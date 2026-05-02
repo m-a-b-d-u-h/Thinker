@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, ArrowRight, RefreshCw } from "lucide-react";
+import { modules } from "@/lib/dummy-data";
+import { notFound } from "next/navigation";
+import { use } from "react";
 
 interface Question {
   id: number;
@@ -12,70 +15,14 @@ interface Question {
   explanation: string;
 }
 
-const questions: Question[] = [
-  {
-    id: 1,
-    question: "According to the module, what is the correct cycle of productivity?",
-    options: [
-      "Motivation → Action → Result",
-      "Action → Result → Motivation",
-      "Result → Action → Motivation",
-      "Action → Motivation → Result"
-    ],
-    correctAnswer: 1,
-    explanation: "The cycle is reversed: Action leads to Result, which then generates Motivation. You don't wait to feel motivated—you act first, and motivation follows."
-  },
-  {
-    id: 2,
-    question: "What is the '5-Minute Rule' from this module?",
-    options: [
-      "Work for exactly 5 minutes and then take a 5-minute break",
-      "Commit to just 5 minutes—afterward you can stop if you want",
-      "Spend 5 minutes planning before you start working",
-      "Work on weekends for at least 5 minutes"
-    ],
-    correctAnswer: 1,
-    explanation: "The 5-Minute Rule is about committing to just 5 minutes of work. Usually, the momentum from those 5 minutes is enough to keep you going."
-  },
-  {
-    id: 3,
-    question: "If you can't start a task, what does the module suggest?",
-    options: [
-      "Wait until you feel more prepared",
-      "Break the task down until it feels 'stupidly small'",
-      "Ask someone else to do it for you",
-      "Read more about the topic first"
-    ],
-    correctAnswer: 1,
-    explanation: "If you can't start, your first step is too big. Break it down until it feels 'stupidly small'—so small that it's impossible to fail."
-  },
-  {
-    id: 4,
-    question: "What is the 'Shitty First Draft' concept?",
-    options: [
-      "Write a rough draft and then edit heavily",
-      "Give yourself permission to do a bad job",
-      "Only create content when you're inspired",
-      "Always aim for perfection on the first try"
-    ],
-    correctAnswer: 1,
-    explanation: "Perfectionism is just procrastination in a fancy suit. Give yourself permission to do a bad job—the 'shitty first draft'—because starting imperfectly is better than not starting at all."
-  },
-  {
-    id: 5,
-    question: "The module compares the brain to a car in winter. What's the point?",
-    options: [
-      "Driving in winter is dangerous",
-      "You need to warm up the car before driving",
-      "You have to start driving to get the engine warm",
-      "Cars break down in cold weather"
-    ],
-    correctAnswer: 2,
-    explanation: "The engine is cold—waiting for it to get warm before you start means you'll never go. You have to start driving to generate heat. Same with action: you start to generate motivation."
-  }
-];
+export default function QuizPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = use(params);
+  const module = modules.find((m) => m.slug === slug);
+  
+  if (!module || !module.questions) notFound();
 
-export default function QuizPage() {
+  const questions: Question[] = module.questions;
+  
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
@@ -119,9 +66,9 @@ export default function QuizPage() {
     <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16">
       <div className="max-w-[700px] mx-auto">
         <header className="mb-12">
-          <span className="badge" style={{ background: 'var(--c-mindset)', color: '#000', marginBottom: '1rem' }}>mindset</span>
+          <span className="badge" style={{ background: 'var(--c-mindset)', color: '#000', marginBottom: '1rem' }}>{module.category}</span>
           <h1 className="text-4xl font-bold text-white mt-4 mb-2">
-            Stop Waiting to Feel Ready
+            {module.title}
           </h1>
           <p className="text-lg text-[#666]">
             Test your understanding of this module

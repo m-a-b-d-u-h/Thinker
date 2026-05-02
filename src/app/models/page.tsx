@@ -2,6 +2,7 @@
 
 import { modules } from "@/lib/dummy-data";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState, useMemo, useEffect } from "react";
 import { Play, ArrowRight, Sparkles, Network, Clock, Search } from "lucide-react";
 import { motion } from "framer-motion";
@@ -138,6 +139,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 2;
+  const router = useRouter();
 
   const calculateTime = (content: string) => {
     const words = content.split(/\s+/).length;
@@ -252,43 +254,60 @@ export default function ProductsPage() {
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-10">
         {paginatedModules.map((module, idx) => (
-          <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.1 }} key={module.id}>
-            <Link href={`/models/${module.slug}`} className="group flex flex-col bg-[#080808] border border-white/5 rounded-[32px] p-8 no-underline h-full transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/60">
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="badge" style={{ background: `var(--c-${module.category})`, color: '#000', fontSize: '0.625rem', fontWeight: 800 }}>{module.category}</span>
-                  <div className="flex items-center gap-1.5 text-[#333]">
-                    <Sparkles size={12} />
-                    <span className="text-[0.625rem] font-bold uppercase tracking-wider">Theory Engine</span>
-                  </div>
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: idx * 0.1 }}
+            key={module.id}
+            onClick={() => router.push(`/models/${module.slug}`)}
+            className="group flex flex-col bg-[#080808] border border-white/5 rounded-[32px] p-8 h-full transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/60 cursor-pointer"
+          >
+            <div>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="badge" style={{ background: `var(--c-${module.category})`, color: '#000', fontSize: '0.625rem', fontWeight: 800 }}>{module.category}</span>
+                <div className="flex items-center gap-1.5 text-[#333]">
+                  <Sparkles size={12} />
+                  <span className="text-[0.625rem] font-bold uppercase tracking-wider">Theory Engine</span>
                 </div>
-                <h2 className="text-2xl font-black text-white mb-2 leading-[1.2]">{module.title}</h2>
-                <p className="text-base text-[#666] leading-relaxed h-[3em] overflow-hidden">{module.description}</p>
               </div>
+              <h2 className="text-2xl font-black text-white mb-2 leading-[1.2]">{module.title}</h2>
+              <p className="text-base text-[#666] leading-relaxed h-[3em] overflow-hidden">{module.description}</p>
+            </div>
 
-              {module.nodes && module.nodes.length > 0 ? (
-                <MiniPreview nodes={module.nodes} edges={module.edges || []} />
-              ) : (
-                <div className="h-[260px] bg-white/[0.01] rounded-3xl flex items-center justify-center text-[#222] my-6">
-                  <Network size={28} />
-                </div>
-              )}
-
-              <div className="flex items-center justify-between border-t border-white/5 pt-5 mt-auto">
-                <div className="flex items-center gap-5">
-                  <div className="flex items-center gap-2 text-[0.8125rem] font-bold text-white">
-                    <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">
-                      <Play size={14} fill="currentColor" />
-                    </div>
-                    Listen & Learn
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[0.75rem] font-semibold text-[#333]">
-                    <Clock size={14} /> {calculateTime(module.content)}
-                  </div>
-                </div>
-                <ArrowRight size={20} className="text-[#222] group-hover:text-white group-hover:translate-x-1 transition-all" />
+            {module.nodes && module.nodes.length > 0 ? (
+              <MiniPreview nodes={module.nodes} edges={module.edges || []} />
+            ) : (
+              <div className="h-[260px] bg-white/[0.01] rounded-3xl flex items-center justify-center text-[#222] my-6">
+                <Network size={28} />
               </div>
-            </Link>
+            )}
+
+            <div className="flex items-center justify-between border-t border-white/5 pt-5 mt-auto">
+              <div className="flex items-center gap-5">
+                <div className="flex items-center gap-2 text-[0.8125rem] font-bold text-white">
+                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">
+                    <Play size={14} fill="currentColor" />
+                  </div>
+                  Listen & Learn
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push(`/models/${module.slug}/path`);
+                  }}
+                  className="flex items-center gap-2 text-[0.8125rem] font-bold text-[#333] hover:text-white transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center">
+                    <Network size={14} />
+                  </div>
+                  Path
+                </button>
+                <div className="flex items-center gap-1.5 text-[0.75rem] font-semibold text-[#333]">
+                  <Clock size={14} /> {calculateTime(module.content)}
+                </div>
+              </div>
+              <ArrowRight size={20} className="text-[#222] group-hover:text-white group-hover:translate-x-1 transition-all" />
+            </div>
           </motion.div>
         ))}
       </div>

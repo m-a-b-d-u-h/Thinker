@@ -1,3 +1,11 @@
+export interface Question {
+  id: number;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  explanation: string;
+}
+
 export interface Module {
   id: string;
   slug: string;
@@ -9,6 +17,7 @@ export interface Module {
   content: string;
   nodes: any[];
   edges: any[];
+  questions?: Question[];
 }
 
 export const modules: Module[] = [
@@ -52,6 +61,68 @@ Think of your brain like a car in winter. The engine is cold. If you wait for th
       { id: 'e2-4', source: '2', target: '4' },
       { id: 'e3-5', source: '3', target: '5' },
       { id: 'e5-6', source: '5', target: '6' },
+    ],
+    questions: [
+      {
+        id: 1,
+        question: "According to the module, what is the correct cycle of productivity?",
+        options: [
+          "Motivation → Action → Result",
+          "Action → Result → Motivation",
+          "Result → Action → Motivation",
+          "Action → Motivation → Result"
+        ],
+        correctAnswer: 1,
+        explanation: "The cycle is reversed: Action leads to Result, which then generates Motivation. You don't wait to feel motivated—you act first, and motivation follows."
+      },
+      {
+        id: 2,
+        question: "What is the '5-Minute Rule' from this module?",
+        options: [
+          "Work for exactly 5 minutes and then take a 5-minute break",
+          "Commit to just 5 minutes—afterward you can stop if you want",
+          "Spend 5 minutes planning before you start working",
+          "Work on weekends for at least 5 minutes"
+        ],
+        correctAnswer: 1,
+        explanation: "The 5-Minute Rule is about committing to just 5 minutes of work. Usually, the momentum from those 5 minutes is enough to keep you going."
+      },
+      {
+        id: 3,
+        question: "If you can't start a task, what does the module suggest?",
+        options: [
+          "Wait until you feel more prepared",
+          "Break the task down until it feels 'stupidly small'",
+          "Ask someone else to do it for you",
+          "Read more about the topic first"
+        ],
+        correctAnswer: 1,
+        explanation: "If you can't start, your first step is too big. Break it down until it feels 'stupidly small'—so small that it's impossible to fail."
+      },
+      {
+        id: 4,
+        question: "What is the 'Shitty First Draft' concept?",
+        options: [
+          "Write a rough draft and then edit heavily",
+          "Give yourself permission to do a bad job",
+          "Only create content when you're inspired",
+          "Always aim for perfection on the first try"
+        ],
+        correctAnswer: 1,
+        explanation: "Perfectionism is just procrastination in a fancy suit. Give yourself permission to do a bad job—the 'shitty first draft'—because starting imperfectly is better than not starting at all."
+      },
+      {
+        id: 5,
+        question: "The module compares the brain to a car in winter. What's the point?",
+        options: [
+          "Driving in winter is dangerous",
+          "You need to warm up the car before driving",
+          "You have to start driving to get the engine warm",
+          "Cars break down in cold weather"
+        ],
+        correctAnswer: 2,
+        explanation: "The engine is cold—waiting for it to get warm before you start means you'll never go. You have to start driving to generate heat. Same with action: you start to generate motivation."
+      }
     ]
   },
   {
