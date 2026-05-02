@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #0a0a0a;
+  --color-fg: #ededed;
+  --color-muted: #888;
+  --color-border: #222;
+  --color-card-bg: #111;
+  --color-accent: #3b82f6;
+  --color-c-mindset: #a78bfa;
+  --color-c-clarity: #fb923c;
+  --color-c-habit: #fbbf24;
+  --color-c-action: #2dd4bf;
+}
+
+@layer base {
+  * {
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+  }
+  
+  body {
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  
+  h1, h2, h3, h4 {
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+  
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 10px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}
