@@ -18,6 +18,7 @@ export default function ModuleLayout({
   const tabs = [
     { name: "Learning", path: `/models/${slug}` },
     { name: "Path", path: `/models/${slug}/path` },
+    { name: "Reflection", path: `/models/${slug}/reflection` },
     { name: "Action", path: `/models/${slug}/action` },
     { name: "Quiz", path: `/models/${slug}/quiz` },
   ];

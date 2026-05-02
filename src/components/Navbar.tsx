@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Library,
   Highlighter,
+  BookOpen,
   User,
   Flame
 } from "lucide-react";
@@ -19,7 +20,8 @@ export default function Navbar() {
     { name: "Explore", href: "/models", icon: Compass },
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Collection", href: "/collection", icon: Library },
-    { name: "Notes", href: "/notes", icon: Highlighter },
+    { name: "Highlight", href: "/highlight", icon: Highlighter },
+    { name: "Reflection", href: "/reflection", icon: BookOpen },
   ];
 
   return (

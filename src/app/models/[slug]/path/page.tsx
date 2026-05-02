@@ -2,7 +2,7 @@
 
 import { modules } from "@/lib/dummy-data";
 import { notFound } from "next/navigation";
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import ReactFlow, { Background, Handle, Position, NodeProps } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -15,6 +15,40 @@ const CustomNode = ({ data }: NodeProps) => (
 );
 
 const nodeTypes = { custom: CustomNode };
+
+function Flow({ nodes, edges }: { nodes: any[]; edges: any[] }) {
+  const reactFlowInstance = useRef<any>(null);
+
+  useEffect(() => {
+    if (reactFlowInstance.current) {
+      const timer = setTimeout(() => {
+        reactFlowInstance.current.fitView({ padding: 0.5, duration: 300 });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [nodes]);
+
+  return (
+    <div className="w-full h-full">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        proOptions={{ hideAttribution: true }}
+        onInit={(instance) => { reactFlowInstance.current = instance; }}
+        fitView
+        fitViewOptions={{ padding: 0.5 }}
+        panOnDrag={true}
+        zoomOnScroll={false}
+        nodesDraggable={false}
+        minZoom={0.1}
+        maxZoom={2}
+      >
+        <Background color="#111" gap={30} size={1} />
+      </ReactFlow>
+    </div>
+  );
+}
 
 export default function PathPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
@@ -31,19 +65,8 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
   if (!module) notFound();
 
   return (
-    <div className="h-[calc(100vh-104px)] bg-[#050505]">
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        proOptions={{ hideAttribution: true }}
-        fitView
-        panOnDrag={true}
-        zoomOnScroll={false}
-        nodesDraggable={false}
-      >
-        <Background color="#111" gap={30} size={1} />
-      </ReactFlow>
+    <div className="h-[calc(100vh-104px)] w-full bg-[#050505]">
+      <Flow nodes={nodes} edges={edges} />
     </div>
   );
 }

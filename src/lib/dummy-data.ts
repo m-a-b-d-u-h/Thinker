@@ -183,6 +183,68 @@ When you refuse to choose between Option A and Option B, you are actually choosi
 
       { id: 'e10-11', source: '10', target: '11' },
       { id: 'e11-12', source: '11', target: '12' },
+    ],
+    questions: [
+      {
+        id: 1,
+        question: "According to the module, what does 'indecision' actually mean?",
+        options: [
+          "You are keeping your options open",
+          "You are choosing Option C: Stagnation",
+          "You are being wise and careful",
+          "You are avoiding risk"
+        ],
+        correctAnswer: 1,
+        explanation: "Indecision is actually a decision itself—you're choosing stagnation by refusing to choose between options."
+      },
+      {
+        id: 2,
+        question: "What is one of the 'Hidden Costs' of not deciding?",
+        options: [
+          "You save money by waiting",
+          "Mental overhead that drains your energy",
+          "You gain more options over time",
+          "You become more decisive naturally"
+        ],
+        correctAnswer: 1,
+        explanation: "Every undecided project takes up 'RAM' in your brain, creating low-level background anxiety that drains energy."
+      },
+      {
+        id: 3,
+        question: "What does 'Loss of Agency' mean in the context of indecision?",
+        options: [
+          "You lose your driver's license",
+          "If you don't decide, the world decides for you",
+          "You become an agent of change",
+          "You lose the ability to work"
+        ],
+        correctAnswer: 1,
+        explanation: "If you don't decide, external circumstances will decide for you as time passes and markets change."
+      },
+      {
+        id: 4,
+        question: "What is the 'Hard Deadline' technique mentioned?",
+        options: [
+          "Wait for the perfect moment",
+          "Give yourself 24 hours to gather data, then decide",
+          "Never set deadlines for decisions",
+          "Only decide on weekdays"
+        ],
+        correctAnswer: 1,
+        explanation: "Set a hard deadline: give yourself 24 hours to gather data, then flip a coin if needed. Wrong decisions can be corrected; indecision just rots."
+      },
+      {
+        id: 5,
+        question: "What is 'Fear Setting'?",
+        options: [
+          "Setting goals based on fear",
+          "Writing down the worst thing that could happen",
+          "Being afraid to set deadlines",
+          "A type of horror movie"
+        ],
+        correctAnswer: 1,
+        explanation: "Fear Setting involves writing down the absolute worst thing that could happen if you make the 'wrong' choice. Usually, the cost of doing nothing is higher."
+      }
     ]
   },
   {
@@ -219,8 +281,84 @@ Humans experience peak motivation when working on tasks that are "just right"—
     edges: [
       { id: 'e1-2', source: '1', target: '2' },
       { id: 'e2-3', source: '2', target: '3' },
+    ],
+    questions: [
+      {
+        id: 1,
+        question: "Why do most people fail at building habits according to the module?",
+        options: [
+          "They don't have enough time",
+          "They rely on willpower which is finite",
+          "They set goals that are too small",
+          "They lack motivation from others"
+        ],
+        correctAnswer: 1,
+        explanation: "Willpower is a finite resource—like a muscle that gets tired. To build lasting habits, you need a system, not reliance on willpower."
+      },
+      {
+        id: 2,
+        question: "What are the three components of the Habit Loop?",
+        options: [
+          "Goal, Action, Result",
+          "Cue, Routine, Reward",
+          "Start, Middle, End",
+          "Trigger, Response, Consequence"
+        ],
+        correctAnswer: 1,
+        explanation: "Every habit is driven by: 1. The Cue (trigger), 2. The Routine (behavior), 3. The Reward (positive reinforcement)."
+      },
+      {
+        id: 3,
+        question: "What is 'Habit Stacking'?",
+        options: [
+          "Stacking books to read",
+          "After [Current Habit], I will [New Habit]",
+          "Doing multiple habits at once",
+          "Piling up rewards for motivation"
+        ],
+        correctAnswer: 1,
+        explanation: "Habit Stacking means attaching a new habit to an existing one using the formula: 'After [Current Habit], I will [New Habit]'."
+      },
+      {
+        id: 4,
+        question: "What is the Goldilocks Rule?",
+        options: [
+          "Always choose the middle option",
+          "Humans peak in motivation when tasks are 'just right'",
+          "Only do easy tasks to avoid failure",
+          "Gold is the best reward for habits"
+        ],
+        correctAnswer: 1,
+        explanation: "Peak motivation occurs when working on tasks that are 'just right'—neither too easy (boring) nor too difficult (quit)."
+      },
+      {
+        id: 5,
+        question: "According to the module, what should you use to build a habit that lasts?",
+        options: [
+          "Pure willpower and determination",
+          "A system",
+          "External pressure from friends",
+          "Expensive equipment and tools"
+        ],
+        correctAnswer: 1,
+        explanation: "To build a habit that lasts, you need a system. Relying on willpower alone will fail because willpower is finite."
+      }
     ]
   }
+];
+
+export interface Mission {
+  id: number;
+  title: string;
+  step: string;
+  module: string;
+  progress: number;
+}
+
+export const activeMissions: Mission[] = [
+  { id: 1, title: "Stop Waiting", step: "Do the 5-minute rule", module: "stop-waiting", progress: 75 },
+  { id: 2, title: "Cost of Not Deciding", step: "Set a hard deadline", module: "cost-of-not-deciding", progress: 45 },
+  { id: 3, title: "Building Habits", step: "Stack a new habit", module: "building-habits", progress: 20 },
 ];
 
 export interface Card {
@@ -281,4 +419,47 @@ export const sampleCards: Card[] = [
       { id: 'e3-1', source: '3', target: '1' },
     ]
   }
+];
+
+export interface Reflection {
+  id: string;
+  title: string;
+  content: string;
+  moduleSlug: string;
+  timestamp: number;
+}
+
+export const reflections: Reflection[] = [
+  { id: "r1", title: "My 5-minute rule experience", content: "Tried the 5-minute rule today...", moduleSlug: "stop-waiting", timestamp: Date.now() - 86400000 * 2 },
+  { id: "r2", title: "Decision paralysis insights", content: "Realized I've been waiting too long...", moduleSlug: "cost-of-not-deciding", timestamp: Date.now() - 86400000 * 1 },
+  { id: "r3", title: "Habit stacking works", content: "Successfully stacked my reading habit...", moduleSlug: "building-habits", timestamp: Date.now() - 86400000 * 3 },
+];
+
+export interface Highlight {
+  id: string;
+  text: string;
+  moduleSlug: string;
+  timestamp: number;
+}
+
+export const highlights: Highlight[] = [
+  { id: "h1", text: "Motivation follows action, not the other way around", moduleSlug: "stop-waiting", timestamp: Date.now() - 86400000 * 2 },
+  { id: "h2", text: "Indecision is actually a decision for stagnation", moduleSlug: "cost-of-not-deciding", timestamp: Date.now() - 86400000 * 1 },
+  { id: "h3", text: "Habit stacking formula: After [Current], I will [New]", moduleSlug: "building-habits", timestamp: Date.now() - 86400000 * 3 },
+  { id: "h4", text: "The Goldilocks Rule: tasks should be just right", moduleSlug: "building-habits", timestamp: Date.now() - 86400000 * 4 },
+];
+
+export interface SavedItem {
+  id: string;
+  type: "model" | "card";
+  itemId: string;
+  timestamp: number;
+}
+
+export const savedItems: SavedItem[] = [
+  { id: "sv1", type: "model", itemId: "stop-waiting", timestamp: Date.now() - 86400000 * 2 },
+  { id: "sv2", type: "card", itemId: "s1", timestamp: Date.now() - 86400000 * 3 },
+  { id: "sv3", type: "model", itemId: "cost-of-not-deciding", timestamp: Date.now() - 86400000 * 1 },
+  { id: "sv4", type: "card", itemId: "s2", timestamp: Date.now() - 86400000 * 4 },
+  { id: "sv5", type: "model", itemId: "building-habits", timestamp: Date.now() - 86400000 * 5 },
 ];

@@ -138,8 +138,13 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const itemsPerPage = 2;
   const router = useRouter();
+
+  const categories = useMemo(() => Array.from(new Set(modules.map(m => m.category))), []);
+  const displayedCategories = showAllCategories ? categories : categories.slice(0, 3);
 
   const calculateTime = (content: string) => {
     const words = content.split(/\s+/).length;
@@ -152,14 +157,22 @@ export default function ProductsPage() {
   const historyModules = modules.slice(0, 3);
 
   const filteredModules = useMemo(() => {
-    const validModules = modules.filter(m => m.slug && m.title && m.description);
-    if (!searchQuery) return validModules;
-    return validModules.filter(m =>
-      m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.category.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [searchQuery]);
+    let validModules = modules.filter(m => m.slug && m.title && m.description);
+    
+    if (selectedCategory) {
+      validModules = validModules.filter(m => m.category === selectedCategory);
+    }
+    
+    if (searchQuery) {
+      validModules = validModules.filter(m =>
+        m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        m.category.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    
+    return validModules;
+  }, [searchQuery, selectedCategory]);
 
   const totalPages = Math.ceil(filteredModules.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -193,47 +206,43 @@ export default function ProductsPage() {
         </p>
       </header>
 
-      {historyModules.length > 0 && (
-        <section className="mb-16">
-          <div className="mb-6">
-            <div className="flex items-center gap-2 text-[#888] mb-2">
-              <Clock size={14} />
-              <span className="text-[0.75rem] font-bold uppercase tracking-[0.05em]">Continue Learning</span>
+        {historyModules.length > 0 && (
+          <section className="mb-16">
+            <div className="mb-6">
+              <div className="flex items-center gap-2 text-[#888] mb-2">
+                <Clock size={14} />
+                <span className="text-[0.75rem] font-bold uppercase tracking-[0.05em]">Continue Learning</span>
+              </div>
+              <h2 className="text-3xl font-black tracking-[-0.04em]">Your Learning <span className="text-[#444]">History</span></h2>
             </div>
-            <h2 className="text-3xl font-black tracking-[-0.04em]">Your Learning <span className="text-[#444]">History</span></h2>
-          </div>
 
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
-            {historyModules.map((module, idx) => (
-              <motion.div
-                key={module.id}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-              >
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
+              {historyModules.map((module, idx) => (
+                <motion.div
+                  key={module.id}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                >
                 <Link href={`/models/${module.slug}`} className="group flex flex-col bg-[#080808] border border-white/5 rounded-2xl p-6 no-underline transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-1">
                   <div className="flex items-center gap-2 mb-4">
                     <span className="badge" style={{ background: `var(--c-${module.category})`, color: '#000', fontSize: '0.625rem', fontWeight: 800 }}>{module.category}</span>
-                    <span className="text-[0.75rem] text-[#444]">Started 2 hours ago</span>
                   </div>
                   <h3 className="text-lg font-bold mb-2 text-white">{module.title}</h3>
                   <p className="text-[0.875rem] text-[#666] leading-relaxed mb-4">{module.description}</p>
-                  <div className="flex items-center gap-4 border-t border-white/5 pt-4 mt-auto">
-                    <div className="flex items-center gap-2 text-[0.75rem] text-[#888]">
-                      <Clock size={12} />
-                      <span>{calculateTime(module.content)} remaining</span>
-                    </div>
-                    <div className="ml-auto flex items-center gap-2 text-[0.75rem] font-semibold text-[#888] group-hover:text-white transition-colors">
+                  <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
+                    <div className="flex items-center gap-2 text-[0.75rem] font-semibold text-[#888] group-hover:text-white transition-colors">
                       <Play size={12} fill="currentColor" />
                       Resume
                     </div>
+                    <span className="text-[0.75rem] text-[#444]">Started 2 hours ago</span>
                   </div>
                 </Link>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-      )}
+                </motion.div>
+              ))}
+            </div>
+          </section>
+        )}
 
       <div className="flex items-center gap-4 mb-12">
         <div className="flex-1 h-px bg-white/5" />
@@ -241,7 +250,7 @@ export default function ProductsPage() {
         <div className="flex-1 h-px bg-white/5" />
       </div>
 
-      <div className="relative max-w-[400px] mb-12">
+      <div className="relative max-w-[400px] mb-6">
         <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#444]" />
         <input
           type="text"
@@ -250,6 +259,32 @@ export default function ProductsPage() {
           onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
           className="w-full py-3.5 pl-11 pr-4 bg-[#080808] border border-white/5 rounded-xl text-white text-[0.875rem] outline-none focus:border-white/15 transition-colors"
         />
+      </div>
+
+      {/* Category Filters */}
+      <div className="flex flex-wrap gap-3 mb-12">
+        {displayedCategories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => {
+              setSelectedCategory(selectedCategory === cat ? null : cat);
+              if (selectedCategory === cat) setSearchQuery('');
+              setCurrentPage(1);
+            }}
+            className={`px-4 py-2 rounded-lg text-[0.75rem] font-bold uppercase tracking-[0.05em] transition-all ${selectedCategory === cat ? 'bg-white text-black' : 'bg-[#080808] border border-white/5 text-[#666] hover:border-white/15'}`}
+          >
+            <span className="w-2 h-2 rounded-full inline-block mr-2" style={{ background: `var(--c-${cat})` }} />
+            {cat}
+          </button>
+        ))}
+        {categories.length > 3 && (
+          <button
+            onClick={() => setShowAllCategories(!showAllCategories)}
+            className="px-4 py-2 rounded-lg text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-[#080808] border border-white/5 text-[#444] hover:border-white/15 transition-all"
+          >
+            {showAllCategories ? 'Less' : `More (${categories.length - 3})`}
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
