@@ -16,11 +16,11 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
 
-      <footer className="section border-t border-white/5 mt-16">
-        <div className="container text-center text-muted text-sm">
-          © 2026 1section Lab. All rights reserved.
-        </div>
-      </footer>
+       <footer className="border-t border-white/5 mt-auto py-8">
+         <div className="mx-auto w-full max-w-[1200px] px-6 text-center text-[0.875rem] text-[#444]">
+           © 2026 1SECTION Lab. All rights reserved.
+         </div>
+       </footer>
     </div>
   );
 }

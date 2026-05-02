@@ -35,16 +35,16 @@ export default function LoginPage() {
           transition={{ delay: 0.3 }}
           className="text-5xl font-black text-white mb-4 tracking-[-0.04em] leading-none"
         >
-          THINKER
+          1SECTION
         </motion.h1>
-
+ 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="text-[#555] text-lg mb-12 leading-relaxed"
         >
-          Master your thinking. Transform your mind.
+          Master your mind. One section at a time.
         </motion.p>
 
         <motion.button

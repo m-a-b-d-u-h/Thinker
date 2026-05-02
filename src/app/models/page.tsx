@@ -140,7 +140,7 @@ export default function ProductsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
-  const itemsPerPage = 2;
+  const itemsPerPage = 6;
   const router = useRouter();
 
   const categories = useMemo(() => Array.from(new Set(modules.map(m => m.category))), []);
@@ -262,7 +262,7 @@ export default function ProductsPage() {
       </div>
 
       {/* Category Filters */}
-      <div className="flex flex-wrap gap-3 mb-12">
+      <div className="flex flex-wrap gap-2 mb-12">
         {displayedCategories.map((cat) => (
           <button
             key={cat}
@@ -271,18 +271,18 @@ export default function ProductsPage() {
               if (selectedCategory === cat) setSearchQuery('');
               setCurrentPage(1);
             }}
-            className={`px-4 py-2 rounded-lg text-[0.75rem] font-bold uppercase tracking-[0.05em] transition-all ${selectedCategory === cat ? 'bg-white text-black' : 'bg-[#080808] border border-white/5 text-[#666] hover:border-white/15'}`}
+            className={`px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] transition-all duration-200 ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#0a0a0a] border border-white/5 text-[#555] hover:bg-[#111] hover:border-white/10 hover:text-[#888]'}`}
           >
-            <span className="w-2 h-2 rounded-full inline-block mr-2" style={{ background: `var(--c-${cat})` }} />
+            <span className="w-1.5 h-1.5 rounded-full inline-block mr-1.5 align-middle" style={{ background: `var(--c-${cat})` }} />
             {cat}
           </button>
         ))}
         {categories.length > 3 && (
           <button
             onClick={() => setShowAllCategories(!showAllCategories)}
-            className="px-4 py-2 rounded-lg text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-[#080808] border border-white/5 text-[#444] hover:border-white/15 transition-all"
+            className="px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] bg-[#0a0a0a] border border-white/5 text-[#444] hover:bg-[#111] hover:border-white/10 transition-all duration-200"
           >
-            {showAllCategories ? 'Less' : `More (${categories.length - 3})`}
+            {showAllCategories ? 'Show Less' : `More (${categories.length - 3})`}
           </button>
         )}
       </div>
