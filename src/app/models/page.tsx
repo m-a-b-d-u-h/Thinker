@@ -139,12 +139,10 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showAllCategories, setShowAllCategories] = useState(false);
   const itemsPerPage = 6;
   const router = useRouter();
 
   const categories = useMemo(() => Array.from(new Set(modules.map(m => m.category))), []);
-  const displayedCategories = showAllCategories ? categories : categories.slice(0, 3);
 
   const calculateTime = (content: string) => {
     const words = content.split(/\s+/).length;
@@ -181,18 +179,28 @@ export default function ProductsPage() {
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16 min-h-[90vh]">
       {/* Knowledge Graph Banner */}
-      <div className="grid grid-cols-[280px_1fr] h-[280px] bg-gradient-to-br from-[#0a0a0c] to-[#111] rounded-3xl mb-8 border border-white/5 overflow-hidden">
-        <div className="p-8 flex flex-col justify-center">
-          <div className="text-[0.75rem] font-black text-[#333] uppercase tracking-[0.1em] mb-2">Premium</div>
-          <div className="text-2xl font-black mb-2 text-white">Your Second Brain</div>
-          <div className="text-[0.9375rem] text-[#666] mb-6 leading-relaxed">
-            Track your mental growth in a connected knowledge graph.
+      <div className="grid grid-cols-[1fr_1fr] h-[320px] bg-gradient-to-br from-[#0a0a0c] via-[#111] to-[#0a0a0c] rounded-3xl mb-8 border border-white/10 overflow-hidden relative">
+        <div className="p-10 flex flex-col justify-center relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] mb-4 w-fit">
+            <Sparkles size={12} className="text-[#fbbf24]" />
+            Pro Feature
           </div>
-          <Link href="/#pricing" className="inline-block px-6 py-3.5 bg-white text-black rounded-xl no-underline font-bold text-[0.875rem] text-center hover:opacity-90 transition-opacity">
-            Upgrade to Pro
-          </Link>
+          <h2 className="text-3xl font-black mb-3 text-white leading-tight">
+            Your Second<br/>Brain Awaits
+          </h2>
+          <p className="text-[0.9375rem] text-[#888] mb-6 leading-relaxed max-w-[400px]">
+            Visualize connections between mental models. See your knowledge graph grow in real-time with interactive nodes and smart paths.
+          </p>
+          <div className="flex items-center gap-4">
+            <Link href="/#pricing" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-xl no-underline font-bold text-[0.875rem] hover:bg-white/90 hover:scale-[1.02] transition-all duration-200 shadow-lg shadow-white/20">
+              <Sparkles size={16} />
+              Upgrade to Pro
+            </Link>
+            <span className="text-[0.75rem] text-[#555]">$9/mo • Cancel anytime</span>
+          </div>
         </div>
-        <div className="relative overflow-hidden">
+        <div className="relative overflow-hidden flex items-center">
+          <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#0a0a0c] z-10" />
           <GraphPreview />
         </div>
       </div>
@@ -250,41 +258,35 @@ export default function ProductsPage() {
         <div className="flex-1 h-px bg-white/5" />
       </div>
 
-      <div className="relative max-w-[400px] mb-6">
-        <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#444]" />
-        <input
-          type="text"
-          placeholder="Search frameworks..."
-          value={searchQuery}
-          onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-          className="w-full py-3.5 pl-11 pr-4 bg-[#080808] border border-white/5 rounded-xl text-white text-[0.875rem] outline-none focus:border-white/15 transition-colors"
-        />
-      </div>
+      <div className="flex items-center gap-4 mb-12">
+        <div className="relative flex-1 max-w-[400px]">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#444]" />
+          <input
+            type="text"
+            placeholder="Search frameworks..."
+            value={searchQuery}
+            onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+            className="w-full py-3.5 pl-11 pr-4 bg-[#080808] border border-white/5 rounded-xl text-white text-[0.875rem] outline-none focus:border-white/15 transition-colors"
+          />
+        </div>
 
-      {/* Category Filters */}
-      <div className="flex flex-wrap gap-2 mb-12">
-        {displayedCategories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => {
-              setSelectedCategory(selectedCategory === cat ? null : cat);
-              if (selectedCategory === cat) setSearchQuery('');
-              setCurrentPage(1);
-            }}
-            className={`px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] transition-all duration-200 ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#0a0a0a] border border-white/5 text-[#555] hover:bg-[#111] hover:border-white/10 hover:text-[#888]'}`}
-          >
-            <span className="w-1.5 h-1.5 rounded-full inline-block mr-1.5 align-middle" style={{ background: `var(--c-${cat})` }} />
-            {cat}
-          </button>
-        ))}
-        {categories.length > 3 && (
-          <button
-            onClick={() => setShowAllCategories(!showAllCategories)}
-            className="px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] bg-[#0a0a0a] border border-white/5 text-[#444] hover:bg-[#111] hover:border-white/10 transition-all duration-200"
-          >
-            {showAllCategories ? 'Show Less' : `More (${categories.length - 3})`}
-          </button>
-        )}
+        {/* Category Filters */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => {
+                setSelectedCategory(selectedCategory === cat ? null : cat);
+                if (selectedCategory === cat) setSearchQuery('');
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] transition-all duration-200 whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#0a0a0a] border border-white/5 text-[#555] hover:bg-[#111] hover:border-white/10 hover:text-[#888]'}`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full inline-block mr-1.5 align-middle" style={{ background: `var(--c-${cat})` }} />
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
