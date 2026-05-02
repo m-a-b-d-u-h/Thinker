@@ -139,10 +139,12 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const itemsPerPage = 6;
   const router = useRouter();
 
   const categories = useMemo(() => Array.from(new Set(modules.map(m => m.category))), []);
+  const displayedCategories = showAllCategories ? categories : categories.slice(0, 3);
 
   const calculateTime = (content: string) => {
     const words = content.split(/\s+/).length;
@@ -270,8 +272,34 @@ export default function ProductsPage() {
           />
         </div>
 
-        {/* Category Filters */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="flex items-center gap-2 flex-1 justify-end flex-wrap">
+          {displayedCategories.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => {
+                setSelectedCategory(selectedCategory === cat ? null : cat);
+                if (selectedCategory === cat) setSearchQuery('');
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] transition-all duration-200 whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#0a0a0a] border border-white/5 text-[#555] hover:bg-[#111] hover:border-white/10 hover:text-[#888]'}`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full inline-block mr-1.5 align-middle" style={{ background: `var(--c-${cat})` }} />
+              {cat}
+            </button>
+          ))}
+          {categories.length > 3 && (
+            <button
+              onClick={() => setShowAllCategories(!showAllCategories)}
+              className="px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] bg-[#0a0a0a] border border-white/5 text-[#444] hover:bg-[#111] hover:border-white/10 transition-all duration-200"
+            >
+              {showAllCategories ? 'Less' : `More (${categories.length - 3})`}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {showAllCategories && (
+        <div className="flex flex-wrap gap-2 mb-12 -mt-8">
           {categories.map((cat) => (
             <button
               key={cat}
@@ -287,6 +315,69 @@ export default function ProductsPage() {
             </button>
           ))}
         </div>
+      )}
+
+           {/* Value Proposition - Marketing Categories */}
+           <div className="flex flex-col gap-4 flex-1">
+             <div className="flex items-center gap-2">
+               {displayedCategories.map((cat) => (
+                 <button
+                   key={cat}
+                   onClick={() => {
+                     setSelectedCategory(selectedCategory === cat ? null : cat);
+                     if (selectedCategory === cat) setSearchQuery('');
+                     setCurrentPage(1);
+                   }}
+                   className={`group px-4 py-2 rounded-xl text-[0.75rem] font-bold uppercase tracking-[0.05em] transition-all duration-300 hover:scale-[1.05] ${selectedCategory === cat ? 'bg-white text-black shadow-xl shadow-white/20' : 'bg-[#0a0a0a] border border-white/5 text-[#555] hover:bg-[#111] hover:border-white/10 hover:text-white'}`}
+                 >
+                   <span className="w-2 h-2 rounded-full inline-block mr-2 align-middle group-hover:scale-125 transition-transform" style={{ background: `var(--c-${cat})` }} />
+                   {cat.replace('-', ' ')}
+                 </button>
+               ))}
+               {categories.length > 3 && (
+                 <button
+                   onClick={() => setShowAllCategories(!showAllCategories)}
+                   className="px-4 py-2 rounded-xl text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-[#0a0a0a] border border-dashed border-white/10 text-[#444] hover:bg-[#111] hover:border-white/20 hover:text-[#666] transition-all duration-300"
+                 >
+                   {showAllCategories ? 'Show Less' : `Explore All ${categories.length} Domains`}
+                 </button>
+               )}
+             </div>
+             
+             {/* Benefit Hint */}
+             <div className="bg-gradient-to-r from-[#0a0a0a] to-transparent rounded-xl p-4 border border-white/5">
+               <div className="flex items-center gap-3">
+                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] flex items-center justify-center">
+                   <Sparkles size={14} className="text-white" />
+                 </div>
+                 <p className="text-[0.8125rem] text-[#888]">
+                   Master <span className="text-white font-semibold">{categories.length} thinking domains</span> to unlock advanced mental models. 
+                   <Link href="/#pricing" className="text-white font-semibold hover:underline ml-1">Upgrade to Pro →</Link>
+                 </p>
+               </div>
+             </div>
+           </div>
+        </div>
+
+        {/* All Categories - Shown when More is clicked */}
+        {showAllCategories && (
+          <div className="flex flex-wrap gap-2 mt-4">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => {
+                  setSelectedCategory(selectedCategory === cat ? null : cat);
+                  if (selectedCategory === cat) setSearchQuery('');
+                  setCurrentPage(1);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] transition-all duration-200 whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#0a0a0a] border border-white/5 text-[#555] hover:bg-[#111] hover:border-white/10 hover:text-[#888]'}`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full inline-block mr-1.5 align-middle" style={{ background: `var(--c-${cat})` }} />
+                {cat}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
