@@ -252,7 +252,7 @@ export default function ProductsPage() {
         />
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-10">
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
         {paginatedModules.map((module, idx) => (
           <motion.div
             initial={{ opacity: 0, y: 5 }}
@@ -260,53 +260,54 @@ export default function ProductsPage() {
             transition={{ delay: idx * 0.1 }}
             key={module.id}
             onClick={() => router.push(`/models/${module.slug}`)}
-            className="group flex flex-col bg-[#080808] border border-white/5 rounded-[32px] p-8 h-full transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/60 cursor-pointer"
+            className="group flex flex-col bg-[#080808] border border-white/5 rounded-[32px] overflow-hidden transition-all duration-500 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/60 cursor-pointer"
           >
-            <div>
-              <div className="flex items-center gap-3 mb-4">
+            <div className="p-8 pb-6">
+              <div className="flex items-center gap-3 mb-5">
                 <span className="badge" style={{ background: `var(--c-${module.category})`, color: '#000', fontSize: '0.625rem', fontWeight: 800 }}>{module.category}</span>
-                <div className="flex items-center gap-1.5 text-[#333]">
+                <div className="flex items-center gap-1.5 text-[#333] group-hover:text-[#444] transition-colors">
                   <Sparkles size={12} />
                   <span className="text-[0.625rem] font-bold uppercase tracking-wider">Theory Engine</span>
                 </div>
               </div>
-              <h2 className="text-2xl font-black text-white mb-2 leading-[1.2]">{module.title}</h2>
-              <p className="text-base text-[#666] leading-relaxed h-[3em] overflow-hidden">{module.description}</p>
+              <h2 className="text-2xl font-black text-white mb-3 leading-[1.2] group-hover:text-white/95 transition-colors">{module.title}</h2>
+              <p className="text-base text-[#666] leading-relaxed mb-2">{module.description}</p>
             </div>
 
             {module.nodes && module.nodes.length > 0 ? (
-              <MiniPreview nodes={module.nodes} edges={module.edges || []} />
+              <div className="px-6 pb-2">
+                <MiniPreview nodes={module.nodes} edges={module.edges || []} />
+              </div>
             ) : (
-              <div className="h-[260px] bg-white/[0.01] rounded-3xl flex items-center justify-center text-[#222] my-6">
+              <div className="mx-6 mb-2 h-[260px] bg-white/[0.01] rounded-3xl flex items-center justify-center text-[#222]">
                 <Network size={28} />
               </div>
             )}
 
-            <div className="flex items-center justify-between border-t border-white/5 pt-5 mt-auto">
-              <div className="flex items-center gap-5">
-                <div className="flex items-center gap-2 text-[0.8125rem] font-bold text-white">
-                  <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">
+            <div className="flex items-center justify-between border-t border-white/5 px-8 py-5 mt-auto">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2.5 text-[0.8125rem] font-bold text-white/90 group-hover:text-white transition-colors">
+                  <div className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-lg shadow-white/10 group-hover:scale-105 transition-transform">
                     <Play size={14} fill="currentColor" />
                   </div>
-                  Listen & Learn
+                  <span className="group-hover:translate-x-0.5 transition-transform">Listen</span>
                 </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     router.push(`/models/${module.slug}/path`);
                   }}
-                  className="flex items-center gap-2 text-[0.8125rem] font-bold text-[#333] hover:text-white transition-colors"
+                  className="flex items-center gap-2.5 text-[0.8125rem] font-bold text-[#333] hover:text-white transition-all"
                 >
-                  <div className="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center group-hover:bg-white/15 transition-colors">
                     <Network size={14} />
                   </div>
-                  Path
+                  <span>Path</span>
                 </button>
-                <div className="flex items-center gap-1.5 text-[0.75rem] font-semibold text-[#333]">
-                  <Clock size={14} /> {calculateTime(module.content)}
-                </div>
               </div>
-              <ArrowRight size={20} className="text-[#222] group-hover:text-white group-hover:translate-x-1 transition-all" />
+              <div className="w-9 h-9 rounded-full border border-white/5 flex items-center justify-center group-hover:border-white/20 group-hover:bg-white/5 transition-all">
+                <ArrowRight size={16} className="text-[#222] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+              </div>
             </div>
           </motion.div>
         ))}
