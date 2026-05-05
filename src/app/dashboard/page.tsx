@@ -5,18 +5,7 @@ import Link from "next/link";
 import { modules, sampleCards, activeMissions, reflections, highlights, savedItems } from "@/lib/dummy-data";
 import {
   Flame,
-  Zap,
-  Target,
-  BookOpen,
-  Clock,
-  CheckCircle2,
-  ChevronRight,
   Play,
-  ArrowRight,
-  Brain,
-  TrendingUp,
-  Calendar,
-  Sparkles
 } from "lucide-react";
 import {
   Tooltip,
@@ -53,6 +42,32 @@ export default function DashboardPage() {
 
   const categoryData = Object.entries(categoryCount).map(([name, value]) => ({ name, value }));
 
+  const categoryColors: Record<string, string> = {
+    mindset: '#a78bfa',
+    clarity: '#fb923c',
+    habit: '#fbbf24',
+    action: '#2dd4bf',
+    productivity: '#34d399',
+    focus: '#60a5fa',
+    learning: '#f472b6',
+    creativity: '#fb7185',
+    strategy: '#818cf8',
+    wellbeing: '#4ade80',
+    'mental-model': '#8b5cf6',
+    logic: '#06b6d4',
+    psychology: '#ec4899',
+    success: '#10b981',
+    stoicism: '#78716c',
+    'cognitive-bias': '#f59e0b',
+    'decision-making': '#6366f1',
+    business: '#0ea5e9',
+    'problem-solving': '#14b8a6',
+    'game-theory': '#f43f5e',
+    resilience: '#22c55e',
+    risk: '#ef4444',
+    economics: '#eab308',
+  };
+
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16">
       {/* Header */}
@@ -70,92 +85,97 @@ export default function DashboardPage() {
         </p>
       </header>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-white/5">
-          <div className="flex items-center gap-3 mb-3">
-            <Flame size={20} className="text-[#f97316]" />
-            <span className="text-[0.75rem] text-[#444] uppercase font-bold">Streak</span>
+      {/* Streak Bar */}
+      <div className="mb-6">
+        <div className="bg-[#0a0a0a] rounded-xl border border-white/5 overflow-hidden relative px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-3 relative z-10 shrink-0">
+            <Flame size={14} className="text-[#f97316]" />
+            <span className="text-[0.75rem] font-bold text-[#888]">14 day streak</span>
           </div>
-          <div className="text-3xl font-bold">14</div>
-          <div className="text-[0.75rem] text-[#666]">days</div>
-        </div>
-
-        <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-white/5">
-          <div className="flex items-center gap-3 mb-3">
-            <Zap size={20} className="text-[#fbbf24]" />
-            <span className="text-[0.75rem] text-[#444] uppercase font-bold">XP</span>
+          <div className="flex-1 mx-6 relative z-10">
+            <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-[#f97316] to-[#fb923c] rounded-full transition-all" style={{ width: `${(14 / 30) * 100}%` }} />
+            </div>
           </div>
-          <div className="text-3xl font-bold">2,480</div>
-          <div className="text-[0.75rem] text-[#666]">points</div>
-        </div>
-
-        <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-white/5">
-          <div className="flex items-center gap-3 mb-3">
-            <BookOpen size={20} className="text-[#22c55e]" />
-            <span className="text-[0.75rem] text-[#444] uppercase font-bold">Learned</span>
+          <div className="relative z-10 shrink-0">
+            <span className="text-[0.6875rem] text-[#444] font-bold">30 day goal</span>
           </div>
-          <div className="text-3xl font-bold">{modules.length}</div>
-          <div className="text-[0.75rem] text-[#666]">models</div>
-        </div>
-      </div>
-
-      {/* Second Stats Row */}
-      <div className="grid grid-cols-3 gap-4 mb-12">
-        <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-white/5">
-          <div className="flex items-center gap-3 mb-3">
-            <CheckCircle2 size={20} className="text-[#3b82f6]" />
-            <span className="text-[0.75rem] text-[#444] uppercase font-bold">Reflections</span>
-          </div>
-          <div className="text-3xl font-bold">{reflections.length}</div>
-          <div className="text-[0.75rem] text-[#666]">total</div>
-        </div>
-
-        <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-white/5">
-          <div className="flex items-center gap-3 mb-3">
-            <Sparkles size={20} className="text-[#f59e0b]" />
-            <span className="text-[0.75rem] text-[#444] uppercase font-bold">Highlights</span>
-          </div>
-          <div className="text-3xl font-bold">{highlights.length}</div>
-          <div className="text-[0.75rem] text-[#666]">total</div>
-        </div>
-
-        <div className="bg-[#0a0a0a] rounded-2xl p-6 border border-white/5">
-          <div className="flex items-center gap-3 mb-3">
-            <Calendar size={20} className="text-[#ec4899]" />
-            <span className="text-[0.75rem] text-[#444] uppercase font-bold">Saved</span>
-          </div>
-          <div className="text-3xl font-bold">{savedItems.length}</div>
-          <div className="text-[0.75rem] text-[#666]">items</div>
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#f97316]/5 to-transparent rounded-full translate-x-1/4 -translate-y-1/4" />
         </div>
       </div>
 
       <div className="grid grid-cols-[2fr_1fr] gap-8">
         {/* Left Column */}
         <div className="flex flex-col gap-8">
-          {/* Rank */}
-          <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">
-                Current Rank
-              </h3>
-              <span className="text-[0.75rem] text-[#666]">2,480 XP</span>
-            </div>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] flex items-center justify-center text-lg font-bold">
-                S
+
+          {/* Rank + Weekly Insights */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Current Rank */}
+            <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">
+                  Current Rank
+                </h3>
+                <span className="text-[0.75rem] text-[#666]">2,480 XP</span>
               </div>
-              <div>
-                <div className="font-semibold text-lg">Strategist</div>
-                <div className="text-[0.75rem] text-[#666]">Thinking Level 4</div>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] flex items-center justify-center text-lg font-bold">
+                  S
+                </div>
+                <div>
+                  <div className="font-semibold text-lg">Strategist</div>
+                  <div className="text-[0.75rem] text-[#666]">Thinking Level 4</div>
+                </div>
+              </div>
+              <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full" style={{ width: `${((2480 - 2000) / (3500 - 2000)) * 100}%` }} />
+              </div>
+              <div className="flex justify-between mt-2 text-[0.6875rem] text-[#666]">
+                <span>2,000 XP</span>
+                <span>Next: Master (3,500 XP)</span>
               </div>
             </div>
-            <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full" style={{ width: `${((2480 - 2000) / (3500 - 2000)) * 100}%` }} />
-            </div>
-            <div className="flex justify-between mt-2 text-[0.6875rem] text-[#666]">
-              <span>2,000 XP</span>
-              <span>Next: Master (3,500 XP)</span>
+
+            {/* Weekly Insights */}
+            <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">
+                  Weekly Insights
+                </h3>
+                <Flame size={16} className="text-[#f97316]" />
+              </div>
+              <div className="flex items-center justify-between gap-1.5 mb-5">
+                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
+                  const now = new Date();
+                  const dayOfWeek = (now.getDay() + 6) % 7;
+                  const daysAgo = dayOfWeek - ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].indexOf(day);
+                  const targetDate = new Date(now);
+                  targetDate.setDate(now.getDate() - Math.abs(daysAgo));
+                  const hasReflection = reflections.some(r => {
+                    const rDate = new Date(r.timestamp);
+                    return rDate.toDateString() === targetDate.toDateString();
+                  });
+                  return (
+                    <div key={day} className="flex flex-col items-center gap-2">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${hasReflection ? 'bg-[#f97316] text-black' : 'bg-[#1a1a1a]'}`}>
+                        <div className={`w-2 h-2 rounded-full ${hasReflection ? 'bg-black' : 'bg-[#333]'}`} />
+                      </div>
+                      <span className="text-[0.625rem] text-[#444] font-bold">{day.charAt(0)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="text-[0.75rem] text-[#666]">
+                <span className="text-xl font-bold text-white">
+                  {reflections.filter(r => {
+                    const now = new Date();
+                    const rDate = new Date(r.timestamp);
+                    const diffDays = Math.floor((now.getTime() - rDate.getTime()) / 86400000);
+                    return diffDays < 7;
+                  }).length}
+                </span>
+                {" "}reflections this week
+              </div>
             </div>
           </div>
 
@@ -182,55 +202,51 @@ export default function DashboardPage() {
 
         {/* Right Column - Activity Charts */}
         <div className="flex flex-col gap-8">
-          {/* Category Distribution PieChart */}
+          {/* Category Distribution */}
           <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
-            <h3 className="text-[0.875rem] font-semibold mb-6">Category Distribution</h3>
+            <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em] mb-6">Category Distribution</h3>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
                   data={categoryData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={5}
+                  innerRadius={55}
+                  outerRadius={85}
+                  paddingAngle={4}
                   dataKey="value"
+                  stroke="none"
+                  isAnimationActive={false}
                 >
                   {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={`var(--c-${entry.name})`} />
+                    <Cell key={`cell-${index}`} fill={categoryColors[entry.name] || '#555'} />
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ background: "#0a0a0a", border: "1px solid #333", borderRadius: "8px" }}
-                  labelStyle={{ color: "#fff" }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 shadow-xl pointer-events-none">
+                          <p className="text-[0.75rem] font-bold text-white capitalize">{data.name}</p>
+                          <p className="text-[0.6875rem] text-[#888]">{data.value} models</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                  cursor={false}
                 />
               </PieChart>
             </ResponsiveContainer>
-            <div className="flex flex-wrap gap-3 mt-2">
+            <div className="grid grid-cols-2 gap-2 mt-2">
               {categoryData.map((cat) => (
-                <div key={cat.name} className="flex items-center gap-2 text-[0.75rem] text-[#666]">
-                  <div className="w-2 h-2 rounded-full" style={{ background: `var(--c-${cat.name})` }} />
-                  <span className="capitalize">{cat.name} ({cat.value})</span>
+                <div key={cat.name} className="flex items-center gap-2.5 text-[0.6875rem] text-[#555]">
+                  <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: categoryColors[cat.name] || '#555' }} />
+                  <span className="capitalize truncate">{cat.name} ({cat.value})</span>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Daily Focus */}
-          <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
-            <div className="flex items-center gap-3 mb-4">
-              <TrendingUp size={18} />
-              <span className="text-[0.875rem] font-semibold">Focus Today</span>
-            </div>
-            <div className="text-lg font-semibold mb-2">
-              "{activeMissions[0]?.step || 'No active mission'}"
-            </div>
-            <p className="text-[0.875rem] text-[#666] mb-6 leading-relaxed">
-              {activeMissions[0]?.title || 'Start a mission to see your focus here.'}
-            </p>
-            <Link href={`/models/${activeMissions[0]?.module || ''}`} className="block w-full py-3.5 bg-white text-black rounded-xl no-underline text-[0.875rem] font-semibold text-center hover:opacity-90 transition-opacity">
-              Practice Now
-            </Link>
           </div>
         </div>
       </div>

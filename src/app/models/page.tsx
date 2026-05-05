@@ -4,8 +4,9 @@ import { modules } from "@/lib/dummy-data";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useMemo, useEffect } from "react";
-import { Play, ArrowRight, Sparkles, Network, Clock, Search } from "lucide-react";
+import { Play, Clock, Search, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { ModuleCard } from "@/components/ModuleCard";
 import ReactFlow, { Background, NodeProps, Handle, Position, useReactFlow, ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
 
@@ -106,85 +107,22 @@ const MarketingFlow = () => {
   );
 };
 
-const FlowFocus = ({ nodeId }: { nodeId: string }) => {
-  const { fitView } = useReactFlow();
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fitView({
-        nodes: [{ id: nodeId }],
-        padding: 0.8,
-        duration: 0,
-        minZoom: 0.8,
-        maxZoom: 1.2
-      });
-    }, 50);
-    return () => clearTimeout(timer);
-  }, [nodeId, fitView]);
-
-  return null;
-};
-
-const MiniPreview = ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
-  const styledNodes = useMemo(() => nodes.map(n => ({
-    ...n,
-    style: n.type === 'custom' ? n.style : {
-      ...n.style,
-      background: '#111',
-      color: '#fff',
-      border: '1px solid #222',
-      borderRadius: '10px',
-      fontSize: '12px',
-      fontWeight: 600,
-      padding: '10px 14px',
-      width: 'auto',
-      minWidth: '100px',
-      textAlign: 'center' as const
-    }
-  })), [nodes]);
-
-  const styledEdges = useMemo(() => edges.map(e => ({
-    ...e,
-    animated: true,
-    style: { stroke: 'rgba(255,255,255,0.2)', strokeWidth: 2 }
-  })), [edges]);
-
-  return (
-    <div className="h-[260px] w-full bg-[#050505] rounded-3xl overflow-hidden border border-white/5 pointer-events-none my-6">
-      <ReactFlowProvider>
-        <ReactFlow
-          nodes={styledNodes}
-          edges={styledEdges}
-          nodeTypes={nodeTypes}
-          proOptions={{ hideAttribution: true }}
-          defaultViewport={{ x: 0, y: 50, zoom: 1 }}
-        >
-          <Background color="#111" gap={12} size={0.5} />
-          <FlowFocus nodeId="1" />
-        </ReactFlow>
-      </ReactFlowProvider>
-    </div>
-  );
-};
-
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const itemsPerPage = 6;
   const router = useRouter();
-
-  const calculateTime = (content: string) => {
-    const words = content.split(/\s+/).length;
-    const totalSeconds = Math.ceil(words / 2.5);
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const historyModules = modules.slice(0, 3);
 
   const filteredModules = useMemo(() => {
     let validModules = modules.filter(m => m.slug && m.title && m.description);
+
+    if (selectedCategory) {
+      validModules = validModules.filter(m => m.category === selectedCategory);
+    }
 
     if (searchQuery) {
       validModules = validModules.filter(m =>
@@ -194,7 +132,7 @@ export default function ProductsPage() {
     }
 
     return validModules;
-  }, [searchQuery]);
+  }, [searchQuery, selectedCategory]);
 
   const totalPages = Math.ceil(filteredModules.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -276,14 +214,57 @@ export default function ProductsPage() {
         )}
 
       <div className="mb-12">
-        <div className="relative flex-1 max-w-[400px]">
+        <div className="mb-5">
+          <p className="text-[0.6875rem] font-bold text-[#444] uppercase tracking-[0.1em] mb-3">Categories</p>
+          <div className={`relative ${!showAllCategories ? 'overflow-hidden max-h-[42px]' : ''}`}>
+            <div className="flex items-center gap-2 flex-wrap">
+              {["mindset", "focus", "productivity", "strategy", "creativity", "learning", "wellbeing", "clarity", "habit", "mental-model", "logic", "psychology", "success", "stoicism", "cognitive-bias", "decision-making", "business", "problem-solving", "game-theory", "resilience", "risk", "economics"].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => { setSelectedCategory(selectedCategory === cat ? null : cat); setCurrentPage(1); }}
+                  className={`px-4 py-2.5 rounded-full text-[0.75rem] font-semibold transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#080808] border border-white/5 text-[#555] hover:border-white/15 hover:text-white'}`}
+                >
+                  {cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}
+                </button>
+              ))}
+            </div>
+            {!showAllCategories && (
+              <>
+                <div className="absolute right-0 top-0 bottom-0 w-64 bg-gradient-to-l from-[#0a0a0c] via-[#0a0a0c]/90 to-transparent pointer-events-none" />
+                <button
+                  onClick={() => setShowAllCategories(true)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 px-4 py-2.5 rounded-full text-[0.75rem] font-semibold bg-[#080808] border border-white/10 text-white hover:bg-white/15 transition-all whitespace-nowrap z-10"
+                >
+                  More
+                </button>
+              </>
+            )}
+            {showAllCategories && (
+              <button
+                onClick={() => setShowAllCategories(false)}
+                className="mt-2 px-4 py-2.5 rounded-full text-[0.75rem] font-semibold bg-white/10 border border-white/10 text-white hover:bg-white/15 transition-all whitespace-nowrap"
+              >
+                Less
+              </button>
+            )}
+          </div>
+          {selectedCategory && (
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className="mt-2 px-4 py-2 rounded-full text-[0.75rem] font-semibold text-red-400 hover:text-red-300 transition-all whitespace-nowrap"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+        <div className="relative">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#444]" />
           <input
             type="text"
             placeholder="Search frameworks..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-            className="w-full py-3.5 pl-11 pr-4 bg-[#080808] border border-white/5 rounded-xl text-white text-[0.875rem] outline-none focus:border-white/15 transition-colors"
+            className="w-full py-4 pl-11 pr-4 bg-[#080808] border border-white/5 rounded-xl text-white text-[0.875rem] outline-none focus:border-white/15 transition-colors"
           />
         </div>
       </div>
@@ -297,56 +278,8 @@ export default function ProductsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
             key={module.id}
-            onClick={() => router.push(`/models/${module.slug}`)}
-            className="group flex flex-col bg-[#080808] border border-white/5 rounded-[32px] overflow-hidden transition-all duration-500 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/60 cursor-pointer"
           >
-            <div className="p-8 pb-6">
-              <div className="flex items-center gap-3 mb-5">
-                <span className="badge" style={{ background: `var(--c-${module.category})`, color: '#000', fontSize: '0.625rem', fontWeight: 800 }}>{module.category}</span>
-                <div className="flex items-center gap-1.5 text-[#333] group-hover:text-[#444] transition-colors">
-                  <Sparkles size={12} />
-                  <span className="text-[0.625rem] font-bold uppercase tracking-wider">Theory Engine</span>
-                </div>
-              </div>
-              <h2 className="text-2xl font-black text-white mb-3 leading-[1.2] group-hover:text-white/95 transition-colors">{module.title}</h2>
-              <p className="text-base text-[#666] leading-relaxed mb-2">{module.description}</p>
-            </div>
-
-            {module.nodes && module.nodes.length > 0 ? (
-              <div className="px-6 pb-2">
-                <MiniPreview nodes={module.nodes} edges={module.edges || []} />
-              </div>
-            ) : (
-              <div className="mx-6 mb-2 h-[260px] bg-white/[0.01] rounded-3xl flex items-center justify-center text-[#222]">
-                <Network size={28} />
-              </div>
-            )}
-
-            <div className="flex items-center justify-between border-t border-white/5 px-8 py-5 mt-auto">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2.5 text-[0.8125rem] font-bold text-white/90 group-hover:text-white transition-colors">
-                  <div className="w-9 h-9 rounded-full bg-white text-black flex items-center justify-center shadow-lg shadow-white/10 group-hover:scale-105 transition-transform">
-                    <Play size={14} fill="currentColor" />
-                  </div>
-                  <span className="group-hover:translate-x-0.5 transition-transform">Listen</span>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    router.push(`/models/${module.slug}/path`);
-                  }}
-                  className="flex items-center gap-2.5 text-[0.8125rem] font-bold text-[#333] hover:text-white transition-all"
-                >
-                  <div className="w-9 h-9 rounded-full bg-white/10 text-white flex items-center justify-center group-hover:bg-white/15 transition-colors">
-                    <Network size={14} />
-                  </div>
-                  <span>Path</span>
-                </button>
-              </div>
-              <div className="w-9 h-9 rounded-full border border-white/5 flex items-center justify-center group-hover:border-white/20 group-hover:bg-white/5 transition-all">
-                <ArrowRight size={16} className="text-[#222] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-              </div>
-            </div>
+            <ModuleCard module={module} />
           </motion.div>
         ))}
       </div>
