@@ -19,39 +19,68 @@ const CustomNode = ({ data }: NodeProps) => (
 
 const nodeTypes = { custom: CustomNode };
 
-const GraphPreview = () => {
-  const nodes = useMemo(() => modules.map((m, i) => ({
-    id: m.slug,
-    type: 'custom',
-    position: { x: Math.cos(i * 2 * Math.PI / modules.length) * 180 + 200, y: Math.sin(i * 2 * Math.PI / modules.length) * 180 + 130 },
-    data: { label: m.title.split(' ').slice(0, 2).join(' ') }
-  })), []);
-
-  const edges = useMemo(() => {
-    const edgeList = [];
-    for (let i = 0; i < modules.length; i++) {
-      edgeList.push({
-        id: `e${i}-${(i + 1) % modules.length}`,
-        source: modules[i].slug,
-        target: modules[(i + 1) % modules.length].slug,
-        animated: true,
-        style: { stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1.5 }
-      });
+const MarketingFlow = () => {
+  const nodes = useMemo(() => [
+    {
+      id: '1',
+      type: 'custom',
+      position: { x: 30, y: 60 },
+      data: { label: 'First Principles' }
+    },
+    {
+      id: '2',
+      type: 'custom',
+      position: { x: 200, y: 20 },
+      data: { label: 'Systems Thinking' }
+    },
+    {
+      id: '3',
+      type: 'custom',
+      position: { x: 180, y: 140 },
+      data: { label: 'Inversion' }
+    },
+    {
+      id: '4',
+      type: 'custom',
+      position: { x: 380, y: 50 },
+      data: { label: 'Second-Order Thinking' }
+    },
+    {
+      id: '5',
+      type: 'custom',
+      position: { x: 370, y: 160 },
+      data: { label: 'Margin of Safety' }
+    },
+    {
+      id: '6',
+      type: 'custom',
+      position: { x: 550, y: 100 },
+      data: { label: 'Opportunity Cost' }
     }
-    for (let i = 0; i < modules.length - 1; i++) {
-      edgeList.push({
-        id: `e${i}-${i + 2}`,
-        source: modules[i].slug,
-        target: modules[i + 1].slug,
-        style: { stroke: 'rgba(255,255,255,0.08)', strokeWidth: 1 }
-      });
-    }
-    return edgeList;
-  }, []);
+  ], []);
 
-  const styledNodes = useMemo(() => nodes.map(n => ({
+  const edges = useMemo(() => [
+    { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: 'rgba(251,191,36,0.4)', strokeWidth: 2 } },
+    { id: 'e1-3', source: '1', target: '3', animated: true, style: { stroke: 'rgba(251,191,36,0.3)', strokeWidth: 1.5 } },
+    { id: 'e2-4', source: '2', target: '4', animated: true, style: { stroke: 'rgba(251,191,36,0.5)', strokeWidth: 2 } },
+    { id: 'e3-5', source: '3', target: '5', animated: true, style: { stroke: 'rgba(251,191,36,0.3)', strokeWidth: 1.5 } },
+    { id: 'e4-5', source: '4', target: '5', animated: true, style: { stroke: 'rgba(251,191,36,0.4)', strokeWidth: 2 } },
+    { id: 'e4-6', source: '4', target: '6', animated: true, style: { stroke: 'rgba(251,191,36,0.5)', strokeWidth: 2 } },
+    { id: 'e5-6', source: '5', target: '6', animated: true, style: { stroke: 'rgba(251,191,36,0.3)', strokeWidth: 1.5 } },
+  ], []);
+
+  const styledNodes = useMemo(() => nodes.map((n, i) => ({
     ...n,
-    style: { background: '#111', color: '#fff', border: '1px solid #333', borderRadius: '10px', padding: '8px 12px', fontSize: '11px', fontWeight: 700 }
+    style: {
+      background: i === 0 ? 'linear-gradient(135deg, rgba(251,191,36,0.15), rgba(251,191,36,0.05))' : 'rgba(255,255,255,0.03)',
+      color: '#fff',
+      border: i === 0 ? '1px solid rgba(251,191,36,0.6)' : '1px solid rgba(255,255,255,0.1)',
+      borderRadius: '12px',
+      padding: '10px 14px',
+      fontSize: '11px',
+      fontWeight: 700,
+      boxShadow: i === 0 ? '0 0 20px rgba(251,191,36,0.1)' : 'none'
+    }
   })), [nodes]);
 
   return (
@@ -62,12 +91,15 @@ const GraphPreview = () => {
           edges={edges}
           nodeTypes={nodeTypes}
           proOptions={{ hideAttribution: true }}
-          defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.85 }}
           minZoom={0.5}
           maxZoom={1.5}
           fitView
+          panOnDrag={false}
+          zoomOnScroll={false}
+          zoomOnPinch={false}
         >
-          <Background color="#1a1a1a" gap={20} size={0.5} />
+          <Background color="#1a1a1a" gap={24} size={0.5} />
         </ReactFlow>
       </ReactFlowProvider>
     </div>
@@ -138,13 +170,8 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showAllCategories, setShowAllCategories] = useState(false);
   const itemsPerPage = 6;
   const router = useRouter();
-
-  const categories = useMemo(() => Array.from(new Set(modules.map(m => m.category))), []);
-  const displayedCategories = showAllCategories ? categories : categories.slice(0, 3);
 
   const calculateTime = (content: string) => {
     const words = content.split(/\s+/).length;
@@ -158,21 +185,16 @@ export default function ProductsPage() {
 
   const filteredModules = useMemo(() => {
     let validModules = modules.filter(m => m.slug && m.title && m.description);
-    
-    if (selectedCategory) {
-      validModules = validModules.filter(m => m.category === selectedCategory);
-    }
-    
+
     if (searchQuery) {
       validModules = validModules.filter(m =>
         m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.category.toLowerCase().includes(searchQuery.toLowerCase())
+        m.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    
+
     return validModules;
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery]);
 
   const totalPages = Math.ceil(filteredModules.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -181,29 +203,28 @@ export default function ProductsPage() {
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16 min-h-[90vh]">
       {/* Knowledge Graph Banner */}
-      <div className="grid grid-cols-[1fr_1fr] h-[320px] bg-gradient-to-br from-[#0a0a0c] via-[#111] to-[#0a0a0c] rounded-3xl mb-8 border border-white/10 overflow-hidden relative">
-        <div className="p-10 flex flex-col justify-center relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] mb-4 w-fit">
-            <Sparkles size={12} className="text-[#fbbf24]" />
-            Pro Feature
-          </div>
-          <h2 className="text-3xl font-black mb-3 text-white leading-tight">
-            Your Second<br/>Brain Awaits
-          </h2>
-          <p className="text-[0.9375rem] text-[#888] mb-6 leading-relaxed max-w-[400px]">
-            Visualize connections between mental models. See your knowledge graph grow in real-time with interactive nodes and smart paths.
-          </p>
-          <div className="flex items-center gap-4">
+      <div className="h-[320px] bg-[#0a0a0c] rounded-3xl mb-8 border border-white/10 overflow-hidden relative">
+        <div className="absolute inset-0">
+          <MarketingFlow />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/90 to-transparent z-10" />
+        <div className="relative z-20 h-full flex items-center">
+          <div className="p-10 max-w-[420px]">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] mb-4 w-fit">
+              <Sparkles size={12} className="text-[#fbbf24]" />
+              Premium Feature
+            </div>
+            <h2 className="text-2xl font-black mb-2 text-white leading-tight">
+              Your Second Brain Awaits
+            </h2>
+            <p className="text-[0.8125rem] text-[#666] mb-5 leading-relaxed max-w-[350px]">
+              Visualize and grow your knowledge graph in real-time.
+            </p>
             <Link href="/#pricing" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-xl no-underline font-bold text-[0.875rem] hover:bg-white/90 hover:scale-[1.02] transition-all duration-200 shadow-lg shadow-white/20">
               <Sparkles size={16} />
-              Upgrade to Pro
+              See It In Action
             </Link>
-            <span className="text-[0.75rem] text-[#555]">$9/mo • Cancel anytime</span>
           </div>
-        </div>
-        <div className="relative overflow-hidden flex items-center">
-          <div className="absolute inset-0 bg-gradient-to-l from-transparent to-[#0a0a0c] z-10" />
-          <GraphPreview />
         </div>
       </div>
 
@@ -250,17 +271,11 @@ export default function ProductsPage() {
                 </Link>
                 </motion.div>
               ))}
-            </div>
-          </section>
+      </div>
+      </section>
         )}
 
-      <div className="flex items-center gap-4 mb-12">
-        <div className="flex-1 h-px bg-white/5" />
-        <span className="text-[0.75rem] font-bold text-[#444] uppercase tracking-[0.05em]">Explore All Frameworks</span>
-        <div className="flex-1 h-px bg-white/5" />
-      </div>
-
-      <div className="flex items-center gap-4 mb-12">
+      <div className="mb-12">
         <div className="relative flex-1 max-w-[400px]">
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#444]" />
           <input
@@ -271,114 +286,9 @@ export default function ProductsPage() {
             className="w-full py-3.5 pl-11 pr-4 bg-[#080808] border border-white/5 rounded-xl text-white text-[0.875rem] outline-none focus:border-white/15 transition-colors"
           />
         </div>
-
-        <div className="flex items-center gap-2 flex-1 justify-end flex-wrap">
-          {displayedCategories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => {
-                setSelectedCategory(selectedCategory === cat ? null : cat);
-                if (selectedCategory === cat) setSearchQuery('');
-                setCurrentPage(1);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] transition-all duration-200 whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#0a0a0a] border border-white/5 text-[#555] hover:bg-[#111] hover:border-white/10 hover:text-[#888]'}`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full inline-block mr-1.5 align-middle" style={{ background: `var(--c-${cat})` }} />
-              {cat}
-            </button>
-          ))}
-          {categories.length > 3 && (
-            <button
-              onClick={() => setShowAllCategories(!showAllCategories)}
-              className="px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] bg-[#0a0a0a] border border-white/5 text-[#444] hover:bg-[#111] hover:border-white/10 transition-all duration-200"
-            >
-              {showAllCategories ? 'Less' : `More (${categories.length - 3})`}
-            </button>
-          )}
-        </div>
       </div>
 
-      {showAllCategories && (
-        <div className="flex flex-wrap gap-2 mb-12 -mt-8">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => {
-                setSelectedCategory(selectedCategory === cat ? null : cat);
-                if (selectedCategory === cat) setSearchQuery('');
-                setCurrentPage(1);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] transition-all duration-200 whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#0a0a0a] border border-white/5 text-[#555] hover:bg-[#111] hover:border-white/10 hover:text-[#888]'}`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full inline-block mr-1.5 align-middle" style={{ background: `var(--c-${cat})` }} />
-              {cat}
-            </button>
-          ))}
-        </div>
-      )}
 
-           {/* Value Proposition - Marketing Categories */}
-           <div className="flex flex-col gap-4 flex-1">
-             <div className="flex items-center gap-2">
-               {displayedCategories.map((cat) => (
-                 <button
-                   key={cat}
-                   onClick={() => {
-                     setSelectedCategory(selectedCategory === cat ? null : cat);
-                     if (selectedCategory === cat) setSearchQuery('');
-                     setCurrentPage(1);
-                   }}
-                   className={`group px-4 py-2 rounded-xl text-[0.75rem] font-bold uppercase tracking-[0.05em] transition-all duration-300 hover:scale-[1.05] ${selectedCategory === cat ? 'bg-white text-black shadow-xl shadow-white/20' : 'bg-[#0a0a0a] border border-white/5 text-[#555] hover:bg-[#111] hover:border-white/10 hover:text-white'}`}
-                 >
-                   <span className="w-2 h-2 rounded-full inline-block mr-2 align-middle group-hover:scale-125 transition-transform" style={{ background: `var(--c-${cat})` }} />
-                   {cat.replace('-', ' ')}
-                 </button>
-               ))}
-               {categories.length > 3 && (
-                 <button
-                   onClick={() => setShowAllCategories(!showAllCategories)}
-                   className="px-4 py-2 rounded-xl text-[0.75rem] font-bold uppercase tracking-[0.05em] bg-[#0a0a0a] border border-dashed border-white/10 text-[#444] hover:bg-[#111] hover:border-white/20 hover:text-[#666] transition-all duration-300"
-                 >
-                   {showAllCategories ? 'Show Less' : `Explore All ${categories.length} Domains`}
-                 </button>
-               )}
-             </div>
-             
-             {/* Benefit Hint */}
-             <div className="bg-gradient-to-r from-[#0a0a0a] to-transparent rounded-xl p-4 border border-white/5">
-               <div className="flex items-center gap-3">
-                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] flex items-center justify-center">
-                   <Sparkles size={14} className="text-white" />
-                 </div>
-                 <p className="text-[0.8125rem] text-[#888]">
-                   Master <span className="text-white font-semibold">{categories.length} thinking domains</span> to unlock advanced mental models. 
-                   <Link href="/#pricing" className="text-white font-semibold hover:underline ml-1">Upgrade to Pro →</Link>
-                 </p>
-               </div>
-             </div>
-           </div>
-        </div>
-
-        {/* All Categories - Shown when More is clicked */}
-        {showAllCategories && (
-          <div className="flex flex-wrap gap-2 mt-4">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => {
-                  setSelectedCategory(selectedCategory === cat ? null : cat);
-                  if (selectedCategory === cat) setSearchQuery('');
-                  setCurrentPage(1);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-[0.6875rem] font-bold uppercase tracking-[0.05em] transition-all duration-200 whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#0a0a0a] border border-white/5 text-[#555] hover:bg-[#111] hover:border-white/10 hover:text-[#888]'}`}
-              >
-                <span className="w-1.5 h-1.5 rounded-full inline-block mr-1.5 align-middle" style={{ background: `var(--c-${cat})` }} />
-                {cat}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
 
       <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
         {paginatedModules.map((module, idx) => (
