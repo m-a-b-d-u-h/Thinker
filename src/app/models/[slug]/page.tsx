@@ -297,9 +297,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     <div className="max-w-[1100px] mx-auto px-4 pb-[160px] pt-8">
       <div className="grid grid-cols-[1fr_320px] gap-8 items-start">
         <article className="max-w-[65ch] mx-auto">
-          <header className="mb-8">
-            <span className="badge" style={{ background: `var(--c-${module.category})`, color: '#000', marginBottom: '1.5rem' }}>{module.category}</span>
-          </header>
           {contentBlocks.map((block, idx) => (
             <HighlightBlock key={idx} block={block} />
           ))}

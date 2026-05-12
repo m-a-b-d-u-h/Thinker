@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Play, Network, Bookmark } from "lucide-react";
+import { Play, Network, Bookmark, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ReactFlow, { Background, Handle, Position, ReactFlowProvider, useReactFlow } from "reactflow";
 import "reactflow/dist/style.css";
@@ -12,9 +12,16 @@ interface ModuleData {
   title: string;
   description: string;
   category: string;
+  content: string;
   nodes?: any[];
   edges?: any[];
 }
+
+const calculateDuration = (content: string): string => {
+  const words = content.split(/\s+/).length;
+  const totalMinutes = Math.max(1, Math.ceil(words / 2.5 / 60));
+  return `${totalMinutes} minutes`;
+};
 
 const CustomNode = ({ data }: any) => (
   <div className="bg-[#0d0d0d]/90 text-white border border-[#1a1a1a] rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap backdrop-blur-sm">
@@ -125,14 +132,20 @@ export function ModuleCard({ module }: { module: ModuleData }) {
             <span>Path</span>
           </button>
         </div>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-          className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition-all"
-        >
-          <Bookmark size={14} />
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="text-[0.625rem] text-[#444]">
+            <Clock size={10} className="inline mr-1" />
+            {calculateDuration(module.content)}
+          </span>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition-all"
+          >
+            <Bookmark size={14} />
+          </button>
+        </div>
       </div>
     </div>
   );
