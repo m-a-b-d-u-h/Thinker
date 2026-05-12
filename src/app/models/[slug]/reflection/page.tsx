@@ -14,7 +14,7 @@ export default function ReflectionPage({ params }: { params: Promise<{ slug: str
     <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16">
       <div className="max-w-[700px] mx-auto">
         <header className="mb-12">
-          <span className="badge" style={{ background: 'var(--c-mindset)', color: '#000', marginBottom: '1rem' }}>{module.category}</span>
+          <span className="badge" style={{ background: 'var(--color-c-mindset)', color: '#000', marginBottom: '1rem' }}>{module.category}</span>
           <h1 className="text-4xl font-bold text-white mt-4 mb-2">
             Reflection: {module.title}
           </h1>

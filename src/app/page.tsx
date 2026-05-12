@@ -174,7 +174,7 @@ export default function Home() {
                 <Link href={`/models/${module.slug}`} className="group flex flex-col bg-[#080808] border border-white/5 rounded-[32px] p-8 transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/60 text-white no-underline h-full">
                   <div>
                     <div className="flex items-center gap-3 mb-4">
-                      <span className="badge" style={{ background: `var(--c-${module.category})`, color: '#000', fontSize: '0.625rem', fontWeight: 800 }}>{module.category}</span>
+                      <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000', fontSize: '0.625rem', fontWeight: 800 }}>{module.category}</span>
                       <div className="flex items-center gap-1.5 text-[#333]">
                         <Sparkles size={12} />
                         <span className="text-[0.625rem] font-bold uppercase tracking-wider">Theory Engine</span>
@@ -227,10 +227,10 @@ export default function Home() {
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-5">
             {[
-              { name: 'Mindset', desc: 'Develop powerful thinking frameworks', icon: Network, color: 'var(--c-mindset)', count: 12 },
-              { name: 'Clarity', desc: 'Cut through complexity with precision', icon: Sparkles, color: 'var(--c-clarity)', count: 8 },
-              { name: 'Habit', desc: 'Build systems that stick', icon: ShieldCheck, color: 'var(--c-habit)', count: 10 },
-              { name: 'Action', desc: 'Convert knowledge into results', icon: Zap, color: 'var(--c-action)', count: 15 },
+              { name: 'Mindset', desc: 'Develop powerful thinking frameworks', icon: Network, color: 'var(--color-c-mindset)', count: 12 },
+              { name: 'Clarity', desc: 'Cut through complexity with precision', icon: Sparkles, color: 'var(--color-c-clarity)', count: 8 },
+              { name: 'Habit', desc: 'Build systems that stick', icon: ShieldCheck, color: 'var(--color-c-habit)', count: 10 },
+              { name: 'Action', desc: 'Convert knowledge into results', icon: Zap, color: 'var(--color-c-action)', count: 15 },
               { name: 'Strategy', desc: 'Plan for long-term success', icon: Crown, color: '#f472b6', count: 9 },
               { name: 'Decision', desc: 'Make better choices faster', icon: CheckCircle2, color: '#38bdf8', count: 11 },
               { name: 'Communication', desc: 'Express ideas effectively', icon: Clock, color: '#a3e635', count: 7 },

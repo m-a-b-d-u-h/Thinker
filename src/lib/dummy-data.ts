@@ -1187,27 +1187,111 @@ export interface Reflection {
   title: string;
   content: string;
   moduleSlug: string;
+  moduleTitle: string;
   timestamp: number;
 }
 
 export const reflections: Reflection[] = [
-  { id: "r1", title: "My 5-minute rule experience", content: "Tried the 5-minute rule today...", moduleSlug: "stop-waiting", timestamp: Date.now() - 86400000 * 2 },
-  { id: "r2", title: "Decision paralysis insights", content: "Realized I've been waiting too long...", moduleSlug: "cost-of-not-deciding", timestamp: Date.now() - 86400000 * 1 },
-  { id: "r3", title: "Habit stacking works", content: "Successfully stacked my reading habit...", moduleSlug: "building-habits", timestamp: Date.now() - 86400000 * 3 },
+  {
+    id: "r1",
+    title: "My 5-minute rule experience",
+    content: "Tried the 5-minute rule today on my report. I set a timer for 5 minutes and told myself I could stop after. Result: I worked for 45 minutes straight. The hardest part really is just starting. Going to apply this to my morning routine tomorrow.",
+    moduleSlug: "stop-waiting",
+    moduleTitle: "Stop waiting to feel ready",
+    timestamp: Date.now() - 86400000 * 2,
+  },
+  {
+    id: "r2",
+    title: "Decision paralysis insights",
+    content: "Realized I've been stuck on the career decision for 3 months. After reading this module, I set a 24-hour deadline and made the call. The relief is immediate. Even if it's wrong, I can course-correct. Indecision was costing me more than any wrong choice would.",
+    moduleSlug: "cost-of-not-deciding",
+    moduleTitle: "The cost of not deciding",
+    timestamp: Date.now() - 86400000 * 1,
+  },
+  {
+    id: "r3",
+    title: "Habit stacking works",
+    content: "Successfully stacked reading 5 pages after my morning coffee for 7 days straight. The key was making it tiny - 5 pages feels almost too easy, but I always end up reading more. Going to add a second stack for evening: after brushing teeth, I'll write 3 sentences in my journal.",
+    moduleSlug: "building-habits",
+    moduleTitle: "Building habits that stick",
+    timestamp: Date.now() - 86400000 * 3,
+  },
+  {
+    id: "r4",
+    title: "Deep work is harder than I thought",
+    content: "Tried the 90-minute block today. First 20 minutes were pure resistance. But around minute 25, something clicked. Got more done in that block than in 3 hours of distracted work. Need to find a way to silence notifications completely.",
+    moduleSlug: "deep-work",
+    moduleTitle: "Deep Work Mastery",
+    timestamp: Date.now() - 86400000 * 5,
+  },
+  {
+    id: "r5",
+    title: "80/20 on my task list",
+    content: "Applied the Pareto Principle to my to-do list. Identified the 20% of tasks that would drive 80% of results. Deleted or delegated the rest. Freed up about 4 hours per week. Should have done this years ago.",
+    moduleSlug: "pareto-principle",
+    moduleTitle: "The 80/20 Rule",
+    timestamp: Date.now() - 86400000 * 4,
+  },
 ];
 
 export interface Highlight {
   id: string;
   text: string;
+  note: string;
   moduleSlug: string;
+  moduleTitle: string;
   timestamp: number;
 }
 
 export const highlights: Highlight[] = [
-  { id: "h1", text: "Motivation follows action, not the other way around", moduleSlug: "stop-waiting", timestamp: Date.now() - 86400000 * 2 },
-  { id: "h2", text: "Indecision is actually a decision for stagnation", moduleSlug: "cost-of-not-deciding", timestamp: Date.now() - 86400000 * 1 },
-  { id: "h3", text: "Habit stacking formula: After [Current], I will [New]", moduleSlug: "building-habits", timestamp: Date.now() - 86400000 * 3 },
-  { id: "h4", text: "The Goldilocks Rule: tasks should be just right", moduleSlug: "building-habits", timestamp: Date.now() - 86400000 * 4 },
+  {
+    id: "h1",
+    text: "Motivation follows action, not the other way around",
+    note: "This changes everything. Stop waiting for motivation - just do 5 minutes.",
+    moduleSlug: "stop-waiting",
+    moduleTitle: "Stop waiting to feel ready",
+    timestamp: Date.now() - 86400000 * 2,
+  },
+  {
+    id: "h2",
+    text: "Indecision is actually a decision for stagnation",
+    note: "The most powerful reframe. Not choosing IS a choice - the worst one.",
+    moduleSlug: "cost-of-not-deciding",
+    moduleTitle: "The cost of not deciding",
+    timestamp: Date.now() - 86400000 * 1,
+  },
+  {
+    id: "h3",
+    text: "Habit stacking formula: After [Current], I will [New]",
+    note: "Using this for my reading habit. After coffee → read 5 pages.",
+    moduleSlug: "building-habits",
+    moduleTitle: "Building habits that stick",
+    timestamp: Date.now() - 86400000 * 3,
+  },
+  {
+    id: "h4",
+    text: "The Goldilocks Rule: tasks should be just right",
+    note: "Not too hard, not too easy. The sweet spot is where growth happens.",
+    moduleSlug: "building-habits",
+    moduleTitle: "Building habits that stick",
+    timestamp: Date.now() - 86400000 * 4,
+  },
+  {
+    id: "h5",
+    text: "Deep Work is the ability to focus without distraction on a cognitively demanding task",
+    note: "This is what I'm building toward. 90-minute blocks with zero interruptions.",
+    moduleSlug: "deep-work",
+    moduleTitle: "Deep Work Mastery",
+    timestamp: Date.now() - 86400000 * 2,
+  },
+  {
+    id: "h6",
+    text: "Inversion: Solve problems backward by asking how you would fail",
+    note: "Great for decision-making. Ask 'what would guarantee failure?' then avoid those things.",
+    moduleSlug: "mental-models",
+    moduleTitle: "Mental Models 101",
+    timestamp: Date.now() - 86400000 * 5,
+  },
 ];
 
 export interface SavedItem {

@@ -187,7 +187,7 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-3">
               {modules.slice(0, 3).map((m) => (
                 <Link key={m.slug} href={`/models/${m.slug}`} className="group bg-[#0d0d0d] rounded-xl px-6 py-5 border border-white/5 no-underline flex items-center gap-4 hover:bg-[#111] hover:border-white/10 transition-all">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: `var(--c-${m.category})` }} />
+                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: `var(--color-c-${m.category})` }} />
                   <div className="flex-1">
                     <div className="font-semibold mb-1">{m.title}</div>
                     <div className="text-[0.8125rem] text-[#666]">{m.description}</div>

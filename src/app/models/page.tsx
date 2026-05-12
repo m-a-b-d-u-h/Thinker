@@ -205,7 +205,7 @@ export default function ProductsPage() {
                 >
                 <Link href={`/models/${module.slug}`} className="group flex flex-col bg-[#080808] border border-white/5 rounded-2xl p-6 no-underline transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-1">
                   <div className="flex items-center gap-2 mb-4">
-                    <span className="badge" style={{ background: `var(--c-${module.category})`, color: '#000', fontSize: '0.625rem', fontWeight: 800 }}>{module.category}</span>
+                    <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
                   </div>
                   <h3 className="text-lg font-bold mb-2 text-white">{module.title}</h3>
                   <p className="text-[0.875rem] text-[#666] leading-relaxed mb-4">{module.description}</p>
