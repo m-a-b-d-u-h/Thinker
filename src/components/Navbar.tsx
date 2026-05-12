@@ -9,8 +9,7 @@ import {
   Library,
   Highlighter,
   BookOpen,
-  User,
-  Flame
+  User
 } from "lucide-react";
 
 export default function Navbar() {
@@ -19,7 +18,7 @@ export default function Navbar() {
   const links = [
     { name: "Explore", href: "/models", icon: Compass },
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Collection", href: "/collection", icon: Library },
+    { name: "Favorites", href: "/favorites", icon: Library },
     { name: "Highlight", href: "/highlight", icon: Highlighter },
     { name: "Reflection", href: "/reflection", icon: BookOpen },
   ];
@@ -27,9 +26,8 @@ export default function Navbar() {
   return (
     <nav className="w-full h-16 bg-[#020202] border-b border-white/3 fixed inset-x-0 z-50 flex items-center justify-between px-8 backdrop-blur">
       <div className="flex-1">
-        <Link href="/" className="flex items-center gap-2 text-2xl font-black tracking-tighter text-white no-underline">
-          <Flame size={18} className="text-ff5f00" />
-          <span>1SECTION</span>
+        <Link href="/" className="flex items-center gap-2 no-underline">
+          <img src="/1section.png" alt="1SECTION" className="h-7 w-auto" />
         </Link>
       </div>
 

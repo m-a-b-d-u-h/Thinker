@@ -20,67 +20,77 @@ const CustomNode = ({ data }: NodeProps) => (
 
 const nodeTypes = { custom: CustomNode };
 
+const MarketingNode = ({ data }: NodeProps) => (
+  <div>
+    <Handle type="target" position={Position.Top} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
+    {data.label}
+    <Handle type="source" position={Position.Bottom} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
+  </div>
+);
+
+const marketingNodeTypes = { custom: MarketingNode };
+
 const MarketingFlow = () => {
   const nodes = useMemo(() => [
     {
       id: '1',
       type: 'custom',
-      position: { x: 30, y: 60 },
+      position: { x: 20, y: 70 },
       data: { label: 'First Principles' }
     },
     {
       id: '2',
       type: 'custom',
-      position: { x: 200, y: 20 },
+      position: { x: 170, y: 25 },
       data: { label: 'Systems Thinking' }
     },
     {
       id: '3',
       type: 'custom',
-      position: { x: 180, y: 140 },
+      position: { x: 155, y: 120 },
       data: { label: 'Inversion' }
     },
     {
       id: '4',
       type: 'custom',
-      position: { x: 380, y: 50 },
-      data: { label: 'Second-Order Thinking' }
+      position: { x: 320, y: 45 },
+      data: { label: 'Second-Order' }
     },
     {
       id: '5',
       type: 'custom',
-      position: { x: 370, y: 160 },
+      position: { x: 305, y: 140 },
       data: { label: 'Margin of Safety' }
     },
     {
       id: '6',
       type: 'custom',
-      position: { x: 550, y: 100 },
+      position: { x: 470, y: 90 },
       data: { label: 'Opportunity Cost' }
     }
   ], []);
 
   const edges = useMemo(() => [
-    { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: 'rgba(251,191,36,0.4)', strokeWidth: 2 } },
-    { id: 'e1-3', source: '1', target: '3', animated: true, style: { stroke: 'rgba(251,191,36,0.3)', strokeWidth: 1.5 } },
-    { id: 'e2-4', source: '2', target: '4', animated: true, style: { stroke: 'rgba(251,191,36,0.5)', strokeWidth: 2 } },
-    { id: 'e3-5', source: '3', target: '5', animated: true, style: { stroke: 'rgba(251,191,36,0.3)', strokeWidth: 1.5 } },
-    { id: 'e4-5', source: '4', target: '5', animated: true, style: { stroke: 'rgba(251,191,36,0.4)', strokeWidth: 2 } },
-    { id: 'e4-6', source: '4', target: '6', animated: true, style: { stroke: 'rgba(251,191,36,0.5)', strokeWidth: 2 } },
-    { id: 'e5-6', source: '5', target: '6', animated: true, style: { stroke: 'rgba(251,191,36,0.3)', strokeWidth: 1.5 } },
+    { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: 'rgba(251,191,36,0.35)', strokeWidth: 1.5 } },
+    { id: 'e1-3', source: '1', target: '3', animated: true, style: { stroke: 'rgba(251,191,36,0.25)', strokeWidth: 1 } },
+    { id: 'e2-4', source: '2', target: '4', animated: true, style: { stroke: 'rgba(251,191,36,0.4)', strokeWidth: 1.5 } },
+    { id: 'e3-5', source: '3', target: '5', animated: true, style: { stroke: 'rgba(251,191,36,0.25)', strokeWidth: 1 } },
+    { id: 'e4-5', source: '4', target: '5', animated: true, style: { stroke: 'rgba(251,191,36,0.35)', strokeWidth: 1.5 } },
+    { id: 'e4-6', source: '4', target: '6', animated: true, style: { stroke: 'rgba(251,191,36,0.4)', strokeWidth: 1.5 } },
+    { id: 'e5-6', source: '5', target: '6', animated: true, style: { stroke: 'rgba(251,191,36,0.3)', strokeWidth: 1 } },
   ], []);
 
   const styledNodes = useMemo(() => nodes.map((n, i) => ({
     ...n,
     style: {
-      background: i === 0 ? 'linear-gradient(135deg, rgba(251,191,36,0.15), rgba(251,191,36,0.05))' : 'rgba(255,255,255,0.03)',
-      color: '#fff',
-      border: i === 0 ? '1px solid rgba(251,191,36,0.6)' : '1px solid rgba(255,255,255,0.1)',
-      borderRadius: '12px',
-      padding: '10px 14px',
+      background: i === 0 ? 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04))' : 'transparent',
+      color: i === 0 ? '#fbbf24' : 'rgba(255,255,255,0.7)',
+      border: i === 0 ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(255,255,255,0.08)',
+      borderRadius: '8px',
+      padding: i === 0 ? '8px 12px' : '6px 10px',
       fontSize: '11px',
       fontWeight: 700,
-      boxShadow: i === 0 ? '0 0 20px rgba(251,191,36,0.1)' : 'none'
+      boxShadow: i === 0 ? '0 0 24px rgba(251,191,36,0.08)' : 'none'
     }
   })), [nodes]);
 
@@ -90,9 +100,9 @@ const MarketingFlow = () => {
         <ReactFlow
           nodes={styledNodes}
           edges={edges}
-          nodeTypes={nodeTypes}
+          nodeTypes={marketingNodeTypes}
           proOptions={{ hideAttribution: true }}
-          defaultViewport={{ x: 0, y: 0, zoom: 0.85 }}
+          defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
           minZoom={0.5}
           maxZoom={1.5}
           fitView
@@ -145,7 +155,7 @@ export default function ProductsPage() {
         <div className="absolute inset-0">
           <MarketingFlow />
         </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/90 to-transparent z-10" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/40 to-transparent z-10" />
         <div className="relative z-20 h-full flex items-center">
           <div className="p-10 max-w-[420px]">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] mb-4 w-fit">

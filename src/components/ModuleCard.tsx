@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { Play, Network } from "lucide-react";
+import { Play, Network, Bookmark } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ReactFlow, { Background, Handle, Position, ReactFlowProvider, useReactFlow } from "reactflow";
 import "reactflow/dist/style.css";
@@ -17,7 +17,7 @@ interface ModuleData {
 }
 
 const CustomNode = ({ data }: any) => (
-  <div className="bg-[#0d0d0d]/90 text-white border border-[#1a1a1a] rounded-lg px-2 py-1.5 text-[10px] font-bold text-center whitespace-nowrap backdrop-blur-sm">
+  <div className="bg-[#0d0d0d]/90 text-white border border-[#1a1a1a] rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap backdrop-blur-sm">
     <Handle type="target" position={Position.Top} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
     {data.label}
     <Handle type="source" position={Position.Bottom} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
@@ -53,18 +53,7 @@ const FlowAutoFit = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
 const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
   const styledNodes = useMemo(() => nodes.map(n => ({
     ...n,
-    style: {
-      background: '#0d0d0d',
-      color: '#fff',
-      border: '1px solid #1a1a1a',
-      borderRadius: '8px',
-      fontSize: '10px',
-      fontWeight: 700,
-      padding: '6px 10px',
-      width: 'auto',
-      minWidth: '80px',
-      textAlign: 'center' as const
-    }
+    type: 'custom'
   })), [nodes]);
 
   const styledEdges = useMemo(() => edges.map(e => ({
@@ -101,7 +90,7 @@ export function ModuleCard({ module }: { module: ModuleData }) {
       <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#080808] via-[#080808]/80 to-transparent z-10" />
 
       {/* Header - Title, Category */}
-      <div className="relative z-20 p-6 pb-2">
+      <div className="relative z-20 p-8 pb-3">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-lg font-black text-white leading-[1.25] line-clamp-2 flex-1">{module.title}</h2>
           <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10 mt-1">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
@@ -113,33 +102,37 @@ export function ModuleCard({ module }: { module: ModuleData }) {
       <div className="flex-1 relative z-10 min-h-[200px]" />
 
       {/* Overlay gradient bottom */}
-      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#080808] via-[#080808]/90 to-transparent z-10" />
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#080808] via-[#080808]/90 to-transparent z-10" />
 
       {/* Footer - Buttons */}
-      <div className="relative z-20 flex items-center justify-between border-t border-white/5 px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-[0.75rem] font-bold text-white/80 group-hover:text-white transition-colors">
-            <div className="w-7 h-7 rounded-full bg-white text-black flex items-center justify-center group-hover:scale-105 transition-transform">
-              <Play size={12} fill="currentColor" />
-            </div>
-            <span>Listen</span>
+      <div className="relative z-20 flex items-center justify-between px-8 pb-6 pt-8">
+        <div className="flex items-center gap-2">
+          <div
+            onClick={() => router.push(`/models/${module.slug}`)}
+            className="group/btn flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black text-[0.6875rem] font-bold no-underline cursor-pointer hover:bg-white/90 transition-all"
+          >
+            <Play size={12} fill="currentColor" />
+            <span>Start Learning</span>
           </div>
           <button
             onClick={(e) => {
               e.stopPropagation();
               router.push(`/models/${module.slug}/path`);
             }}
-            className="flex items-center gap-2 text-[0.75rem] font-bold text-[#555] hover:text-white transition-all"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/5 text-white/60 text-[0.6875rem] font-semibold hover:bg-white/10 hover:text-white/80 transition-all"
           >
-            <div className="w-7 h-7 rounded-full bg-white/10 text-white flex items-center justify-center group-hover:bg-white/15 transition-colors">
-              <Network size={12} />
-            </div>
+            <Network size={12} />
             <span>Path</span>
           </button>
         </div>
-        <div className="w-7 h-7 rounded-full border border-white/5 flex items-center justify-center group-hover:border-white/20 group-hover:bg-white/5 transition-all">
-          <Network size={14} className="text-[#333] group-hover:text-white group-hover:translate-x-0.5 transition-all" />
-        </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition-all"
+        >
+          <Bookmark size={14} />
+        </button>
       </div>
     </div>
   );

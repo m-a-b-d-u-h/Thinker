@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Flame } from "lucide-react";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -24,9 +23,7 @@ export default function LoginPage() {
           transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
           className="mb-10"
         >
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#ff5f00] to-[#ff8a00] flex items-center justify-center mx-auto shadow-lg shadow-[#ff5f004d]">
-            <Flame size={40} className="text-white" />
-          </div>
+          <img src="/1section.png" alt="1SECTION" className="w-20 h-20 mx-auto" />
         </motion.div>
 
         <motion.h1
@@ -35,7 +32,7 @@ export default function LoginPage() {
           transition={{ delay: 0.3 }}
           className="text-5xl font-black text-white mb-4 tracking-[-0.04em] leading-none"
         >
-          1SECTION
+          1section
         </motion.h1>
  
         <motion.p
