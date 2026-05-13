@@ -150,28 +150,55 @@ export default function ProductsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16 min-h-[90vh]">
-      {/* Knowledge Graph Banner */}
-      <div className="h-[320px] bg-[#0a0a0c] rounded-3xl mb-8 border border-white/10 overflow-hidden relative">
-        <div className="absolute inset-0">
-          <MarketingFlow />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/40 to-transparent z-10" />
-        <div className="relative z-20 h-full flex items-center">
-          <div className="p-10 max-w-[420px]">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] mb-4 w-fit">
-              <Sparkles size={12} className="text-[#fbbf24]" />
-              Premium Feature
+      {/* Knowledge Graph Banner + Daily Material */}
+      <div className="grid grid-cols-2 gap-5 mb-8">
+        <div className="h-[280px] bg-[#0a0a0c] rounded-3xl border border-white/10 overflow-hidden relative">
+          <div className="absolute inset-0">
+            <MarketingFlow />
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/40 to-transparent z-10" />
+          <div className="relative z-20 h-full flex items-center">
+            <div className="p-8 max-w-[380px]">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] mb-3 w-fit">
+                <Sparkles size={12} className="text-[#fbbf24]" />
+                Premium Feature
+              </div>
+              <h2 className="text-xl font-black mb-2 text-white leading-tight">
+                Your Second Brain Awaits
+              </h2>
+              <p className="text-[0.8125rem] text-[#666] mb-4 leading-relaxed max-w-[300px]">
+                Visualize and grow your knowledge graph in real-time.
+              </p>
+              <Link href="/#pricing" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-xl no-underline font-bold text-[0.8125rem] hover:bg-white/90 hover:scale-[1.02] transition-all duration-200 shadow-lg shadow-white/20">
+                <Sparkles size={14} />
+                See It In Action
+              </Link>
             </div>
-            <h2 className="text-2xl font-black mb-2 text-white leading-tight">
-              Your Second Brain Awaits
-            </h2>
-            <p className="text-[0.8125rem] text-[#666] mb-5 leading-relaxed max-w-[350px]">
-              Visualize and grow your knowledge graph in real-time.
-            </p>
-            <Link href="/#pricing" className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-xl no-underline font-bold text-[0.875rem] hover:bg-white/90 hover:scale-[1.02] transition-all duration-200 shadow-lg shadow-white/20">
-              <Sparkles size={16} />
-              See It In Action
-            </Link>
+          </div>
+        </div>
+
+        <div className="h-[280px] bg-[#0a0a0c] rounded-3xl border border-white/10 overflow-hidden relative">
+          <div className="h-full flex items-center p-8">
+            <div className="w-full">
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] mb-3 w-fit">
+                Daily Material
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2 leading-snug">
+                {modules[0].title}
+              </h3>
+              <p className="text-[0.8125rem] text-[#666] mb-4 leading-relaxed line-clamp-2">
+                {modules[0].description}
+              </p>
+              <div className="flex items-center justify-between">
+                <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10">
+                  {modules[0].category.charAt(0).toUpperCase() + modules[0].category.slice(1).replace(/-/g, ' ')}
+                </span>
+                <Link href={`/models/${modules[0].slug}`} className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-lg no-underline font-bold text-[0.75rem] hover:bg-white/90 transition-all">
+                  <Play size={12} fill="currentColor" />
+                  Start
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </div>
