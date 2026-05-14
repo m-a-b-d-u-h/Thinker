@@ -2,10 +2,11 @@
 
 import { modules } from "@/lib/dummy-data";
 import { notFound } from "next/navigation";
-import React, { useState, useEffect, useMemo, useRef } from "react";
-import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, ChevronLeft } from "lucide-react";
+import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
+import { getModuleProgress, saveModuleProgress } from "@/lib/progress";
 
 export default function ModulePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
@@ -18,6 +19,12 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const [volume, setVolume] = useState(1);
   const [rate, setRate] = useState(1);
   const [showSettings, setShowSettings] = useState(false);
+  const [savedListeningProgress, setSavedListeningProgress] = useState<number | null>(null);
+  const [savedReadingProgress, setSavedReadingProgress] = useState<number | null>(null);
+  const [showResume, setShowResume] = useState(false);
+  const listenSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const readSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const articleRef = useRef<HTMLDivElement>(null);
 
   const module = modules.find((m) => m.slug === slug);
   const synthRef = useRef<SpeechSynthesis | null>(null);
@@ -136,12 +143,125 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   }, []);
 
   useEffect(() => {
+    if (!module) return;
+    const saved = getModuleProgress(module.slug);
+    if (!saved) return;
+    const hasListen = saved.listeningProgress > 0;
+    const hasRead = saved.readingProgress > 0;
+    if (!hasListen && !hasRead) return;
+
+    if (hasListen) {
+      setSavedListeningProgress(saved.listeningProgress);
+      setProgress(saved.listeningProgress);
+      setCurrentCharIndex(saved.currentCharIndex);
+      setRate(saved.audioRate);
+    }
+    if (hasRead) {
+      setSavedReadingProgress(saved.readingProgress);
+      if (saved.scrollPosition > 0) {
+        setTimeout(() => {
+          window.scrollTo({ top: saved.scrollPosition, behavior: "instant" });
+        }, 100);
+      }
+    }
+    setShowResume(true);
+  }, [module]);
+
+  useEffect(() => {
+    if (progress > 0 && isPlaying) {
+      if (listenSaveTimer.current) clearTimeout(listenSaveTimer.current);
+      listenSaveTimer.current = setTimeout(() => {
+        saveModuleProgress(slug, {
+          listeningProgress: progress,
+          currentCharIndex,
+          audioRate: rate,
+        });
+      }, 2000);
+    }
+  }, [progress, isPlaying, slug, currentCharIndex, rate]);
+
+  useEffect(() => {
+    if (!articleRef.current) return;
+    const onScroll = () => {
+      const article = articleRef.current;
+      if (!article) return;
+      const rect = article.getBoundingClientRect();
+      const articleTop = rect.top + window.scrollY;
+      const articleHeight = article.offsetHeight;
+      const scrollY = window.scrollY;
+      const scrolled = Math.max(0, scrollY - articleTop);
+      const pct = Math.min(100, Math.round((scrolled / articleHeight) * 100));
+      if (readSaveTimer.current) clearTimeout(readSaveTimer.current);
+      readSaveTimer.current = setTimeout(() => {
+        saveModuleProgress(slug, {
+          readingProgress: pct,
+          scrollPosition: window.scrollY,
+        });
+      }, 1000);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [slug]);
+
+  const saveOnLeave = useCallback(() => {
+    const data: Record<string, any> = { scrollPosition: window.scrollY };
+    if (progress > 0) {
+      data.listeningProgress = progress;
+      data.currentCharIndex = currentCharIndex;
+      data.audioRate = rate;
+    }
+    const article = articleRef.current;
+    if (article) {
+      const rect = article.getBoundingClientRect();
+      const articleTop = rect.top + window.scrollY;
+      const articleHeight = article.offsetHeight;
+      const scrollY = window.scrollY;
+      const scrolled = Math.max(0, scrollY - articleTop);
+      const pct = Math.min(100, Math.round((scrolled / articleHeight) * 100));
+      data.readingProgress = pct;
+    }
+    saveModuleProgress(slug, data);
+  }, [slug, progress, currentCharIndex, rate]);
+
+  useEffect(() => {
+    window.addEventListener("beforeunload", saveOnLeave);
+    window.addEventListener("pagehide", saveOnLeave);
     return () => {
+      window.removeEventListener("beforeunload", saveOnLeave);
+      window.removeEventListener("pagehide", saveOnLeave);
+      saveOnLeave();
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
     };
-  }, []);
+  }, [saveOnLeave]);
+
+  const handleResumeListening = () => {
+    setShowResume(false);
+    const idx = savedListeningProgress !== null
+      ? Math.floor((savedListeningProgress / 100) * unifiedCleanText.length)
+      : 0;
+    startSpeech(idx, unifiedCleanText, volume, rate, selectedVoice);
+  };
+
+  const handleResumeReading = () => {
+    setShowResume(false);
+    if (savedReadingProgress !== null) {
+      const saved = getModuleProgress(slug);
+      if (saved && saved.scrollPosition > 0) {
+        window.scrollTo({ top: saved.scrollPosition, behavior: "smooth" });
+      }
+    }
+  };
+
+  const handleStartOver = () => {
+    setShowResume(false);
+    setSavedListeningProgress(null);
+    setSavedReadingProgress(null);
+    setProgress(0);
+    setCurrentCharIndex(0);
+    saveModuleProgress(slug, { listeningProgress: 0, readingProgress: 0, currentCharIndex: 0, scrollPosition: 0 });
+  };
 
   const startSpeech = (startIndex: number, text: string, vol: number, spd: number, voiceName: string) => {
     if (!synth) return;
@@ -206,6 +326,11 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   };
 
   if (!module) notFound();
+
+  const recommendations = useMemo(() =>
+    modules.filter(m => m.category === module.category && m.slug !== module.slug).slice(0, 3),
+    [module]
+  );
 
   const getBlockText = (block: any) => {
     return block.segments
@@ -296,7 +421,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   return (
     <div className="max-w-[1100px] mx-auto px-4 pb-[160px] pt-8">
       <div className="grid grid-cols-[1fr_320px] gap-8 items-start">
-        <article className="max-w-[65ch] mx-auto">
+        <article ref={articleRef} className="max-w-[65ch] mx-auto">
           {contentBlocks.map((block, idx) => (
             <HighlightBlock key={idx} block={block} />
           ))}
@@ -319,6 +444,116 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           </nav>
         </div>
       </div>
+
+      {/* What's Next */}
+      {recommendations.length > 0 && (
+        <section className="max-w-[65ch] mx-auto mt-20 mb-8">
+          <h2 className="text-2xl font-black text-white mb-1 tracking-[-0.03em]">
+            What&apos;s Next
+          </h2>
+          <p className="text-[0.875rem] text-[#666] mb-8">
+            More in <span className="text-[#888] font-semibold">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
+          </p>
+          <div className="flex flex-col gap-4">
+            {recommendations.map((rec) => (
+              <Link
+                key={rec.id}
+                href={`/models/${rec.slug}`}
+                className="group flex items-start gap-5 bg-[#080808] border border-white/5 rounded-2xl p-5 no-underline transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-0.5"
+              >
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold text-white mb-1.5 group-hover:text-white/90 transition-colors">
+                    {rec.title}
+                  </h3>
+                  <p className="text-[0.8125rem] text-[#666] leading-relaxed line-clamp-2">
+                    {rec.description}
+                  </p>
+                </div>
+                <div className="shrink-0 flex items-center gap-2 text-[0.75rem] font-semibold text-[#555] group-hover:text-white transition-colors mt-1">
+                  <span>Explore</span>
+                  <ArrowRight size={14} />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Resume Banner */}
+      {showResume && (savedListeningProgress !== null || savedReadingProgress !== null) && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-[65ch] mx-auto mb-8 bg-[#0a0a0a] border border-white/10 rounded-2xl p-6"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <RotateCcw size={16} className="text-[#fbbf24]" />
+            <span className="text-[0.6875rem] font-bold text-[#fbbf24] uppercase tracking-[0.1em]">
+              Resume
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-5">
+            {savedListeningProgress !== null && (
+              <div className="bg-[#080808] border border-white/5 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Play size={14} className="text-[#888]" />
+                  <span className="text-[0.6875rem] font-semibold text-[#888] uppercase tracking-[0.05em]">
+                    Listening
+                  </span>
+                </div>
+                <p className="text-2xl font-black text-white mb-1">
+                  {Math.round(savedListeningProgress)}%
+                </p>
+                <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+                  <div className="h-full bg-white rounded-full" style={{ width: `${savedListeningProgress}%` }} />
+                </div>
+              </div>
+            )}
+            {savedReadingProgress !== null && (
+              <div className="bg-[#080808] border border-white/5 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[0.6875rem] font-semibold text-[#888] uppercase tracking-[0.05em]">
+                    Reading
+                  </span>
+                </div>
+                <p className="text-2xl font-black text-white mb-1">
+                  {Math.round(savedReadingProgress)}%
+                </p>
+                <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+                  <div className="h-full bg-white rounded-full" style={{ width: `${savedReadingProgress}%` }} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {savedListeningProgress !== null && (
+              <button
+                onClick={handleResumeListening}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black rounded-lg font-bold text-[0.8125rem] hover:bg-white/90 transition-all"
+              >
+                <Play size={14} fill="currentColor" />
+                Continue Listening
+              </button>
+            )}
+            {savedReadingProgress !== null && (
+              <button
+                onClick={handleResumeReading}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#111] border border-white/10 text-white rounded-lg font-bold text-[0.8125rem] hover:bg-[#1a1a1a] transition-all"
+              >
+                Continue Reading
+              </button>
+            )}
+            <button
+              onClick={handleStartOver}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-transparent border border-white/10 text-[#666] rounded-lg font-semibold text-[0.8125rem] hover:border-white/20 hover:text-white transition-all"
+            >
+              Start Over
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* TTS Player */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#050505cc] backdrop-blur-[30px] border-t border-[var(--border)] z-[1000] py-6 shadow-2xl shadow-black/50">

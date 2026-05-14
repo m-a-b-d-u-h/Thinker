@@ -1,6 +1,7 @@
 "use client";
 
 import { modules } from "@/lib/dummy-data";
+import { getContinueLearning } from "@/lib/progress";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState, useMemo, useEffect } from "react";
@@ -9,6 +10,17 @@ import { motion } from "framer-motion";
 import { ModuleCard } from "@/components/ModuleCard";
 import ReactFlow, { Background, NodeProps, Handle, Position, useReactFlow, ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
+
+function timeAgo(timestamp: number): string {
+  const diff = Date.now() - timestamp;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 const CustomNode = ({ data }: NodeProps) => (
   <div className="bg-[#111] text-white border border-[#222] rounded-xl px-3 py-2.5 text-xs font-bold text-center min-w-[120px]">
@@ -125,7 +137,26 @@ export default function ProductsPage() {
   const itemsPerPage = 6;
   const router = useRouter();
 
-  const historyModules = modules.slice(0, 3);
+  const [historyModules, setHistoryModules] = useState(modules.slice(0, 3));
+  const [historyProgress, setHistoryProgress] = useState<Record<string, { listening: number; reading: number }>>({});
+
+  useEffect(() => {
+    const saved = getContinueLearning();
+    if (saved.length > 0) {
+      const modulesMap: Record<string, { listening: number; reading: number }> = {};
+      saved.forEach((p) => {
+        modulesMap[p.slug] = { listening: p.listeningProgress, reading: p.readingProgress };
+      });
+      setHistoryProgress(modulesMap);
+
+      const ordered = saved
+        .map((p) => modules.find((m) => m.slug === p.slug))
+        .filter(Boolean) as typeof modules;
+      if (ordered.length > 0) {
+        setHistoryModules(ordered);
+      }
+    }
+  }, []);
 
   const filteredModules = useMemo(() => {
     let validModules = modules.filter(m => m.slug && m.title && m.description);
@@ -236,12 +267,44 @@ export default function ProductsPage() {
                   </div>
                   <h3 className="text-lg font-bold mb-2 text-white">{module.title}</h3>
                   <p className="text-[0.875rem] text-[#666] leading-relaxed mb-4">{module.description}</p>
+                  {historyProgress[module.slug] && (
+                    <div className="mb-4 space-y-2.5">
+                      {historyProgress[module.slug].listening > 0 && (
+                        <div>
+                          <div className="flex items-center justify-between text-[0.625rem] text-[#555] mb-1">
+                            <span className="flex items-center gap-1">
+                              <Play size={10} /> Listening
+                            </span>
+                            <span>{Math.round(historyProgress[module.slug].listening)}%</span>
+                          </div>
+                          <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+                            <div className="h-full bg-white rounded-full" style={{ width: `${historyProgress[module.slug].listening}%` }} />
+                          </div>
+                        </div>
+                      )}
+                      {historyProgress[module.slug].reading > 0 && (
+                        <div>
+                          <div className="flex items-center justify-between text-[0.625rem] text-[#555] mb-1">
+                            <span>Reading</span>
+                            <span>{Math.round(historyProgress[module.slug].reading)}%</span>
+                          </div>
+                          <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+                            <div className="h-full bg-white/60 rounded-full" style={{ width: `${historyProgress[module.slug].reading}%` }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
                     <div className="flex items-center gap-2 text-[0.75rem] font-semibold text-[#888] group-hover:text-white transition-colors">
                       <Play size={12} fill="currentColor" />
-                      Resume
+                      {historyProgress[module.slug] ? "Continue" : "Start"}
                     </div>
-                    <span className="text-[0.75rem] text-[#444]">Started 2 hours ago</span>
+                    <span className="text-[0.75rem] text-[#444]">
+                      {historyProgress[module.slug]
+                        ? "Last read recently"
+                        : "New"}
+                    </span>
                   </div>
                 </Link>
                 </motion.div>
