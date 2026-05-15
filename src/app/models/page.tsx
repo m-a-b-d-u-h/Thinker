@@ -11,16 +11,7 @@ import { ModuleCard } from "@/components/ModuleCard";
 import ReactFlow, { Background, NodeProps, Handle, Position, useReactFlow, ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
 
-function timeAgo(timestamp: number): string {
-  const diff = Date.now() - timestamp;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Just now";
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return `${days}d ago`;
-}
+const ITEMS_PER_PAGE = 6;
 
 const CustomNode = ({ data }: NodeProps) => (
   <div className="bg-[#111] text-white border border-[#222] rounded-xl px-3 py-2.5 text-xs font-bold text-center min-w-[120px]">
@@ -32,53 +23,71 @@ const CustomNode = ({ data }: NodeProps) => (
 
 const nodeTypes = { custom: CustomNode };
 
-const MarketingNode = ({ data }: NodeProps) => (
-  <div>
-    <Handle type="target" position={Position.Top} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
-    {data.label}
-    <Handle type="source" position={Position.Bottom} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
-  </div>
-);
+const nodeSlugs: Record<string, string> = {
+  "First Principles": "first-principles",
+  "Systems Thinking": "systems-thinking",
+  "Inversion": "inversion-thinking",
+  "Second-Order": "second-order-thinking",
+  "Margin of Safety": "opportunity-cost",
+  "Opportunity Cost": "opportunity-cost",
+};
+
+const MarketingNode = ({ data }: NodeProps) => {
+  const router = useRouter();
+  const slug = nodeSlugs[data.label];
+  return (
+    <div
+      onClick={() => slug && router.push(`/models/${slug}`)}
+      className={`cursor-pointer transition-all hover:opacity-80 ${slug ? 'cursor-pointer' : 'cursor-default'}`}
+      title={slug ? `Open ${data.label}` : undefined}
+    >
+      <Handle type="target" position={Position.Top} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
+      {data.label}
+      <Handle type="source" position={Position.Bottom} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
+    </div>
+  );
+};
 
 const marketingNodeTypes = { custom: MarketingNode };
 
 const MarketingFlow = () => {
+  const router = useRouter();
   const nodes = useMemo(() => [
     {
       id: '1',
       type: 'custom',
       position: { x: 20, y: 70 },
-      data: { label: 'First Principles' }
+      data: { label: 'First Principles', slug: 'first-principles' }
     },
     {
       id: '2',
       type: 'custom',
       position: { x: 170, y: 25 },
-      data: { label: 'Systems Thinking' }
+      data: { label: 'Systems Thinking', slug: 'systems-thinking' }
     },
     {
       id: '3',
       type: 'custom',
       position: { x: 155, y: 120 },
-      data: { label: 'Inversion' }
+      data: { label: 'Inversion', slug: 'inversion-thinking' }
     },
     {
       id: '4',
       type: 'custom',
       position: { x: 320, y: 45 },
-      data: { label: 'Second-Order' }
+      data: { label: 'Second-Order', slug: 'second-order-thinking' }
     },
     {
       id: '5',
       type: 'custom',
       position: { x: 305, y: 140 },
-      data: { label: 'Margin of Safety' }
+      data: { label: 'Margin of Safety', slug: 'opportunity-cost' }
     },
     {
       id: '6',
       type: 'custom',
       position: { x: 470, y: 90 },
-      data: { label: 'Opportunity Cost' }
+      data: { label: 'Opportunity Cost', slug: 'opportunity-cost' }
     }
   ], []);
 
@@ -132,9 +141,8 @@ const MarketingFlow = () => {
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [showAllCategories, setShowAllCategories] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const itemsPerPage = 6;
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const router = useRouter();
 
   const [historyModules, setHistoryModules] = useState(modules.slice(0, 3));
@@ -150,6 +158,7 @@ export default function ProductsPage() {
       setHistoryProgress(modulesMap);
 
       const ordered = saved
+        .slice(0, 3)
         .map((p) => modules.find((m) => m.slug === p.slug))
         .filter(Boolean) as typeof modules;
       if (ordered.length > 0) {
@@ -175,9 +184,9 @@ export default function ProductsPage() {
     return validModules;
   }, [searchQuery, selectedCategory]);
 
-  const totalPages = Math.ceil(filteredModules.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedModules = filteredModules.slice(startIndex, startIndex + itemsPerPage);
+  const totalPages = Math.ceil(filteredModules.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedModules = filteredModules.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16 min-h-[90vh]">
@@ -215,16 +224,16 @@ export default function ProductsPage() {
                 Daily Material
               </div>
               <h3 className="text-xl font-bold text-white mb-2 leading-snug">
-                {modules[0].title}
+                {modules[0]?.title ?? ''}
               </h3>
               <p className="text-[0.8125rem] text-[#666] mb-4 leading-relaxed line-clamp-2">
-                {modules[0].description}
+                {modules[0]?.description ?? ''}
               </p>
               <div className="flex items-center justify-between">
                 <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10">
-                  {modules[0].category.charAt(0).toUpperCase() + modules[0].category.slice(1).replace(/-/g, ' ')}
+                  {modules[0]?.category ? modules[0].category.charAt(0).toUpperCase() + modules[0].category.slice(1).replace(/-/g, ' ') : ''}
                 </span>
-                <Link href={`/models/${modules[0].slug}`} className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-lg no-underline font-bold text-[0.75rem] hover:bg-white/90 transition-all">
+                <Link href={`/models/${modules[0]?.slug ?? '#'}`} className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-lg no-underline font-bold text-[0.75rem] hover:bg-white/90 transition-all">
                   <Play size={12} fill="currentColor" />
                   Start
                 </Link>
@@ -318,7 +327,7 @@ export default function ProductsPage() {
           <p className="text-[0.6875rem] font-bold text-[#444] uppercase tracking-[0.1em] mb-3">Categories</p>
           <div className={`relative ${!showAllCategories ? 'overflow-hidden max-h-[42px]' : ''}`}>
             <div className="flex items-center gap-2 flex-wrap">
-              {["mindset", "focus", "productivity", "strategy", "creativity", "learning", "wellbeing", "clarity", "habit", "mental-model", "logic", "psychology", "success", "stoicism", "cognitive-bias", "decision-making", "business", "problem-solving", "game-theory", "resilience", "risk", "economics"].map(cat => (
+              {[...new Set(modules.map(m => m.category))].map(cat => (
                 <button
                   key={cat}
                   onClick={() => { setSelectedCategory(selectedCategory === cat ? null : cat); setCurrentPage(1); }}

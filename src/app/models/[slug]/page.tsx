@@ -3,7 +3,7 @@
 import { modules } from "@/lib/dummy-data";
 import { notFound } from "next/navigation";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw } from "lucide-react";
+import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { getModuleProgress, saveModuleProgress } from "@/lib/progress";
@@ -22,6 +22,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const [savedListeningProgress, setSavedListeningProgress] = useState<number | null>(null);
   const [savedReadingProgress, setSavedReadingProgress] = useState<number | null>(null);
   const [showResume, setShowResume] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
   const listenSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const readSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const articleRef = useRef<HTMLDivElement>(null);
@@ -116,8 +117,9 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   }, [module]);
 
   useEffect(() => {
+    const synth = window.speechSynthesis;
     const loadVoices = () => {
-      const v = window.speechSynthesis.getVoices();
+      const v = synth.getVoices();
       const filteredVoices = v
         .filter(voice => {
           const isEnglish = voice.lang.startsWith('en');
@@ -139,13 +141,16 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       else if (filteredVoices.length > 0) setSelectedVoice(filteredVoices[0].name);
     };
     loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
+    synth.addEventListener('voiceschanged', loadVoices);
+    return () => synth.removeEventListener('voiceschanged', loadVoices);
   }, []);
 
   useEffect(() => {
     if (!module) return;
     const saved = getModuleProgress(module.slug);
     if (!saved) return;
+    const completed = saved.listeningProgress >= 100 || saved.readingProgress >= 100;
+    setIsCompleted(completed);
     const hasListen = saved.listeningProgress > 0;
     const hasRead = saved.readingProgress > 0;
     if (!hasListen && !hasRead) return;
@@ -325,6 +330,25 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     else { startSpeech(Math.floor((progress / 100) * unifiedCleanText.length), unifiedCleanText, volume, rate, selectedVoice); }
   };
 
+  const handleMarkComplete = () => {
+    const newCompleted = !isCompleted;
+    setIsCompleted(newCompleted);
+    saveModuleProgress(slug, {
+      listeningProgress: newCompleted ? 100 : 0,
+      readingProgress: newCompleted ? 100 : 0,
+    });
+    if (newCompleted) {
+      setSavedListeningProgress(100);
+      setSavedReadingProgress(100);
+      setProgress(100);
+    } else {
+      setSavedListeningProgress(null);
+      setSavedReadingProgress(null);
+      setProgress(0);
+      setShowResume(false);
+    }
+  };
+
   if (!module) notFound();
 
   const recommendations = useMemo(() =>
@@ -427,22 +451,22 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           ))}
         </article>
 
-        <div className="sticky top-[100px] pl-6 border-l border-[#333]">
-          <div className="text-[0.6875rem] font-semibold text-[#444] uppercase tracking-[0.1em] mb-6">Contents</div>
-          <nav className="flex flex-col gap-3">
-            {contentBlocks
-              .filter(b => b.type === 'h2' || b.type === 'h3')
-              .map((block: any, idx: number) => (
-                <a
-                  key={idx}
-                  href={`#${getBlockText(block).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
-                  className={`no-underline ${block.type === 'h3' ? 'text-[0.8125rem] pl-4' : 'text-[0.875rem]'} ${block.type === 'h3' ? 'font-normal' : 'font-medium'} text-[#666] hover:text-[#ccc] transition-colors`}
-                >
-                  {getBlockText(block)}
-                </a>
-              ))}
-          </nav>
-        </div>
+          <div className="sticky top-[100px] pl-6 border-l border-[#333]">
+            <div className="text-[0.6875rem] font-semibold text-[#444] uppercase tracking-[0.1em] mb-6">Contents</div>
+            <nav className="flex flex-col gap-3">
+              {contentBlocks
+                .filter(b => b.type === 'h2' || b.type === 'h3')
+                .map((block: any, idx: number) => (
+                  <a
+                    key={idx}
+                    href={`#${getBlockText(block).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
+                    className={`no-underline ${block.type === 'h3' ? 'text-[0.8125rem] pl-4' : 'text-[0.875rem]'} ${block.type === 'h3' ? 'font-normal' : 'font-medium'} text-[#666] hover:text-[#ccc] transition-colors`}
+                  >
+                    {getBlockText(block)}
+                  </a>
+                ))}
+            </nav>
+          </div>
       </div>
 
       {/* What's Next */}
@@ -554,6 +578,21 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           </div>
         </motion.div>
       )}
+
+      {/* Mark as Complete */}
+      <div className="max-w-[65ch] mx-auto mb-8">
+        <button
+          onClick={handleMarkComplete}
+          className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-[0.8125rem] transition-all ${
+            isCompleted
+              ? "bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20"
+              : "bg-[#080808] border border-white/10 text-[#888] hover:border-white/20 hover:text-white"
+          }`}
+        >
+          <CheckCircle2 size={16} />
+          {isCompleted ? "Completed" : "Mark as Complete"}
+        </button>
+      </div>
 
       {/* TTS Player */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#050505cc] backdrop-blur-[30px] border-t border-[var(--border)] z-[1000] py-6 shadow-2xl shadow-black/50">

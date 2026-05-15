@@ -25,29 +25,23 @@ export default function ModuleLayout({
 
   return (
     <div>
-      <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1rem 1rem' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Link href="/models" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#666', textDecoration: 'none', fontSize: '0.875rem', transition: 'all 0.2s' }}>
+      <div className="border-b border-white/[0.05]">
+        <div className="mx-auto max-w-[1100px] px-4 py-4">
+          <div className="flex items-center justify-between">
+            <Link href="/models" className="flex items-center gap-2 text-[#666] no-underline text-[0.875rem] hover:text-white transition-colors">
               <ChevronLeft size={18} />
               <span>Back to Library</span>
             </Link>
-            <div style={{ display: 'flex', gap: '0.25rem' }}>
+            <div className="flex gap-1">
               {tabs.map((tab) => {
                 const isActive = pathname === tab.path;
                 return (
                   <Link
                     key={tab.path}
                     href={tab.path}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      color: isActive ? '#fff' : '#666',
-                      textDecoration: 'none',
-                      fontSize: '0.8125rem',
-                      borderRadius: '8px',
-                      background: isActive ? 'rgba(255,255,255,0.05)' : 'transparent',
-                      transition: 'all 0.2s',
-                    }}
+                    className={`px-4 py-2 no-underline text-[0.8125rem] rounded-lg transition-all ${
+                      isActive ? 'text-white bg-white/[0.05]' : 'text-[#666] hover:text-white'
+                    }`}
                   >
                     {tab.name}
                   </Link>

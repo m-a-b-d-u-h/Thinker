@@ -1,10 +1,12 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { Play, Network, Bookmark, Clock } from "lucide-react";
+import React, { useMemo, useState, useEffect } from "react";
+import { Play, Network, Bookmark, Headphones, BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ReactFlow, { Background, Handle, Position, ReactFlowProvider, useReactFlow } from "reactflow";
 import "reactflow/dist/style.css";
+import { getModuleProgress } from "@/lib/progress";
+import { calculateDurations } from "@/lib/calculate";
 
 interface ModuleData {
   id: string;
@@ -16,12 +18,6 @@ interface ModuleData {
   nodes?: any[];
   edges?: any[];
 }
-
-const calculateDuration = (content: string): string => {
-  const words = content.split(/\s+/).length;
-  const totalMinutes = Math.max(1, Math.ceil(words / 2.5 / 60));
-  return `${totalMinutes} minutes`;
-};
 
 const CustomNode = ({ data }: any) => (
   <div className="bg-[#0d0d0d]/90 text-white border border-[#1a1a1a] rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap backdrop-blur-sm">
@@ -78,6 +74,18 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
 
 export function ModuleCard({ module }: { module: ModuleData }) {
   const router = useRouter();
+  const [progress, setProgress] = useState<{ listening: number; reading: number } | null>(null);
+
+  useEffect(() => {
+    const saved = getModuleProgress(module.slug);
+    if (saved) {
+      setProgress({ listening: saved.listeningProgress, reading: saved.readingProgress });
+    }
+  }, [module.slug]);
+
+  const status = !progress ? "new" : progress.listening >= 100 || progress.reading >= 100 ? "completed" : "in-progress";
+
+  const durations = calculateDurations(module.content);
 
   return (
     <div
@@ -105,8 +113,17 @@ export function ModuleCard({ module }: { module: ModuleData }) {
         <p className="text-[0.75rem] text-[#777] leading-relaxed mt-1">{module.description}</p>
       </div>
 
+      {/* Progress bar */}
+      {progress && status === "in-progress" && (
+        <div className="relative z-20 px-8 mb-2">
+          <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
+            <div className="h-full bg-white rounded-full" style={{ width: `${Math.max(progress.listening || 0, progress.reading || 0)}%` }} />
+          </div>
+        </div>
+      )}
+
       {/* Spacer */}
-      <div className="flex-1 relative z-10 min-h-[200px]" />
+      <div className="flex-1 relative z-10 min-h-[160px]" />
 
       {/* Overlay gradient bottom */}
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#080808] via-[#080808]/90 to-transparent z-10" />
@@ -119,7 +136,7 @@ export function ModuleCard({ module }: { module: ModuleData }) {
             className="group/btn flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black text-[0.6875rem] font-bold no-underline cursor-pointer hover:bg-white/90 transition-all"
           >
             <Play size={12} fill="currentColor" />
-            <span>Start Learning</span>
+            <span>{status === "completed" ? "Review" : status === "in-progress" ? "Continue" : "Start Learning"}</span>
           </div>
           <button
             onClick={(e) => {
@@ -132,10 +149,13 @@ export function ModuleCard({ module }: { module: ModuleData }) {
             <span>Path</span>
           </button>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[0.625rem] text-[#444]">
-            <Clock size={10} className="inline mr-1" />
-            {calculateDuration(module.content)}
+        <div className="flex items-center gap-3">
+          <span className="text-[0.625rem] text-[#555] flex items-center gap-1.5">
+            <Headphones size={10} />
+            {durations.listenMin}m
+            <span className="text-[#333] mx-0.5">·</span>
+            <BookOpen size={10} />
+            {durations.readMin}m
           </span>
           <button
             onClick={(e) => {

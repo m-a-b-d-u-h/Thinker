@@ -4,13 +4,7 @@ import { reflections } from "@/lib/dummy-data";
 import { BookOpen, Calendar } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-
-function formatDate(ts: number): string {
-  const days = Math.floor((Date.now() - ts) / 86400000);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  return `${days} days ago`;
-}
+import { formatDate } from "@/lib/format";
 
 export default function ReflectionListPage() {
   return (

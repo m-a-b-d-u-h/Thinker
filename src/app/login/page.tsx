@@ -74,7 +74,7 @@ export default function LoginPage() {
       </motion.div>
 
       <div className="absolute bottom-8 left-0 right-0 text-center text-[#222] text-[0.75rem]">
-        © 2026 1section Lab
+        © {new Date().getFullYear()} 1section Lab
       </div>
     </div>
   );

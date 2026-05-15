@@ -7,13 +7,7 @@ import { modules } from "@/lib/dummy-data";
 import { notFound } from "next/navigation";
 import { use } from "react";
 
-interface Question {
-  id: number;
-  question: string;
-  options: string[];
-  correctAnswer: number;
-  explanation: string;
-}
+import type { Question } from "@/lib/dummy-data";
 
 export default function QuizPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -66,7 +60,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
     <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16">
       <div className="max-w-[700px] mx-auto">
         <header className="mb-12">
-          <span className="badge" style={{ background: 'var(--color-c-mindset)', color: '#000', marginBottom: '1rem' }}>{module.category}</span>
+          <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000', marginBottom: '1rem' }}>{module.category}</span>
           <h1 className="text-4xl font-bold text-white mt-4 mb-2">
             {module.title}
           </h1>

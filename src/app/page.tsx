@@ -131,7 +131,7 @@ export default function Home() {
   };
 
   const sampleProducts = modules.slice(0, 2);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [openFaq, setOpenFaq] = useState<string | null>(null);
 
   return (
     <>
@@ -476,30 +476,30 @@ export default function Home() {
 
           <div className="max-w-[800px] mx-auto flex flex-col gap-4">
             {[
-              { q: "What makes 1section different from other learning platforms?", a: "1section focuses on mental models and cognitive frameworks rather than just information. Our interactive knowledge graph shows how concepts connect, and the implementation paths help you actually apply what you learn." },
-              { q: "How does the daily free theory work?", a: "Every 24 hours, we unlock a new professional framework for free. This gives you a taste of our premium content and helps you build a learning habit without any commitment." },
-              { q: "Can I access content offline?", a: "Yes! With our 1 Year and Lifetime plans, you can download theories and listen to them offline. Perfect for commute learning or areas with limited connectivity." },
-              { q: "What's included in the lifetime access?", a: "Lifetime access includes all current and future theories, the complete knowledge graph, offline downloads, completion certificates, and free digital pocketbooks we release over time." },
-              { q: "How does the knowledge graph work?", a: "As you progress through theories, they appear in your personal knowledge graph showing how different mental models connect. This helps you see the bigger picture and understand relationships between concepts." },
-              { q: "Is there a refund policy?", a: "We offer a 30-day money-back guarantee on all paid plans. If you're not satisfied within the first 30 days, just reach out and we'll issue a full refund, no questions asked." },
+              { id: "diff", q: "What makes 1section different from other learning platforms?", a: "1section focuses on mental models and cognitive frameworks rather than just information. Our interactive knowledge graph shows how concepts connect, and the implementation paths help you actually apply what you learn." },
+              { id: "free", q: "How does the daily free theory work?", a: "Every 24 hours, we unlock a new professional framework for free. This gives you a taste of our premium content and helps you build a learning habit without any commitment." },
+              { id: "offline", q: "Can I access content offline?", a: "Yes! With our 1 Year and Lifetime plans, you can download theories and listen to them offline. Perfect for commute learning or areas with limited connectivity." },
+              { id: "lifetime", q: "What's included in the lifetime access?", a: "Lifetime access includes all current and future theories, the complete knowledge graph, offline downloads, completion certificates, and free digital pocketbooks we release over time." },
+              { id: "graph", q: "How does the knowledge graph work?", a: "As you progress through theories, they appear in your personal knowledge graph showing how different mental models connect. This helps you see the bigger picture and understand relationships between concepts." },
+              { id: "refund", q: "Is there a refund policy?", a: "We offer a 30-day money-back guarantee on all paid plans. If you're not satisfied within the first 30 days, just reach out and we'll issue a full refund, no questions asked." },
             ].map((faq, idx) => (
               <motion.div
-                key={idx}
+                key={faq.id}
                 initial={{ opacity: 0, y: 2.5 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: idx * 0.05 }}
               >
                 <button
-                  onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                  className={`w-full p-6 bg-[#080808] border border-white/5 rounded-xl flex items-center justify-between cursor-pointer text-left transition-all duration-200 ${openFaq === idx ? 'bg-white/5' : ''}`}
+                  onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)}
+                  className={`w-full p-6 bg-[#080808] border border-white/5 rounded-xl flex items-center justify-between cursor-pointer text-left transition-all duration-200 ${openFaq === faq.id ? 'bg-white/5' : ''}`}
                 >
                   <span className="text-base font-bold text-white pr-4">{faq.q}</span>
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 flex-shrink-0 ${openFaq === idx ? 'bg-white/10' : 'bg-white/5'}`}>
-                    <div className={`w-2.5 h-2.5 border-r-2 border-b-2 border-[#888] ${openFaq === idx ? 'rotate-[-135deg] mt-[-4px]' : 'rotate-45'}`} />
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 flex-shrink-0 ${openFaq === faq.id ? 'bg-white/10' : 'bg-white/5'}`}>
+                    <div className={`w-2.5 h-2.5 border-r-2 border-b-2 border-[#888] ${openFaq === faq.id ? 'rotate-[-135deg] mt-[-4px]' : 'rotate-45'}`} />
                   </div>
                 </button>
-                {openFaq === idx && (
+                {openFaq === faq.id && (
                   <motion.div
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: 'auto', opacity: 1 }}

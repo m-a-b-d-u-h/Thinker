@@ -4,13 +4,7 @@ import React, { useState } from "react";
 import { Highlighter, Plus, Search, StickyNote } from "lucide-react";
 import Link from "next/link";
 import { highlights as dummyHighlights } from "@/lib/dummy-data";
-
-function formatDate(ts: number): string {
-  const days = Math.floor((Date.now() - ts) / 86400000);
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  return `${days} days ago`;
-}
+import { formatDate } from "@/lib/format";
 
 export default function HighlightPage() {
   const [search, setSearch] = useState("");
