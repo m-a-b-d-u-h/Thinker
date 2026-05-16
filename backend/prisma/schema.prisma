@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SubscriptionStatus {
+  FREE
+  MONTHLY
+  YEARLY
+  LIFETIME
+}
+
+enum PlanType {
+  MONTHLY
+  YEARLY
+  LIFETIME
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+model User {
+  id                String             @id @default(cuid())
+  email             String             @unique
+  passwordHash      String?
+  name              String?
+  avatar            String?
+  googleId          String?            @unique
+  stripeCustomerId  String?            @unique
+  subscriptionStatus SubscriptionStatus @default(FREE)
+  subscriptionEnd   DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  progress          UserProgress[]
+  completedNodes    CompletedGraphNode[]
+  reflections       Reflection[]
+  highlights        Highlight[]
+  favorites         Favorite[]
+  quizAttempts      QuizAttempt[]
+  payments          Payment[]
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  description String
+  category    String
+  content     String
+  isPremium   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  nodes           ModuleNode[]
+  edges           ModuleEdge[]
+  questions       Question[]
+  progress        UserProgress[]
+  completedNodes  CompletedGraphNode[]
+  reflections     Reflection[]
+  highlights      Highlight[]
+  favorites       Favorite[]
+  quizAttempts    QuizAttempt[]
+}
+
+model ModuleNode {
+  id        String @id @default(cuid())
+  moduleId  String
+  positionX Float
+  positionY Float
+  label     String
+  type      String @default("custom")
+  style     Json?
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+}
+
+model ModuleEdge {
+  id       String  @id @default(cuid())
+  moduleId String
+  source   String
+  target   String
+  label    String?
+  animated Boolean @default(true)
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+}
+
+model Question {
+  id             String @id @default(cuid())
+  moduleId       String
+  question       String
+  options        Json
+  correctAnswer  Int
+  explanation    String
+
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+}
+
+model UserProgress {
+  id                String   @id @default(cuid())
+  userId            String
+  moduleId          String
+  listeningProgress Float    @default(0)
+  readingProgress   Float    @default(0)
+  scrollPosition    Float    @default(0)
+  currentCharIndex  Int      @default(0)
+  audioRate         Float    @default(1)
+  completed         Boolean  @default(false)
+  lastReadAt        DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId])
+}
+
+model CompletedGraphNode {
+  id       String @id @default(cuid())
+  userId   String
+  moduleId String
+  nodeId   String
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId, nodeId])
+}
+
+model Reflection {
+  id          String   @id @default(cuid())
+  userId      String
+  moduleId    String
+  title       String
+  content     String
+  timestamp   DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+}
+
+model Highlight {
+  id        String @id @default(cuid())
+  userId    String
+  moduleId  String
+  text      String
+  note      String  @default("")
+  timestamp DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  moduleId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId])
+}
+
+model QuizAttempt {
+  id            String   @id @default(cuid())
+  userId        String
+  moduleId      String
+  score         Int
+  totalQuestions Int
+  percentage    Float
+  completedAt   DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id               String        @id @default(cuid())
+  userId           String
+  stripePaymentId  String        @unique
+  amount           Int
+  currency         String        @default("usd")
+  status           PaymentStatus @default(PENDING)
+  planType         PlanType
+  createdAt        DateTime      @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
