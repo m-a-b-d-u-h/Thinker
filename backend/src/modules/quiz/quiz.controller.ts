@@ -6,7 +6,7 @@ import type { SubmitAnswerInput } from "./quiz.schema";
 export namespace QuizController {
   export async function getQuestions(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { slug } = req.params;
+      const slug = req.params.slug as string;
       const questions = await QuizService.getQuestions(slug);
       res.json(questions);
     } catch (err) {
@@ -16,7 +16,7 @@ export namespace QuizController {
 
   export async function submit(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { slug } = req.params;
+      const slug = req.params.slug as string;
       const body = req.body as SubmitAnswerInput;
       const result = await QuizService.submit(req.user!.userId, slug, body);
       res.json(result);
@@ -27,7 +27,7 @@ export namespace QuizController {
 
   export async function getAttempts(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { slug } = req.params;
+      const slug = req.params.slug as string;
       const attempts = await QuizService.getAttempts(req.user!.userId, slug);
       res.json(attempts);
     } catch (err) {

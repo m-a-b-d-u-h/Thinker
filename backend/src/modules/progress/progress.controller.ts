@@ -15,7 +15,7 @@ export namespace ProgressController {
 
   export async function getBySlug(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { slug } = req.params;
+      const slug = req.params.slug as string;
       const progress = await ProgressService.getBySlug(req.user!.userId, slug);
       res.json(progress);
     } catch (err) {
@@ -25,7 +25,7 @@ export namespace ProgressController {
 
   export async function upsert(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { slug } = req.params;
+      const slug = req.params.slug as string;
       const body = req.body as UpdateProgressInput;
       const progress = await ProgressService.upsert(req.user!.userId, slug, body);
       res.json(progress);
@@ -54,7 +54,7 @@ export namespace ProgressController {
 
   export async function addCompletedNode(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { slug } = req.params;
+      const slug = req.params.slug as string;
       const body = req.body as AddCompletedNodeInput;
       const result = await ProgressService.addCompletedNode(req.user!.userId, slug, body.nodeId);
       res.json(result);
@@ -65,7 +65,7 @@ export namespace ProgressController {
 
   export async function getCompletedNodes(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { slug } = req.params;
+      const slug = req.params.slug as string;
       const nodes = await ProgressService.getCompletedNodes(req.user!.userId, slug);
       res.json(nodes);
     } catch (err) {

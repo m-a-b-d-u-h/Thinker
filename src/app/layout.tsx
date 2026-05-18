@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata: Metadata = {
   title: "1section",
@@ -24,9 +25,11 @@ export default function RootLayout({
         <link rel="icon" href="/1section.png" type="image/png" />
       </head>
       <body>
-        <MainLayout>
-          {children}
-        </MainLayout>
+        <AuthProvider>
+          <MainLayout>
+            {children}
+          </MainLayout>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -12,6 +12,7 @@ export namespace QuizService {
             id: true,
             question: true,
             options: true,
+            explanation: true,
           },
           orderBy: { id: "asc" },
         },
@@ -36,7 +37,7 @@ export namespace QuizService {
     let score = 0;
     const results = input.answers.map((answer) => {
       const question = mod.questions.find((q) => q.id === answer.questionId);
-      if (!question) return { questionId: answer.questionId, correct: false };
+      if (!question) return { questionId: answer.questionId, correct: false, correctAnswer: 0, explanation: "" };
 
       const isCorrect = answer.selectedAnswer === question.correctAnswer;
       if (isCorrect) score++;
@@ -45,6 +46,7 @@ export namespace QuizService {
         questionId: answer.questionId,
         correct: isCorrect,
         correctAnswer: question.correctAnswer,
+        explanation: question.explanation,
       };
     });
 

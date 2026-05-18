@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma";
 import { NotFoundError, ConflictError } from "../../lib/errors";
+import { transformNode, transformEdge } from "../../lib/transform";
 
 export namespace FavoritesService {
   export async function list(userId: string) {
@@ -24,8 +25,9 @@ export namespace FavoritesService {
       title: f.module.title,
       description: f.module.description,
       category: f.module.category,
-      nodes: f.module.nodes,
-      edges: f.module.edges,
+      content: f.module.content,
+      nodes: f.module.nodes.map(transformNode),
+      edges: f.module.edges.map(transformEdge),
       questionCount: f.module._count.questions,
       createdAt: f.createdAt,
     }));

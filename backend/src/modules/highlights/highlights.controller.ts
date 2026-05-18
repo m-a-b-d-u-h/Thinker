@@ -16,7 +16,7 @@ export namespace HighlightsController {
 
   export async function getById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const highlight = await HighlightsService.getById(req.user!.userId, id);
       res.json(highlight);
     } catch (err) {
@@ -36,7 +36,7 @@ export namespace HighlightsController {
 
   export async function update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const body = req.body as UpdateHighlightInput;
       const highlight = await HighlightsService.update(req.user!.userId, id, body);
       res.json(highlight);
@@ -47,7 +47,7 @@ export namespace HighlightsController {
 
   export async function remove(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const result = await HighlightsService.remove(req.user!.userId, id);
       res.json(result);
     } catch (err) {

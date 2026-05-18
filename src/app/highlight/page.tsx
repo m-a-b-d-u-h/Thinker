@@ -1,24 +1,56 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Highlighter, Plus, Search, StickyNote } from "lucide-react";
 import Link from "next/link";
-import { highlights as dummyHighlights } from "@/lib/dummy-data";
 import { formatDate } from "@/lib/format";
+import { highlightsApi } from "@/lib/api/highlights";
+import { useAuth } from "@/lib/auth-context";
+import type { Highlight } from "@/lib/types";
 
 export default function HighlightPage() {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
-  const [highlights, setHighlights] = useState(dummyHighlights);
+  const [highlights, setHighlights] = useState<Highlight[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingNote, setEditingNote] = useState<string | null>(null);
 
-  const updateNote = (id: string, note: string) => {
+  useEffect(() => {
+    if (!user) { setLoading(false); return; }
+    highlightsApi.list().then(setHighlights).catch(() => {}).finally(() => setLoading(false));
+  }, [user]);
+
+  const updateNote = async (id: string, note: string) => {
     setHighlights(prev => prev.map(h => h.id === id ? { ...h, note } : h));
+    try {
+      await highlightsApi.update(id, { note });
+    } catch {}
   };
 
   const filtered = highlights.filter(h =>
     h.text.toLowerCase().includes(search.toLowerCase()) ||
-    h.moduleTitle.toLowerCase().includes(search.toLowerCase())
+    (h as any).moduleSlug?.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (!user) {
+    return (
+      <div className="mx-auto w-full max-w-[1200px] px-6 py-16 text-center">
+        <Highlighter size={32} className="mx-auto text-[#222] mb-4" />
+        <h1 className="text-3xl font-black mb-4">Sign in to view your highlights</h1>
+        <Link href="/login" className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg font-semibold">
+          Sign In
+        </Link>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-[1200px] px-6 py-16 flex justify-center">
+        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16">
@@ -29,9 +61,7 @@ export default function HighlightPage() {
           </div>
         </div>
         <h1 className="text-5xl font-black mb-4 tracking-[-0.04em]">Highlights</h1>
-        <p className="text-muted text-lg max-w-[500px]">
-          Key insights and quotes you have highlighted.
-        </p>
+        <p className="text-muted text-lg max-w-[500px]">Key insights and quotes you have highlighted.</p>
       </header>
 
       <div className="flex items-center justify-between mb-8">
@@ -45,28 +75,16 @@ export default function HighlightPage() {
             className="w-full py-3 pl-12 pr-4 bg-[#080808] border border-white/5 rounded-xl text-white text-[0.875rem] outline-none focus:border-white/15 transition-colors"
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-3 bg-white text-black rounded-xl text-[0.875rem] font-semibold hover:opacity-90 transition-opacity cursor-pointer">
-          <Plus size={16} />
-          <span>New Highlight</span>
-        </button>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-20 text-[#444] text-[0.875rem]">
-          No highlights found.
-        </div>
+        <div className="text-center py-20 text-[#444] text-[0.875rem]">No highlights found.</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
           {filtered.map((highlight) => (
             <div key={highlight.id} className="bg-[#080808] border border-white/5 rounded-2xl p-8 hover:border-white/10 transition-colors flex flex-col">
               <div className="flex items-center gap-3 mb-5 flex-wrap">
-                <Link
-                  href={`/models/${highlight.moduleSlug}`}
-                  className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10 hover:text-white hover:border-white/20 transition-colors no-underline"
-                >
-                  {highlight.moduleTitle}
-                </Link>
-                <span className="text-[0.75rem] text-[#444]">{formatDate(highlight.timestamp)}</span>
+                <span className="text-[0.75rem] text-[#444]">{formatDate(new Date(highlight.timestamp).getTime())}</span>
               </div>
 
               <blockquote className="text-[1.0625rem] text-white/90 leading-[1.8] italic mb-6 border-l-2 border-white/10 pl-6 flex-1">

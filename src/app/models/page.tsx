@@ -1,17 +1,17 @@
 "use client";
 
-import { modules } from "@/lib/dummy-data";
-import { getContinueLearning } from "@/lib/progress";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Play, Clock, Search, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
-import { ModuleCard } from "@/components/ModuleCard";
+import Link from "next/link";
 import ReactFlow, { Background, NodeProps, Handle, Position, useReactFlow, ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
-
-const ITEMS_PER_PAGE = 6;
+import { ModuleCard } from "@/components/ModuleCard";
+import { modulesApi } from "@/lib/api/modules";
+import { progressApi } from "@/lib/api/progress";
+import { useAuth } from "@/lib/auth-context";
+import type { ModuleListItem, UserProgress } from "@/lib/types";
 
 const CustomNode = ({ data }: NodeProps) => (
   <div className="bg-[#111] text-white border border-[#222] rounded-xl px-3 py-2.5 text-xs font-bold text-center min-w-[120px]">
@@ -51,47 +51,16 @@ const MarketingNode = ({ data }: NodeProps) => {
 const marketingNodeTypes = { custom: MarketingNode };
 
 const MarketingFlow = () => {
-  const router = useRouter();
-  const nodes = useMemo(() => [
-    {
-      id: '1',
-      type: 'custom',
-      position: { x: 20, y: 70 },
-      data: { label: 'First Principles', slug: 'first-principles' }
-    },
-    {
-      id: '2',
-      type: 'custom',
-      position: { x: 170, y: 25 },
-      data: { label: 'Systems Thinking', slug: 'systems-thinking' }
-    },
-    {
-      id: '3',
-      type: 'custom',
-      position: { x: 155, y: 120 },
-      data: { label: 'Inversion', slug: 'inversion-thinking' }
-    },
-    {
-      id: '4',
-      type: 'custom',
-      position: { x: 320, y: 45 },
-      data: { label: 'Second-Order', slug: 'second-order-thinking' }
-    },
-    {
-      id: '5',
-      type: 'custom',
-      position: { x: 305, y: 140 },
-      data: { label: 'Margin of Safety', slug: 'opportunity-cost' }
-    },
-    {
-      id: '6',
-      type: 'custom',
-      position: { x: 470, y: 90 },
-      data: { label: 'Opportunity Cost', slug: 'opportunity-cost' }
-    }
+  const nodes = React.useMemo(() => [
+    { id: '1', type: 'custom', position: { x: 20, y: 70 }, data: { label: 'First Principles' } },
+    { id: '2', type: 'custom', position: { x: 170, y: 25 }, data: { label: 'Systems Thinking' } },
+    { id: '3', type: 'custom', position: { x: 155, y: 120 }, data: { label: 'Inversion' } },
+    { id: '4', type: 'custom', position: { x: 320, y: 45 }, data: { label: 'Second-Order' } },
+    { id: '5', type: 'custom', position: { x: 305, y: 140 }, data: { label: 'Margin of Safety' } },
+    { id: '6', type: 'custom', position: { x: 470, y: 90 }, data: { label: 'Opportunity Cost' } },
   ], []);
 
-  const edges = useMemo(() => [
+  const edges = React.useMemo(() => [
     { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: 'rgba(251,191,36,0.35)', strokeWidth: 1.5 } },
     { id: 'e1-3', source: '1', target: '3', animated: true, style: { stroke: 'rgba(251,191,36,0.25)', strokeWidth: 1 } },
     { id: 'e2-4', source: '2', target: '4', animated: true, style: { stroke: 'rgba(251,191,36,0.4)', strokeWidth: 1.5 } },
@@ -101,7 +70,7 @@ const MarketingFlow = () => {
     { id: 'e5-6', source: '5', target: '6', animated: true, style: { stroke: 'rgba(251,191,36,0.3)', strokeWidth: 1 } },
   ], []);
 
-  const styledNodes = useMemo(() => nodes.map((n, i) => ({
+  const styledNodes = React.useMemo(() => nodes.map((n, i) => ({
     ...n,
     style: {
       background: i === 0 ? 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04))' : 'transparent',
@@ -139,54 +108,70 @@ const MarketingFlow = () => {
 };
 
 export default function ProductsPage() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
-  const router = useRouter();
 
-  const [historyModules, setHistoryModules] = useState(modules.slice(0, 3));
-  const [historyProgress, setHistoryProgress] = useState<Record<string, { listening: number; reading: number }>>({});
+  const [modules, setModules] = useState<ModuleListItem[]>([]);
+  const [totalPages, setTotalPages] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const [historyModules, setHistoryModules] = useState<(ModuleListItem & { progress?: UserProgress })[]>([]);
 
   useEffect(() => {
-    const saved = getContinueLearning();
-    if (saved.length > 0) {
-      const modulesMap: Record<string, { listening: number; reading: number }> = {};
-      saved.forEach((p) => {
-        modulesMap[p.slug] = { listening: p.listeningProgress, reading: p.readingProgress };
-      });
-      setHistoryProgress(modulesMap);
-
-      const ordered = saved
-        .slice(0, 3)
-        .map((p) => modules.find((m) => m.slug === p.slug))
-        .filter(Boolean) as typeof modules;
-      if (ordered.length > 0) {
-        setHistoryModules(ordered);
-      }
-    }
+    modulesApi.getCategories().then(setCategories).catch(() => {});
   }, []);
 
-  const filteredModules = useMemo(() => {
-    let validModules = modules.filter(m => m.slug && m.title && m.description);
-
-    if (selectedCategory) {
-      validModules = validModules.filter(m => m.category === selectedCategory);
+  const fetchModules = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params: Record<string, string> = { page: String(currentPage), limit: "6" };
+      if (selectedCategory) params.category = selectedCategory;
+      if (searchQuery) params.search = searchQuery;
+      const res = await modulesApi.list(params);
+      setModules(res.data);
+      setTotalPages(res.pagination.totalPages);
+      setTotal(res.pagination.total);
+    } catch {
+      setModules([]);
+    } finally {
+      setLoading(false);
     }
+  }, [currentPage, selectedCategory, searchQuery]);
 
-    if (searchQuery) {
-      validModules = validModules.filter(m =>
-        m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        m.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+  useEffect(() => {
+    fetchModules();
+  }, [fetchModules]);
 
-    return validModules;
-  }, [searchQuery, selectedCategory]);
-
-  const totalPages = Math.ceil(filteredModules.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedModules = filteredModules.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  useEffect(() => {
+    if (!user) return;
+    progressApi.getContinueLearning().then(async (saved) => {
+      if (saved.length === 0) return;
+      const slugs = saved.slice(0, 3).map((p) => {
+        const slug = p.moduleId; // moduleId from progress might be a cuid, not slug
+        return p;
+      });
+      try {
+        const res = await modulesApi.list({ limit: "3" });
+        const matched = res.data.filter((m) =>
+          saved.some((p) => p.moduleId === m.id)
+        ).slice(0, 3);
+        if (matched.length > 0) {
+          const withProgress = matched.map((m) => ({
+            ...m,
+            progress: saved.find((p) => p.moduleId === m.id),
+          }));
+          setHistoryModules(withProgress);
+        }
+      } catch {
+        // fallback
+      }
+    }).catch(() => {});
+  }, [user]);
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16 min-h-[90vh]">
@@ -252,53 +237,51 @@ export default function ProductsPage() {
         </p>
       </header>
 
-        {historyModules.length > 0 && (
-          <section className="mb-16">
-            <div className="mb-6">
-              <div className="flex items-center gap-2 text-[#888] mb-2">
-                <Clock size={14} />
-                <span className="text-[0.75rem] font-bold uppercase tracking-[0.05em]">Continue Learning</span>
-              </div>
-              <h2 className="text-3xl font-black tracking-[-0.04em]">Your Learning <span className="text-[#444]">History</span></h2>
+      {historyModules.length > 0 && (
+        <section className="mb-16">
+          <div className="mb-6">
+            <div className="flex items-center gap-2 text-[#888] mb-2">
+              <Clock size={14} />
+              <span className="text-[0.75rem] font-bold uppercase tracking-[0.05em]">Continue Learning</span>
             </div>
+            <h2 className="text-3xl font-black tracking-[-0.04em]">Your Learning <span className="text-[#444]">History</span></h2>
+          </div>
 
-            <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
-              {historyModules.map((module, idx) => (
-                <motion.div
-                  key={module.id}
-                  initial={{ opacity: 0, y: 5 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.1 }}
-                >
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
+            {historyModules.map((module, idx) => (
+              <motion.div
+                key={module.id}
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+              >
                 <Link href={`/models/${module.slug}`} className="group flex flex-col bg-[#080808] border border-white/5 rounded-2xl p-6 no-underline transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-1">
                   <div className="flex items-center gap-2 mb-4">
                     <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
                   </div>
                   <h3 className="text-lg font-bold mb-2 text-white">{module.title}</h3>
                   <p className="text-[0.875rem] text-[#666] leading-relaxed mb-4">{module.description}</p>
-                  {historyProgress[module.slug] && (
+                  {module.progress && (
                     <div className="mb-4 space-y-2.5">
-                      {historyProgress[module.slug].listening > 0 && (
+                      {module.progress.listeningProgress > 0 && (
                         <div>
                           <div className="flex items-center justify-between text-[0.625rem] text-[#555] mb-1">
-                            <span className="flex items-center gap-1">
-                              <Play size={10} /> Listening
-                            </span>
-                            <span>{Math.round(historyProgress[module.slug].listening)}%</span>
+                            <span className="flex items-center gap-1"><Play size={10} /> Listening</span>
+                            <span>{Math.round(module.progress.listeningProgress)}%</span>
                           </div>
                           <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
-                            <div className="h-full bg-white rounded-full" style={{ width: `${historyProgress[module.slug].listening}%` }} />
+                            <div className="h-full bg-white rounded-full" style={{ width: `${module.progress.listeningProgress}%` }} />
                           </div>
                         </div>
                       )}
-                      {historyProgress[module.slug].reading > 0 && (
+                      {module.progress.readingProgress > 0 && (
                         <div>
                           <div className="flex items-center justify-between text-[0.625rem] text-[#555] mb-1">
                             <span>Reading</span>
-                            <span>{Math.round(historyProgress[module.slug].reading)}%</span>
+                            <span>{Math.round(module.progress.readingProgress)}%</span>
                           </div>
                           <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
-                            <div className="h-full bg-white/60 rounded-full" style={{ width: `${historyProgress[module.slug].reading}%` }} />
+                            <div className="h-full bg-white/60 rounded-full" style={{ width: `${module.progress.readingProgress}%` }} />
                           </div>
                         </div>
                       )}
@@ -307,27 +290,25 @@ export default function ProductsPage() {
                   <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
                     <div className="flex items-center gap-2 text-[0.75rem] font-semibold text-[#888] group-hover:text-white transition-colors">
                       <Play size={12} fill="currentColor" />
-                      {historyProgress[module.slug] ? "Continue" : "Start"}
+                      {module.progress ? "Continue" : "Start"}
                     </div>
                     <span className="text-[0.75rem] text-[#444]">
-                      {historyProgress[module.slug]
-                        ? "Last read recently"
-                        : "New"}
+                      {module.progress ? "Last read recently" : "New"}
                     </span>
                   </div>
                 </Link>
-                </motion.div>
-              ))}
-      </div>
-      </section>
-        )}
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="mb-12">
         <div className="mb-5">
           <p className="text-[0.6875rem] font-bold text-[#444] uppercase tracking-[0.1em] mb-3">Categories</p>
           <div className={`relative ${!showAllCategories ? 'overflow-hidden max-h-[42px]' : ''}`}>
             <div className="flex items-center gap-2 flex-wrap">
-              {[...new Set(modules.map(m => m.category))].map(cat => (
+              {categories.map(cat => (
                 <button
                   key={cat}
                   onClick={() => { setSelectedCategory(selectedCategory === cat ? null : cat); setCurrentPage(1); }}
@@ -378,51 +359,57 @@ export default function ProductsPage() {
         </div>
       </div>
 
-
-
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
-        {paginatedModules.map((module, idx) => (
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.1 }}
-            key={module.id}
-          >
-            <ModuleCard module={module} />
-          </motion.div>
-        ))}
-      </div>
-
-      {totalPages > 1 && (
-        <div className="flex justify-center gap-2 mt-12">
-          <button
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className={`w-10 h-10 rounded-lg bg-[#080808] border border-white/5 text-[#888] flex items-center justify-center transition-all duration-200 ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:border-white/15 cursor-pointer'}`}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`min-w-10 h-10 rounded-lg font-bold text-[0.875rem] transition-all duration-200 ${currentPage === page ? 'bg-white text-black' : 'bg-[#080808] border border-white/5 text-[#888] hover:border-white/15'}`}
-            >
-              {page}
-            </button>
-          ))}
-          <button
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className={`w-10 h-10 rounded-lg bg-[#080808] border border-white/5 text-[#888] flex items-center justify-center transition-all duration-200 ${currentPage === totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:border-white/15 cursor-pointer'}`}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
         </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
+            {modules.map((module, idx) => (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                key={module.id}
+              >
+                <ModuleCard module={module} />
+              </motion.div>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex justify-center gap-2 mt-12">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className={`w-10 h-10 rounded-lg bg-[#080808] border border-white/5 text-[#888] flex items-center justify-center transition-all duration-200 ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:border-white/15 cursor-pointer'}`}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`min-w-10 h-10 rounded-lg font-bold text-[0.875rem] transition-all duration-200 ${currentPage === page ? 'bg-white text-black' : 'bg-[#080808] border border-white/5 text-[#888] hover:border-white/15'}`}
+                >
+                  {page}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className={`w-10 h-10 rounded-lg bg-[#080808] border border-white/5 text-[#888] flex items-center justify-center transition-all duration-200 ${currentPage === totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:border-white/15 cursor-pointer'}`}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

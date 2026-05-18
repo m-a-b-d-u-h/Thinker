@@ -1,22 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { modules } from "@/lib/dummy-data";
 import { motion } from "framer-motion";
 import { Search, Bookmark } from "lucide-react";
 import { ModuleCard } from "@/components/ModuleCard";
+import { favoritesApi } from "@/lib/api/favorites";
+import { useAuth } from "@/lib/auth-context";
+import type { FavoriteItem } from "@/lib/types";
 
 export default function FavoritesPage() {
+  const { user } = useAuth();
   const [search, setSearch] = useState("");
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const favoriteModules = modules.slice(0, 8);
+  useEffect(() => {
+    if (!user) { setLoading(false); return; }
+    favoritesApi.list().then(setFavorites).catch(() => {}).finally(() => setLoading(false));
+  }, [user]);
 
-  const filteredModules = favoriteModules.filter(m =>
+  const filteredModules = (favorites || []).filter(m =>
     m.title.toLowerCase().includes(search.toLowerCase()) ||
     m.description.toLowerCase().includes(search.toLowerCase()) ||
     m.category.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (!user) {
+    return (
+      <div className="mx-auto w-full max-w-[1200px] px-6 py-16 text-center">
+        <Bookmark size={32} className="mx-auto text-[#222] mb-4" />
+        <h1 className="text-3xl font-black mb-4">Sign in to view your favorites</h1>
+        <Link href="/login" className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg font-semibold">
+          Sign In
+        </Link>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-[1200px] px-6 py-16 flex justify-center">
+        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16">
@@ -27,9 +55,7 @@ export default function FavoritesPage() {
           </div>
         </div>
         <h1 className="text-5xl font-black mb-4 tracking-[-0.04em]">Favorites</h1>
-        <p className="text-muted text-lg max-w-[500px]">
-          Your saved mental models for quick access.
-        </p>
+        <p className="text-muted text-lg max-w-[500px]">Your saved mental models for quick access.</p>
       </header>
 
       <div className="flex items-center justify-between mb-8">
@@ -52,7 +78,7 @@ export default function FavoritesPage() {
               initial={{ opacity: 0, y: 5 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              key={module.id}
+              key={module.slug}
             >
               <ModuleCard module={module} />
             </motion.div>

@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { NotFoundError } from "../../lib/errors";
+import { transformNode, transformEdge } from "../../lib/transform";
 
 export namespace ModulesService {
   const moduleInclude = {
@@ -48,7 +49,11 @@ export namespace ModulesService {
     ]);
 
     return {
-      data: modules,
+      data: modules.map((m) => ({
+        ...m,
+        nodes: m.nodes.map(transformNode),
+        edges: m.edges.map(transformEdge),
+      })),
       pagination: {
         page,
         limit,
@@ -65,7 +70,11 @@ export namespace ModulesService {
     });
 
     if (!module) throw new NotFoundError("Module");
-    return module;
+    return {
+      ...module,
+      nodes: module.nodes.map(transformNode),
+      edges: module.edges.map(transformEdge),
+    };
   }
 
   export async function getCategories() {

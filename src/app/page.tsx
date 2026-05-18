@@ -9,7 +9,8 @@ import React from "react";
 import { CheckCircle2, Zap, Crown, ShieldCheck, Infinity, Library, Play, ArrowRight, Sparkles, Network, Clock, BookOpen, Star, Quote } from "lucide-react";
 import Marquee from "react-fast-marquee";
 import Navbar from "@/components/Navbar";
-import { modules } from "@/lib/dummy-data";
+import { modulesApi } from "@/lib/api/modules";
+import type { ModuleListItem } from "@/lib/types";
 
 // Custom Node Component for MiniPreview
 const CustomNode = ({ data }: NodeProps) => (
@@ -84,6 +85,12 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
 };
 
 export default function Home() {
+  const [modules, setModules] = useState<ModuleListItem[]>([]);
+
+  useEffect(() => {
+    modulesApi.list({ limit: "3" }).then((res) => setModules(res.data)).catch(() => {});
+  }, []);
+
   const nodes = useMemo(() => [
     { id: '1', position: { x: 0, y: 0 }, data: { label: '' }, style: { width: 12, height: 12, borderRadius: '50%', background: '#fff', border: 'none', boxShadow: '0 0 15px #fff' } },
     { id: '2', position: { x: 100, y: -50 }, data: { label: '' }, style: { width: 8, height: 8, borderRadius: '50%', background: '#fff', border: 'none', opacity: 0.6 } },

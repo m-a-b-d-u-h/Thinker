@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
-import { Play, Network, Bookmark, Headphones, BookOpen } from "lucide-react";
+import { Play, Network, Bookmark, Headphones, BookOpen, BookmarkCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ReactFlow, { Background, Handle, Position, ReactFlowProvider, useReactFlow } from "reactflow";
 import "reactflow/dist/style.css";
-import { getModuleProgress } from "@/lib/progress";
 import { calculateDurations } from "@/lib/calculate";
+import { progressApi } from "@/lib/api/progress";
+import { favoritesApi } from "@/lib/api/favorites";
+import { useAuth } from "@/lib/auth-context";
 
 interface ModuleData {
   id: string;
@@ -74,25 +76,40 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
 
 export function ModuleCard({ module }: { module: ModuleData }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [progress, setProgress] = useState<{ listening: number; reading: number } | null>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
 
   useEffect(() => {
-    const saved = getModuleProgress(module.slug);
-    if (saved) {
-      setProgress({ listening: saved.listeningProgress, reading: saved.readingProgress });
-    }
-  }, [module.slug]);
+    if (!user) return;
+    progressApi.getBySlug(module.slug).then((p) => {
+      if (p) setProgress({ listening: p.listeningProgress, reading: p.readingProgress });
+    }).catch(() => {});
+    favoritesApi.check(module.slug).then((r) => setIsFavorited(r.isFavorited)).catch(() => {});
+  }, [module.slug, user]);
 
   const status = !progress ? "new" : progress.listening >= 100 || progress.reading >= 100 ? "completed" : "in-progress";
-
   const durations = calculateDurations(module.content);
+
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!user) { router.push("/login"); return; }
+    try {
+      if (isFavorited) {
+        await favoritesApi.remove(module.slug);
+        setIsFavorited(false);
+      } else {
+        await favoritesApi.add(module.slug);
+        setIsFavorited(true);
+      }
+    } catch {}
+  };
 
   return (
     <div
       onClick={() => router.push(`/models/${module.slug}`)}
       className="group relative flex flex-col bg-[#080808] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-[#0c0c0c] hover:border-white/10 hover:-translate-y-1 cursor-pointer"
     >
-      {/* React Flow Canvas - Full Card */}
       <div className="absolute inset-0 z-0">
         {module.nodes && module.nodes.length > 0 ? (
           <MiniPreview nodes={module.nodes} edges={module.edges || []} />
@@ -101,10 +118,8 @@ export function ModuleCard({ module }: { module: ModuleData }) {
         )}
       </div>
 
-      {/* Overlay gradient top */}
       <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#080808] via-[#080808]/80 to-transparent z-10" />
 
-      {/* Header - Title, Category */}
       <div className="relative z-20 p-8 pb-3">
         <div className="flex items-start justify-between gap-3">
           <h2 className="text-lg font-black text-white leading-[1.25] line-clamp-2 flex-1">{module.title}</h2>
@@ -113,7 +128,6 @@ export function ModuleCard({ module }: { module: ModuleData }) {
         <p className="text-[0.75rem] text-[#777] leading-relaxed mt-1">{module.description}</p>
       </div>
 
-      {/* Progress bar */}
       {progress && status === "in-progress" && (
         <div className="relative z-20 px-8 mb-2">
           <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
@@ -122,13 +136,10 @@ export function ModuleCard({ module }: { module: ModuleData }) {
         </div>
       )}
 
-      {/* Spacer */}
       <div className="flex-1 relative z-10 min-h-[160px]" />
 
-      {/* Overlay gradient bottom */}
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#080808] via-[#080808]/90 to-transparent z-10" />
 
-      {/* Footer - Buttons */}
       <div className="relative z-20 flex items-center justify-between px-8 pb-6 pt-8">
         <div className="flex items-center gap-2">
           <div
@@ -158,12 +169,10 @@ export function ModuleCard({ module }: { module: ModuleData }) {
             {durations.readMin}m
           </span>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-            }}
+            onClick={toggleFavorite}
             className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition-all"
           >
-            <Bookmark size={14} />
+            {isFavorited ? <BookmarkCheck size={14} className="text-white" /> : <Bookmark size={14} />}
           </button>
         </div>
       </div>

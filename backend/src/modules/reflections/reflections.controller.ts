@@ -15,7 +15,7 @@ export namespace ReflectionsController {
 
   export async function getById(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const reflection = await ReflectionsService.getById(req.user!.userId, id);
       res.json(reflection);
     } catch (err) {
@@ -35,7 +35,7 @@ export namespace ReflectionsController {
 
   export async function update(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const body = req.body as UpdateReflectionInput;
       const reflection = await ReflectionsService.update(req.user!.userId, id, body);
       res.json(reflection);
@@ -46,7 +46,7 @@ export namespace ReflectionsController {
 
   export async function remove(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { id } = req.params;
+      const id = req.params.id as string;
       const result = await ReflectionsService.remove(req.user!.userId, id);
       res.json(result);
     } catch (err) {

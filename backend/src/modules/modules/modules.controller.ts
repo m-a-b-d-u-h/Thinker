@@ -19,7 +19,7 @@ export namespace ModulesController {
 
   export async function getBySlug(req: Request, res: Response, next: NextFunction) {
     try {
-      const { slug } = req.params;
+      const slug = req.params.slug as string;
       const mod = await ModulesService.getBySlug(slug);
       res.json(mod);
     } catch (err) {
@@ -38,7 +38,7 @@ export namespace ModulesController {
 
   export async function getRecommended(req: Request, res: Response, next: NextFunction) {
     try {
-      const { slug } = req.params;
+      const slug = req.params.slug as string;
       const recommendations = await ModulesService.getRecommended(slug);
       res.json(recommendations);
     } catch (err) {

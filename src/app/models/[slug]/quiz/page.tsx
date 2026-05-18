@@ -1,27 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, ArrowRight, RefreshCw } from "lucide-react";
-import { modules } from "@/lib/dummy-data";
 import { notFound } from "next/navigation";
 import { use } from "react";
-
-import type { Question } from "@/lib/dummy-data";
+import { modulesApi } from "@/lib/api/modules";
+import { quizApi } from "@/lib/api/quiz";
+import type { Module, QuizQuestion, QuizSubmitResponse } from "@/lib/types";
 
 export default function QuizPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const module = modules.find((m) => m.slug === slug);
-  
-  if (!module || !module.questions) notFound();
+  const [module, setModule] = useState<Module | null>(null);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  const questions: Question[] = module.questions;
-  
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [result, setResult] = useState<QuizSubmitResponse | null>(null);
+  const [allAnswers, setAllAnswers] = useState<number[]>([]);
+
+  useEffect(() => {
+    modulesApi.getBySlug(slug).then((m) => {
+      setModule(m);
+    }).catch(() => {});
+    quizApi.getQuestions(slug).then((q) => {
+      setQuestions(q);
+    }).catch(() => {}).finally(() => setLoading(false));
+  }, [slug]);
 
   const handleSelect = (index: number) => {
     if (showResult) return;
@@ -31,8 +41,9 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
   const handleNext = () => {
     if (selectedAnswer === null) return;
 
-    const isCorrect = selectedAnswer === questions[currentQuestion].correctAnswer;
+    const isCorrect = selectedAnswer === (module?.questions?.[currentQuestion]?.correctAnswer ?? -1);
     if (isCorrect) setScore(s => s + 1);
+    setAllAnswers(prev => [...prev, selectedAnswer]);
     setShowResult(true);
   };
 
@@ -42,7 +53,20 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
       setSelectedAnswer(null);
       setShowResult(false);
     } else {
+      submitQuiz();
+    }
+  };
+
+  const submitQuiz = async () => {
+    setSubmitting(true);
+    try {
+      const res = await quizApi.submit(slug, { answers: allAnswers });
+      setResult(res);
+    } catch {
+      setResult({ score, total: questions.length, percentage: Math.round((score / questions.length) * 100), answers: [] });
+    } finally {
       setFinished(true);
+      setSubmitting(false);
     }
   };
 
@@ -52,141 +76,140 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
     setShowResult(false);
     setScore(0);
     setFinished(false);
+    setResult(null);
   };
 
-  const percentage = Math.round((score / questions.length) * 100);
+  const percentage = Math.round((score / (questions.length || 1)) * 100);
+
+  if (loading) {
+    return (
+      <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 flex justify-center">
+        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!module || questions.length === 0) notFound();
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16">
       <div className="max-w-[700px] mx-auto">
         <header className="mb-12">
           <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000', marginBottom: '1rem' }}>{module.category}</span>
-          <h1 className="text-4xl font-bold text-white mt-4 mb-2">
-            {module.title}
-          </h1>
-          <p className="text-lg text-[#666]">
-            Test your understanding of this module
-          </p>
+          <h1 className="text-4xl font-bold text-white mt-4 mb-2">{module.title}</h1>
+          <p className="text-lg text-[#666]">Test your understanding of this module</p>
         </header>
 
         {!finished ? (
           <div>
             <div className="mb-6">
-              <span className="text-[0.875rem] text-[#444]">
-                Question {currentQuestion + 1} of {questions.length}
-              </span>
+              <span className="text-[0.875rem] text-[#444]">Question {currentQuestion + 1} of {questions.length}</span>
             </div>
 
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestion}
-                initial={{ opacity: 0, x: 5 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -5 }}
-                transition={{ duration: 0.2 }}
+                exit={{ opacity: 0, x: -20 }}
               >
-                <h2 className="text-2xl font-semibold text-white mb-8 leading-relaxed">
-                  {questions[currentQuestion].question}
+                <h2 className="text-2xl font-bold text-white mb-8 leading-snug">
+                  {questions[currentQuestion]?.question}
                 </h2>
 
-                <div className="flex flex-col gap-3">
-                  {questions[currentQuestion].options.map((option, index) => {
-                    const isSelected = selectedAnswer === index;
-                    const isCorrect = index === questions[currentQuestion].correctAnswer;
-                    let bg = 'bg-[#111]';
-                    let border = 'border-[#222]';
-                    let color = 'text-[#888]';
-
-                    if (showResult) {
-                      if (isCorrect) {
-                        bg = 'bg-[#22c55e1a]';
-                        border = 'border-[#22c55e]';
-                        color = 'text-[#22c55e]';
-                      } else if (isSelected && !isCorrect) {
-                        bg = 'bg-[#ef44441a]';
-                        border = 'border-[#ef4444]';
-                        color = 'text-[#ef4444]';
-                      }
-                    } else if (isSelected) {
-                      bg = 'bg-white/[0.05]';
-                      border = 'border-white';
-                      color = 'text-white';
-                    }
+                <div className="flex flex-col gap-3 mb-8">
+                  {questions[currentQuestion]?.options.map((option, idx) => {
+                    const isCorrectOption = module.questions?.[currentQuestion]?.correctAnswer === idx;
+                    const isWrongSelected = showResult && selectedAnswer === idx && !isCorrectOption;
+                    const isCorrectSelected = showResult && selectedAnswer === idx && isCorrectOption;
 
                     return (
                       <button
-                        key={index}
-                        onClick={() => handleSelect(index)}
+                        key={idx}
+                        onClick={() => handleSelect(idx)}
                         disabled={showResult}
-                        className={`w-full text-left p-5 ${bg} border ${border} rounded-xl ${color} text-base cursor-pointer transition-all duration-200 hover:border-white/20 disabled:cursor-default flex items-center gap-4`}
+                        className={`w-full text-left px-6 py-4 rounded-xl text-[1rem] border transition-all duration-200 ${
+                          showResult
+                            ? isCorrectOption
+                              ? 'bg-green-500/10 border-green-500/30 text-green-400'
+                              : isWrongSelected
+                                ? 'bg-red-500/10 border-red-500/30 text-red-400'
+                                : 'bg-[#080808] border-white/5 text-[#888]'
+                            : selectedAnswer === idx
+                              ? 'bg-white/10 border-white/30 text-white'
+                              : 'bg-[#080808] border-white/5 text-[#888] hover:border-white/20 hover:text-white'
+                        } ${!showResult ? 'cursor-pointer' : ''}`}
                       >
-                        {showResult && (
-                          isCorrect ? <CheckCircle size={20} /> :
-                          isSelected ? <XCircle size={20} /> : null
-                        )}
-                        <span>{option}</span>
+                        <div className="flex items-center justify-between">
+                          <span>{option}</span>
+                          {showResult && isCorrectOption && <CheckCircle size={20} className="text-green-400 shrink-0" />}
+                          {showResult && isWrongSelected && <XCircle size={20} className="text-red-400 shrink-0" />}
+                        </div>
                       </button>
                     );
                   })}
                 </div>
-
-                {showResult && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 2.5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="mt-6 p-5 bg-white/[0.03] rounded-xl border border-white/5"
-                  >
-                    <p className="text-[0.875rem] text-[#666] leading-relaxed">
-                      {questions[currentQuestion].explanation}
-                    </p>
-                  </motion.div>
-                )}
-
-                <div className="mt-8 flex justify-end">
-                  {!showResult ? (
-                    <button
-                      onClick={handleNext}
-                      disabled={selectedAnswer === null}
-                      className={`px-6 py-3.5 rounded-xl text-[0.9375rem] font-semibold transition-all duration-200 ${selectedAnswer === null ? 'bg-[#222] text-[#444] cursor-not-allowed' : 'bg-white text-black hover:opacity-90 cursor-pointer'}`}
-                    >
-                      Check Answer
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleContinue}
-                      className="px-6 py-3.5 bg-white text-black rounded-xl text-[0.9375rem] font-semibold cursor-pointer hover:opacity-90 transition-opacity flex items-center gap-2"
-                    >
-                      {currentQuestion < questions.length - 1 ? 'Next Question' : 'See Results'}
-                      <ArrowRight size={18} />
-                    </button>
-                  )}
-                </div>
               </motion.div>
             </AnimatePresence>
+
+            {!showResult ? (
+              <button
+                onClick={handleNext}
+                disabled={selectedAnswer === null}
+                className="w-full py-4 bg-white text-black rounded-xl font-bold text-[0.9375rem] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/90 transition-all flex items-center justify-center gap-2"
+              >
+                Submit Answer
+              </button>
+            ) : (
+              <div>
+                <div className="mb-6 p-4 rounded-xl bg-[#0a0a0a] border border-white/5">
+                  {module.questions?.[currentQuestion]?.explanation && (
+                    <p className="text-[0.9375rem] text-[#888] leading-relaxed">
+                      {module.questions[currentQuestion].explanation}
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={handleContinue}
+                  className="w-full py-4 bg-white text-black rounded-xl font-bold text-[0.9375rem] cursor-pointer hover:bg-white/90 transition-all flex items-center justify-center gap-2"
+                >
+                  {currentQuestion < questions.length - 1 ? (
+                    <>Next Question <ArrowRight size={18} /></>
+                  ) : (
+                    <>See Results <ArrowRight size={18} /></>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         ) : (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center p-12 bg-[#111] rounded-2xl border border-[#222]"
-          >
-            <div className={`w-20 h-20 mx-auto mb-6 rounded-full flex items-center justify-center ${percentage >= 80 ? 'bg-[#22c55e33]' : percentage >= 60 ? 'bg-[#fbbf2433]' : 'bg-[#ef444433]'}`}>
-              <span className={`text-2xl font-bold ${percentage >= 80 ? 'text-[#22c55e]' : percentage >= 60 ? 'text-[#fbbf24]' : 'text-[#ef4444]'}`}>
-                {percentage}%
-              </span>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
+            <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl font-black">{percentage}%</span>
             </div>
-
             <h2 className="text-3xl font-bold text-white mb-2">
-              {percentage >= 80 ? 'Excellent!' : percentage >= 60 ? 'Good effort!' : 'Keep practicing!'}
+              {percentage >= 80 ? "Great job!" : percentage >= 50 ? "Good effort!" : "Keep practicing!"}
             </h2>
-
-            <p className="text-base text-[#666] mb-8">
-              You got {score} out of {questions.length} questions correct.
+            <p className="text-lg text-[#666] mb-8">
+              You got {result?.score ?? score} out of {result?.total ?? questions.length} correct
             </p>
+
+            {result?.answers && result.answers.length > 0 && (
+              <div className="text-left mb-8 space-y-3">
+                {result.answers.map((a, idx) => (
+                  <div key={idx} className={`p-4 rounded-xl border ${a.correct ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
+                    <p className="text-[0.875rem] text-white/80 mb-1">
+                      <span className="font-bold">{a.correct ? "✓" : "✗"}</span> Question {idx + 1}
+                    </p>
+                    {a.explanation && <p className="text-[0.8125rem] text-[#888]">{a.explanation}</p>}
+                  </div>
+                ))}
+              </div>
+            )}
 
             <button
               onClick={handleRestart}
-              className="inline-flex items-center gap-2 px-6 py-3.5 bg-transparent text-[#888] border border-[#222] rounded-xl text-[0.9375rem] font-semibold cursor-pointer hover:text-white hover:border-white/20 transition-colors"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-xl font-bold cursor-pointer hover:bg-white/90 transition-all"
             >
               <RefreshCw size={18} />
               Retry Quiz

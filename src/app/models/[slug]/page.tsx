@@ -1,15 +1,21 @@
 "use client";
 
-import { modules } from "@/lib/dummy-data";
 import { notFound } from "next/navigation";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { getModuleProgress, saveModuleProgress } from "@/lib/progress";
+import { modulesApi } from "@/lib/api/modules";
+import { progressApi } from "@/lib/api/progress";
+import { useAuth } from "@/lib/auth-context";
+import type { Module } from "@/lib/types";
 
 export default function ModulePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
+  const { user } = useAuth();
+  const [module, setModule] = useState<Module | null>(null);
+  const [loading, setLoading] = useState(true);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [voices, setVoices] = useState<any[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<string>("");
@@ -23,11 +29,21 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const [savedReadingProgress, setSavedReadingProgress] = useState<number | null>(null);
   const [showResume, setShowResume] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [recommendations, setRecommendations] = useState<Module[]>([]);
   const listenSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const readSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const articleRef = useRef<HTMLDivElement>(null);
 
-  const module = modules.find((m) => m.slug === slug);
+  useEffect(() => {
+    modulesApi.getBySlug(slug).then((m) => {
+      setModule(m);
+      setLoading(false);
+      modulesApi.getRecommended(slug).then(setRecommendations).catch(() => {});
+    }).catch(() => {
+      setLoading(false);
+    });
+  }, [slug]);
+
   const synthRef = useRef<SpeechSynthesis | null>(null);
   if (typeof window !== 'undefined' && !synthRef.current) {
     synthRef.current = window.speechSynthesis;
@@ -117,9 +133,9 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   }, [module]);
 
   useEffect(() => {
-    const synth = window.speechSynthesis;
+    const s = window.speechSynthesis;
     const loadVoices = () => {
-      const v = synth.getVoices();
+      const v = s.getVoices();
       const filteredVoices = v
         .filter(voice => {
           const isEnglish = voice.lang.startsWith('en');
@@ -141,49 +157,57 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       else if (filteredVoices.length > 0) setSelectedVoice(filteredVoices[0].name);
     };
     loadVoices();
-    synth.addEventListener('voiceschanged', loadVoices);
-    return () => synth.removeEventListener('voiceschanged', loadVoices);
+    s.addEventListener('voiceschanged', loadVoices);
+    return () => s.removeEventListener('voiceschanged', loadVoices);
   }, []);
 
   useEffect(() => {
-    if (!module) return;
-    const saved = getModuleProgress(module.slug);
-    if (!saved) return;
-    const completed = saved.listeningProgress >= 100 || saved.readingProgress >= 100;
-    setIsCompleted(completed);
-    const hasListen = saved.listeningProgress > 0;
-    const hasRead = saved.readingProgress > 0;
-    if (!hasListen && !hasRead) return;
+    if (!module || !user) return;
+    progressApi.getBySlug(module.slug).then((saved) => {
+      if (!saved) return;
+      const completed = saved.listeningProgress >= 100 || saved.readingProgress >= 100;
+      setIsCompleted(completed);
+      const hasListen = saved.listeningProgress > 0;
+      const hasRead = saved.readingProgress > 0;
+      if (!hasListen && !hasRead) return;
 
-    if (hasListen) {
-      setSavedListeningProgress(saved.listeningProgress);
-      setProgress(saved.listeningProgress);
-      setCurrentCharIndex(saved.currentCharIndex);
-      setRate(saved.audioRate);
-    }
-    if (hasRead) {
-      setSavedReadingProgress(saved.readingProgress);
-      if (saved.scrollPosition > 0) {
-        setTimeout(() => {
-          window.scrollTo({ top: saved.scrollPosition, behavior: "instant" });
-        }, 100);
+      if (hasListen) {
+        setSavedListeningProgress(saved.listeningProgress);
+        setProgress(saved.listeningProgress);
+        setCurrentCharIndex(saved.currentCharIndex);
+        setRate(saved.audioRate);
       }
-    }
-    setShowResume(true);
-  }, [module]);
+      if (hasRead) {
+        setSavedReadingProgress(saved.readingProgress);
+        if (saved.scrollPosition > 0) {
+          setTimeout(() => {
+            window.scrollTo({ top: saved.scrollPosition, behavior: "instant" });
+          }, 100);
+        }
+      }
+      setShowResume(true);
+    }).catch(() => {});
+  }, [module, user]);
+
+  const saveProgress = useCallback(async (data: Record<string, any>) => {
+    if (!user) return;
+    try {
+      await progressApi.upsert(slug, data);
+    } catch {}
+  }, [slug, user]);
 
   useEffect(() => {
     if (progress > 0 && isPlaying) {
       if (listenSaveTimer.current) clearTimeout(listenSaveTimer.current);
       listenSaveTimer.current = setTimeout(() => {
-        saveModuleProgress(slug, {
+        saveProgress({
           listeningProgress: progress,
           currentCharIndex,
           audioRate: rate,
         });
       }, 2000);
     }
-  }, [progress, isPlaying, slug, currentCharIndex, rate]);
+  }, [progress, isPlaying, slug, currentCharIndex, rate, saveProgress]);
 
   useEffect(() => {
     if (!articleRef.current) return;
@@ -198,7 +222,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       const pct = Math.min(100, Math.round((scrolled / articleHeight) * 100));
       if (readSaveTimer.current) clearTimeout(readSaveTimer.current);
       readSaveTimer.current = setTimeout(() => {
-        saveModuleProgress(slug, {
+        saveProgress({
           readingProgress: pct,
           scrollPosition: window.scrollY,
         });
@@ -206,7 +230,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [slug]);
+  }, [slug, saveProgress]);
 
   const saveOnLeave = useCallback(() => {
     const data: Record<string, any> = { scrollPosition: window.scrollY };
@@ -225,8 +249,8 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       const pct = Math.min(100, Math.round((scrolled / articleHeight) * 100));
       data.readingProgress = pct;
     }
-    saveModuleProgress(slug, data);
-  }, [slug, progress, currentCharIndex, rate]);
+    saveProgress(data);
+  }, [slug, progress, currentCharIndex, rate, saveProgress]);
 
   useEffect(() => {
     window.addEventListener("beforeunload", saveOnLeave);
@@ -252,20 +276,21 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const handleResumeReading = () => {
     setShowResume(false);
     if (savedReadingProgress !== null) {
-      const saved = getModuleProgress(slug);
-      if (saved && saved.scrollPosition > 0) {
-        window.scrollTo({ top: saved.scrollPosition, behavior: "smooth" });
-      }
+      progressApi.getBySlug(slug).then((saved) => {
+        if (saved && saved.scrollPosition > 0) {
+          window.scrollTo({ top: saved.scrollPosition, behavior: "smooth" });
+        }
+      }).catch(() => {});
     }
   };
 
-  const handleStartOver = () => {
+  const handleStartOver = async () => {
     setShowResume(false);
     setSavedListeningProgress(null);
     setSavedReadingProgress(null);
     setProgress(0);
     setCurrentCharIndex(0);
-    saveModuleProgress(slug, { listeningProgress: 0, readingProgress: 0, currentCharIndex: 0, scrollPosition: 0 });
+    await saveProgress({ listeningProgress: 0, readingProgress: 0, currentCharIndex: 0, scrollPosition: 0 });
   };
 
   const startSpeech = (startIndex: number, text: string, vol: number, spd: number, voiceName: string) => {
@@ -330,10 +355,10 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     else { startSpeech(Math.floor((progress / 100) * unifiedCleanText.length), unifiedCleanText, volume, rate, selectedVoice); }
   };
 
-  const handleMarkComplete = () => {
+  const handleMarkComplete = async () => {
     const newCompleted = !isCompleted;
     setIsCompleted(newCompleted);
-    saveModuleProgress(slug, {
+    await saveProgress({
       listeningProgress: newCompleted ? 100 : 0,
       readingProgress: newCompleted ? 100 : 0,
     });
@@ -349,12 +374,15 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     }
   };
 
-  if (!module) notFound();
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
-  const recommendations = useMemo(() =>
-    modules.filter(m => m.category === module.category && m.slug !== module.slug).slice(0, 3),
-    [module]
-  );
+  if (!module) notFound();
 
   const getBlockText = (block: any) => {
     return block.segments
@@ -451,25 +479,24 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           ))}
         </article>
 
-          <div className="sticky top-[100px] pl-6 border-l border-[#333]">
-            <div className="text-[0.6875rem] font-semibold text-[#444] uppercase tracking-[0.1em] mb-6">Contents</div>
-            <nav className="flex flex-col gap-3">
-              {contentBlocks
-                .filter(b => b.type === 'h2' || b.type === 'h3')
-                .map((block: any, idx: number) => (
-                  <a
-                    key={idx}
-                    href={`#${getBlockText(block).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
-                    className={`no-underline ${block.type === 'h3' ? 'text-[0.8125rem] pl-4' : 'text-[0.875rem]'} ${block.type === 'h3' ? 'font-normal' : 'font-medium'} text-[#666] hover:text-[#ccc] transition-colors`}
-                  >
-                    {getBlockText(block)}
-                  </a>
-                ))}
-            </nav>
-          </div>
+        <div className="sticky top-[100px] pl-6 border-l border-[#333]">
+          <div className="text-[0.6875rem] font-semibold text-[#444] uppercase tracking-[0.1em] mb-6">Contents</div>
+          <nav className="flex flex-col gap-3">
+            {contentBlocks
+              .filter(b => b.type === 'h2' || b.type === 'h3')
+              .map((block: any, idx: number) => (
+                <a
+                  key={idx}
+                  href={`#${getBlockText(block).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
+                  className={`no-underline ${block.type === 'h3' ? 'text-[0.8125rem] pl-4' : 'text-[0.875rem]'} ${block.type === 'h3' ? 'font-normal' : 'font-medium'} text-[#666] hover:text-[#ccc] transition-colors`}
+                >
+                  {getBlockText(block)}
+                </a>
+              ))}
+          </nav>
+        </div>
       </div>
 
-      {/* What's Next */}
       {recommendations.length > 0 && (
         <section className="max-w-[65ch] mx-auto mt-20 mb-8">
           <h2 className="text-2xl font-black text-white mb-1 tracking-[-0.03em]">
@@ -503,7 +530,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
         </section>
       )}
 
-      {/* Resume Banner */}
       {showResume && (savedListeningProgress !== null || savedReadingProgress !== null) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -579,7 +605,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
         </motion.div>
       )}
 
-      {/* Mark as Complete */}
       <div className="max-w-[65ch] mx-auto mb-8">
         <button
           onClick={handleMarkComplete}
@@ -594,7 +619,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
         </button>
       </div>
 
-      {/* TTS Player */}
       <div className="fixed bottom-0 left-0 right-0 bg-[#050505cc] backdrop-blur-[30px] border-t border-[var(--border)] z-[1000] py-6 shadow-2xl shadow-black/50">
         <div className="mx-auto w-full max-w-[1200px] px-6 flex flex-col gap-5">
           <div className="flex items-center gap-5">
