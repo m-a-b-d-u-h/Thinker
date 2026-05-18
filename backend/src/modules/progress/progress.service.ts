@@ -79,15 +79,21 @@ export namespace ProgressService {
       take: 10,
       include: {
         module: {
-          select: { slug: true, title: true, category: true, content: true },
+          select: { id: true, slug: true, title: true, category: true, description: true, content: true, isPremium: true, createdAt: true, updatedAt: true },
         },
       },
     });
 
     return progress.map((p) => ({
+      id: p.module.id,
       slug: p.module.slug,
       title: p.module.title,
+      description: p.module.description,
       category: p.module.category,
+      content: p.module.content,
+      isPremium: p.module.isPremium,
+      createdAt: p.module.createdAt.toISOString(),
+      updatedAt: p.module.updatedAt.toISOString(),
       listeningProgress: p.listeningProgress,
       readingProgress: p.readingProgress,
       completed: p.completed,

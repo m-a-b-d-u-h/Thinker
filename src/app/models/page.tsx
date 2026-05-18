@@ -1,27 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Play, Clock, Search, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import ReactFlow, { Background, NodeProps, Handle, Position, useReactFlow, ReactFlowProvider } from "reactflow";
+import ReactFlow, { Background, NodeProps, Handle, Position, ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
 import { ModuleCard } from "@/components/ModuleCard";
-import { modulesApi } from "@/lib/api/modules";
-import { progressApi } from "@/lib/api/progress";
+import { useModules } from "@/lib/use-modules";
 import { useAuth } from "@/lib/auth-context";
-import type { ModuleListItem, UserProgress } from "@/lib/types";
-
-const CustomNode = ({ data }: NodeProps) => (
-  <div className="bg-[#111] text-white border border-[#222] rounded-xl px-3 py-2.5 text-xs font-bold text-center min-w-[120px]">
-    <Handle type="target" position={Position.Top} className="!bg-[#333] !border-0 !w-2 !h-2" />
-    {data.label}
-    <Handle type="source" position={Position.Bottom} className="!bg-[#333] !border-0 !w-2 !h-2" />
-  </div>
-);
-
-const nodeTypes = { custom: CustomNode };
 
 const nodeSlugs: Record<string, string> = {
   "First Principles": "first-principles",
@@ -110,68 +98,30 @@ const MarketingFlow = () => {
 export default function ProductsPage() {
   const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
 
-  const [modules, setModules] = useState<ModuleListItem[]>([]);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [categories, setCategories] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { modules, categories, historyModules, totalPages, loading, error, fetchHistory } = useModules(
+    currentPage,
+    selectedCategory,
+    debouncedSearch,
+  );
 
-  const [historyModules, setHistoryModules] = useState<(ModuleListItem & { progress?: UserProgress })[]>([]);
+  const historyFetchedRef = useRef(false);
 
   useEffect(() => {
-    modulesApi.getCategories().then(setCategories).catch(() => {});
-  }, []);
-
-  const fetchModules = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params: Record<string, string> = { page: String(currentPage), limit: "6" };
-      if (selectedCategory) params.category = selectedCategory;
-      if (searchQuery) params.search = searchQuery;
-      const res = await modulesApi.list(params);
-      setModules(res.data);
-      setTotalPages(res.pagination.totalPages);
-      setTotal(res.pagination.total);
-    } catch {
-      setModules([]);
-    } finally {
-      setLoading(false);
+    if (user && !historyFetchedRef.current) {
+      historyFetchedRef.current = true;
+      fetchHistory();
     }
-  }, [currentPage, selectedCategory, searchQuery]);
+  }, [user, fetchHistory]);
 
   useEffect(() => {
-    fetchModules();
-  }, [fetchModules]);
-
-  useEffect(() => {
-    if (!user) return;
-    progressApi.getContinueLearning().then(async (saved) => {
-      if (saved.length === 0) return;
-      const slugs = saved.slice(0, 3).map((p) => {
-        const slug = p.moduleId; // moduleId from progress might be a cuid, not slug
-        return p;
-      });
-      try {
-        const res = await modulesApi.list({ limit: "3" });
-        const matched = res.data.filter((m) =>
-          saved.some((p) => p.moduleId === m.id)
-        ).slice(0, 3);
-        if (matched.length > 0) {
-          const withProgress = matched.map((m) => ({
-            ...m,
-            progress: saved.find((p) => p.moduleId === m.id),
-          }));
-          setHistoryModules(withProgress);
-        }
-      } catch {
-        // fallback
-      }
-    }).catch(() => {});
-  }, [user]);
+    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16 min-h-[90vh]">
@@ -358,6 +308,10 @@ export default function ProductsPage() {
           />
         </div>
       </div>
+
+      {error && (
+        <div className="text-center py-10 text-red-400">{error}</div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-20">

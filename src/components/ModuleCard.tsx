@@ -1,14 +1,11 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
-import { Play, Network, Bookmark, Headphones, BookOpen, BookmarkCheck } from "lucide-react";
+import React, { useMemo } from "react";
+import { Play, Network, Headphones, BookOpen } from "lucide-react";
 import { useRouter } from "next/navigation";
 import ReactFlow, { Background, Handle, Position, ReactFlowProvider, useReactFlow } from "reactflow";
 import "reactflow/dist/style.css";
 import { calculateDurations } from "@/lib/calculate";
-import { progressApi } from "@/lib/api/progress";
-import { favoritesApi } from "@/lib/api/favorites";
-import { useAuth } from "@/lib/auth-context";
 
 interface ModuleData {
   id: string;
@@ -76,34 +73,7 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
 
 export function ModuleCard({ module }: { module: ModuleData }) {
   const router = useRouter();
-  const { user } = useAuth();
-  const [progress, setProgress] = useState<{ listening: number; reading: number } | null>(null);
-  const [isFavorited, setIsFavorited] = useState(false);
-
-  useEffect(() => {
-    if (!user) return;
-    progressApi.getBySlug(module.slug).then((p) => {
-      if (p) setProgress({ listening: p.listeningProgress, reading: p.readingProgress });
-    }).catch(() => {});
-    favoritesApi.check(module.slug).then((r) => setIsFavorited(r.isFavorited)).catch(() => {});
-  }, [module.slug, user]);
-
-  const status = !progress ? "new" : progress.listening >= 100 || progress.reading >= 100 ? "completed" : "in-progress";
   const durations = calculateDurations(module.content);
-
-  const toggleFavorite = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!user) { router.push("/login"); return; }
-    try {
-      if (isFavorited) {
-        await favoritesApi.remove(module.slug);
-        setIsFavorited(false);
-      } else {
-        await favoritesApi.add(module.slug);
-        setIsFavorited(true);
-      }
-    } catch {}
-  };
 
   return (
     <div
@@ -128,14 +98,6 @@ export function ModuleCard({ module }: { module: ModuleData }) {
         <p className="text-[0.75rem] text-[#777] leading-relaxed mt-1">{module.description}</p>
       </div>
 
-      {progress && status === "in-progress" && (
-        <div className="relative z-20 px-8 mb-2">
-          <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
-            <div className="h-full bg-white rounded-full" style={{ width: `${Math.max(progress.listening || 0, progress.reading || 0)}%` }} />
-          </div>
-        </div>
-      )}
-
       <div className="flex-1 relative z-10 min-h-[160px]" />
 
       <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#080808] via-[#080808]/90 to-transparent z-10" />
@@ -147,7 +109,7 @@ export function ModuleCard({ module }: { module: ModuleData }) {
             className="group/btn flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black text-[0.6875rem] font-bold no-underline cursor-pointer hover:bg-white/90 transition-all"
           >
             <Play size={12} fill="currentColor" />
-            <span>{status === "completed" ? "Review" : status === "in-progress" ? "Continue" : "Start Learning"}</span>
+            <span>Start Learning</span>
           </div>
           <button
             onClick={(e) => {
@@ -160,21 +122,13 @@ export function ModuleCard({ module }: { module: ModuleData }) {
             <span>Path</span>
           </button>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-[0.625rem] text-[#555] flex items-center gap-1.5">
-            <Headphones size={10} />
-            {durations.listenMin}m
-            <span className="text-[#333] mx-0.5">·</span>
-            <BookOpen size={10} />
-            {durations.readMin}m
-          </span>
-          <button
-            onClick={toggleFavorite}
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition-all"
-          >
-            {isFavorited ? <BookmarkCheck size={14} className="text-white" /> : <Bookmark size={14} />}
-          </button>
-        </div>
+        <span className="text-[0.625rem] text-[#555] flex items-center gap-1.5">
+          <Headphones size={10} />
+          {durations.listenMin}m
+          <span className="text-[#333] mx-0.5">&middot;</span>
+          <BookOpen size={10} />
+          {durations.readMin}m
+        </span>
       </div>
     </div>
   );

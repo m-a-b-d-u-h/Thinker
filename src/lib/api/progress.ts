@@ -1,6 +1,22 @@
 import { api } from "@/lib/api";
 import type { UserProgress, ProgressStats } from "@/lib/types";
 
+export interface ContinueLearningItem {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  content: string;
+  isPremium: boolean;
+  createdAt: string;
+  updatedAt: string;
+  listeningProgress: number;
+  readingProgress: number;
+  completed: boolean;
+  lastReadAt: number;
+}
+
 export const progressApi = {
   getAll: () =>
     api.get<UserProgress[]>("/progress"),
@@ -19,7 +35,7 @@ export const progressApi = {
     api.put<UserProgress>(`/progress/${slug}`, body),
 
   getContinueLearning: () =>
-    api.get<UserProgress[]>("/progress/continue-learning"),
+    api.get<ContinueLearningItem[]>("/progress/continue-learning"),
 
   getStats: () =>
     api.get<ProgressStats>("/progress/stats"),
