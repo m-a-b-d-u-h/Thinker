@@ -12,9 +12,9 @@ export const loginSchema = z.object({
 });
 
 export const googleAuthSchema = z.object({
+  googleId: z.string().min(1),
   email: z.string().email(),
   name: z.string().optional(),
-  googleId: z.string().min(1),
   avatar: z.string().url().optional(),
 });
 

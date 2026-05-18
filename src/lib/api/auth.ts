@@ -8,7 +8,7 @@ export const authApi = {
   login: (body: { email: string; password: string }) =>
     api.post<AuthResponse>("/auth/login", body),
 
-  googleAuth: (body: { token: string }) =>
+  googleAuth: (body: { googleId: string; email: string; name?: string; avatar?: string }) =>
     api.post<AuthResponse>("/auth/google", body),
 
   getMe: () => api.get<User>("/auth/me"),
