@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useMemo } from "react";
-import { Play, Network, Headphones, BookOpen } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Play, Network, Headphones, BookOpen, Bookmark } from "lucide-react";
 import { useRouter } from "next/navigation";
-import ReactFlow, { Background, Handle, Position, ReactFlowProvider, useReactFlow } from "reactflow";
+import ReactFlow, { Handle, Position, ReactFlowProvider, useReactFlow } from "reactflow";
 import "reactflow/dist/style.css";
 import { calculateDurations } from "@/lib/calculate";
+import { favoritesApi } from "@/lib/api/favorites";
 
 interface ModuleData {
   id: string;
@@ -16,13 +17,14 @@ interface ModuleData {
   content: string;
   nodes?: any[];
   edges?: any[];
+  isFavorited?: boolean;
 }
 
 const CustomNode = ({ data }: any) => (
-  <div className="bg-[#0d0d0d]/90 text-white border border-[#1a1a1a] rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
+  <div className="bg-[#0d0d0d]/90 text-white border border-[#333] rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap backdrop-blur-sm">
+    <Handle type="target" position={Position.Top} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
     {data.label}
-    <Handle type="source" position={Position.Bottom} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
+    <Handle type="source" position={Position.Bottom} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
   </div>
 );
 
@@ -47,7 +49,6 @@ const FlowAutoFit = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
       defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
       fitView
     >
-      <Background color="#0f0f0f" gap={16} size={0.5} />
     </ReactFlow>
   );
 };
@@ -61,7 +62,7 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
   const styledEdges = useMemo(() => edges.map(e => ({
     ...e,
     animated: true,
-    style: { stroke: 'rgba(255,255,255,0.15)', strokeWidth: 1.5 }
+    style: { stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1.5 }
   })), [edges]);
 
   return (
@@ -74,6 +75,22 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
 export function ModuleCard({ module }: { module: ModuleData }) {
   const router = useRouter();
   const durations = calculateDurations(module.content);
+  const [isFavorited, setIsFavorited] = useState(module.isFavorited ?? false);
+
+  const toggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const prev = isFavorited;
+    setIsFavorited(!prev);
+    try {
+      if (prev) {
+        await favoritesApi.remove(module.slug);
+      } else {
+        await favoritesApi.add(module.slug);
+      }
+    } catch {
+      setIsFavorited(prev);
+    }
+  };
 
   return (
     <div
@@ -122,13 +139,25 @@ export function ModuleCard({ module }: { module: ModuleData }) {
             <span>Path</span>
           </button>
         </div>
-        <span className="text-[0.625rem] text-[#555] flex items-center gap-1.5">
-          <Headphones size={10} />
-          {durations.listenMin}m
-          <span className="text-[#333] mx-0.5">&middot;</span>
-          <BookOpen size={10} />
-          {durations.readMin}m
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-[0.6875rem] text-[#666] flex items-center gap-2">
+            <span className="flex items-center gap-1">
+              <Headphones size={12} />
+              <span>Listen {durations.listenMin}m</span>
+            </span>
+            <span className="text-[#444]">·</span>
+            <span className="flex items-center gap-1">
+              <BookOpen size={12} />
+              <span>Read {durations.readMin}m</span>
+            </span>
+          </span>
+          <button
+            onClick={toggleFavorite}
+            className="p-2.5 rounded-full text-[#888] hover:text-[#fbbf24] hover:bg-white/10 transition-all"
+          >
+            <Bookmark size={16} fill={isFavorited ? "#fbbf24" : "none"} stroke={isFavorited ? "#fbbf24" : "currentColor"} />
+          </button>
+        </div>
       </div>
     </div>
   );

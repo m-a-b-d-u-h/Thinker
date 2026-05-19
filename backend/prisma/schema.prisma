@@ -36,6 +36,8 @@ model User {
   stripeCustomerId  String?            @unique
   subscriptionStatus SubscriptionStatus @default(FREE)
   subscriptionEnd   DateTime?
+  streakCount       Int                @default(0)
+  lastActiveDate    DateTime?
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
 

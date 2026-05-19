@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import { ModulesService } from "./modules.service";
+import type { AuthRequest } from "../../types";
 
 export namespace ModulesController {
-  export async function list(req: Request, res: Response, next: NextFunction) {
+  export async function list(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { page, limit, category, search } = req.query;
       const result = await ModulesService.list({
@@ -10,6 +11,7 @@ export namespace ModulesController {
         limit: limit ? parseInt(limit as string) : undefined,
         category: category as string | undefined,
         search: search as string | undefined,
+        userId: req.user?.userId,
       });
       res.json(result);
     } catch (err) {

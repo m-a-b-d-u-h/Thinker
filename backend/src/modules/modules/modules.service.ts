@@ -15,6 +15,7 @@ export namespace ModulesService {
     limit?: number;
     category?: string;
     search?: string;
+    userId?: string;
   }) {
     const page = Math.max(1, query.page || 1);
     const limit = Math.min(50, Math.max(1, query.limit || 12));
@@ -33,26 +34,32 @@ export namespace ModulesService {
       ];
     }
 
+    const include: Prisma.ModuleInclude = {
+      nodes: { orderBy: { id: "asc" } },
+      edges: { orderBy: { id: "asc" } },
+      _count: { select: { questions: true } },
+    };
+
     const [modules, total] = await Promise.all([
       prisma.module.findMany({
         where,
         skip,
         take: limit,
         orderBy: { createdAt: "desc" },
-        include: {
-          nodes: { orderBy: { id: "asc" } },
-          edges: { orderBy: { id: "asc" } },
-          _count: { select: { questions: true } },
-        },
+        include: query.userId
+          ? { ...include, favorites: { where: { userId: query.userId } } }
+          : include,
       }),
       prisma.module.count({ where }),
     ]);
 
     return {
-      data: modules.map((m) => ({
+      data: modules.map((m: any) => ({
         ...m,
         nodes: m.nodes.map(transformNode),
         edges: m.edges.map(transformEdge),
+        isFavorited: query.userId ? m.favorites?.length > 0 : false,
+        favorites: undefined,
       })),
       pagination: {
         page,

@@ -8,7 +8,7 @@ export const reflectionsApi = {
   getById: (id: string) =>
     api.get<Reflection>(`/reflections/${id}`),
 
-  create: (body: { title: string; content: string; moduleId: string }) =>
+  create: (body: { title: string; content: string; moduleSlug: string }) =>
     api.post<Reflection>("/reflections", body),
 
   update: (id: string, body: { title?: string; content?: string }) =>

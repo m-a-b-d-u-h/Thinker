@@ -66,6 +66,7 @@ export interface ModuleListItem {
   nodes: ReactFlowNode[];
   edges: ReactFlowEdge[];
   _count?: { questions: number };
+  isFavorited?: boolean;
 }
 
 export interface PaginatedResponse<T> {
@@ -146,6 +147,7 @@ export interface Reflection {
   title: string;
   content: string;
   timestamp: string;
+  module?: { slug: string; title: string; category: string };
 }
 
 export interface Highlight {
@@ -164,6 +166,22 @@ export interface ProgressStats {
   listeningMinutes: number;
   readingMinutes: number;
   completedNodes: number;
+  inProgressCount: number;
+  highlights: number;
+  historyCount: number;
+  categoryBreakdown: Record<string, number>;
+  listenXp: number;
+  readXp: number;
+  completedXp: number;
+  reflectionXp: number;
+  highlightXp: number;
+  streakXp: number;
+  totalXp: number;
+  rank: string;
+  rankLevel: number;
+  nextRank: string | null;
+  nextLevelXp: number;
+  prevLevelXp: number;
 }
 
 export interface PaginationInfo {

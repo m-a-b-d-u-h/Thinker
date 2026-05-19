@@ -4,7 +4,7 @@ import { optionalAuth } from "../../middleware/auth";
 
 const router = Router();
 
-router.get("/", ModulesController.list);
+router.get("/", optionalAuth, ModulesController.list);
 router.get("/categories", ModulesController.getCategories);
 router.get("/:slug", optionalAuth, ModulesController.getBySlug);
 router.get("/:slug/recommended", ModulesController.getRecommended);

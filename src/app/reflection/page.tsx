@@ -1,31 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookOpen, Calendar } from "lucide-react";
+import { BookOpen, Calendar, Trash2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { formatDate } from "@/lib/format";
 import { reflectionsApi } from "@/lib/api/reflections";
-import { modulesApi } from "@/lib/api/modules";
 import { useAuth } from "@/lib/auth-context";
-import type { Reflection, ModuleListItem } from "@/lib/types";
+import type { Reflection } from "@/lib/types";
 
 export default function ReflectionListPage() {
   const { user } = useAuth();
   const [reflections, setReflections] = useState<Reflection[]>([]);
-  const [modules, setModules] = useState<ModuleListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) { setLoading(false); return; }
-    Promise.all([
-      reflectionsApi.list().catch(() => [] as Reflection[]),
-      modulesApi.list({ limit: "50" }).catch(() => ({ data: [] as ModuleListItem[], pagination: { page: 1, limit: 50, total: 0, totalPages: 0 } })),
-    ]).then(([refl, mods]) => {
-      setReflections(refl);
-      setModules(mods.data);
-    }).finally(() => setLoading(false));
-  }, [user]);
+    reflectionsApi.list().then(setReflections).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    try {
+      await reflectionsApi.remove(id);
+      setReflections((prev) => prev.filter((r) => r.id !== id));
+    } catch {}
+  };
 
   if (!user) {
     return (
@@ -47,8 +45,6 @@ export default function ReflectionListPage() {
     );
   }
 
-  const getModuleTitle = (moduleId: string) => modules.find((m) => m.id === moduleId)?.title || "Unknown";
-
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16">
       <header className="mb-12">
@@ -58,7 +54,7 @@ export default function ReflectionListPage() {
           </div>
         </div>
         <h1 className="text-5xl font-black mb-4 tracking-[-0.04em]">Reflections</h1>
-        <p className="text-muted text-lg max-w-[500px]">Review and manage your learning reflections.</p>
+        <p className="text-muted text-lg max-w-[500px]">Review your learning reflections ({reflections.length})</p>
       </header>
 
       {reflections.length === 0 ? (
@@ -72,24 +68,55 @@ export default function ReflectionListPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.05 }}
             >
-              <div className="bg-[#080808] border border-white/5 rounded-2xl p-8 hover:border-white/10 transition-all duration-200 cursor-pointer group h-full flex flex-col">
-                <div className="flex items-center gap-3 mb-4 flex-wrap">
-                  <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10">
-                    {getModuleTitle(ref.moduleId)}
-                  </span>
-                  <span className="text-[0.75rem] text-[#444] flex items-center gap-1.5">
-                    <Calendar size={12} />
-                    {formatDate(new Date(ref.timestamp).getTime())}
-                  </span>
+              <div className="group bg-[#080808] border border-white/5 rounded-2xl hover:border-white/10 transition-all duration-200 h-full flex flex-col">
+                <div className="p-6 pb-3 flex-1">
+                  <div className="flex items-center gap-2 mb-3 flex-wrap">
+                    {ref.module?.category && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10">
+                        {ref.module.category.charAt(0).toUpperCase() + ref.module.category.slice(1).replace(/-/g, ' ')}
+                      </span>
+                    )}
+                    <span className="text-[0.6875rem] text-[#555] flex items-center gap-1">
+                      <Calendar size={11} />
+                      {formatDate(new Date(ref.timestamp).getTime())}
+                    </span>
+                  </div>
+
+                  <Link
+                    href={ref.module?.slug ? `/models/${ref.module.slug}` : '#'}
+                    className="text-[0.6875rem] text-[#666] hover:text-white transition-colors no-underline mb-2 block"
+                  >
+                    {ref.module?.title || "Unknown Module"}
+                  </Link>
+
+                  <h3 className="text-lg font-bold text-white mb-2 leading-snug">
+                    {ref.title}
+                  </h3>
+
+                  <p className="text-[0.8125rem] text-[#666] leading-relaxed whitespace-pre-wrap line-clamp-5">
+                    {ref.content}
+                  </p>
                 </div>
 
-                <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-white/90 transition-colors">
-                  {ref.title}
-                </h3>
-
-                <p className="text-[0.9375rem] text-[#777] leading-[1.8] whitespace-pre-wrap flex-1">
-                  {ref.content}
-                </p>
+                <div className="flex items-center justify-between px-6 py-3 border-t border-white/5">
+                  {ref.module?.slug ? (
+                    <Link
+                      href={`/models/${ref.module.slug}/reflection`}
+                      className="flex items-center gap-1 text-[0.6875rem] font-semibold text-[#555] hover:text-white transition-colors no-underline"
+                    >
+                      Open Module <ArrowRight size={12} />
+                    </Link>
+                  ) : (
+                    <div />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(ref.id)}
+                    className="p-1.5 rounded-lg text-[#444] opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-white/5 transition-all cursor-pointer bg-transparent border-none"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             </motion.div>
           ))}

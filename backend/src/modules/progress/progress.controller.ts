@@ -52,6 +52,24 @@ export namespace ProgressController {
     }
   }
 
+  export async function getStreak(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await ProgressService.getStreak(req.user!.userId);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  export async function resetStreak(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await ProgressService.resetStreak(req.user!.userId);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
   export async function addCompletedNode(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const slug = req.params.slug as string;

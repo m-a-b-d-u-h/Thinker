@@ -47,9 +47,9 @@ if (env.nodeEnv === "development") {
   app.use(morgan("dev"));
 }
 
-// Rate limiting
+// Rate limiting — 100 requests per minute
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
+  windowMs: 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,

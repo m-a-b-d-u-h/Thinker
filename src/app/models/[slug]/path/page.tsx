@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { notFound } from "next/navigation";
-import React, { useMemo, useRef } from "react";
-import ReactFlow, { Background, Handle, Position, NodeProps } from "reactflow";
+import React from "react";
+import ReactFlow, { Handle, Position, NodeProps } from "reactflow";
 import "reactflow/dist/style.css";
 import { modulesApi } from "@/lib/api/modules";
 import { progressApi } from "@/lib/api/progress";
@@ -11,10 +11,14 @@ import { useAuth } from "@/lib/auth-context";
 import type { Module } from "@/lib/types";
 
 const CustomNode = ({ data }: NodeProps) => (
-  <div className="bg-[#111] text-white border border-[#222] rounded-xl px-3 py-2.5 text-xs font-bold text-center min-w-[120px]">
-    <Handle type="target" position={Position.Top} className="!bg-[#333] !border-0 !w-2 !h-2" />
+  <div className={`rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap ${
+    data.isCompleted
+      ? 'bg-[#1a3a1a] border border-green-500 text-[#86efac]'
+      : 'bg-[#0d0d0d]/90 text-white border border-[#333] backdrop-blur-sm'
+  }`}>
+    <Handle type="target" position={Position.Top} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
     {data.label}
-    <Handle type="source" position={Position.Bottom} className="!bg-[#333] !border-0 !w-2 !h-2" />
+    <Handle type="source" position={Position.Bottom} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
   </div>
 );
 
@@ -22,6 +26,13 @@ const nodeTypes = { custom: CustomNode };
 
 function Flow({ nodes, edges }: { nodes: any[]; edges: any[] }) {
   const reactFlowInstance = useRef<any>(null);
+
+  const styledEdges = useMemo(() => edges.map(e => ({
+    ...e,
+    animated: true,
+    style: { stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1.5 },
+    labelStyle: { fill: '#666', fontSize: 10, fontWeight: 600 },
+  })), [edges]);
 
   useEffect(() => {
     if (reactFlowInstance.current) {
@@ -36,14 +47,13 @@ function Flow({ nodes, edges }: { nodes: any[]; edges: any[] }) {
     <div className="w-full h-full">
       <ReactFlow
         nodes={nodes}
-        edges={edges}
+        edges={styledEdges}
         nodeTypes={nodeTypes}
         proOptions={{ hideAttribution: true }}
         onInit={(instance) => { reactFlowInstance.current = instance; }}
         fitView
         fitViewOptions={{ padding: 0.5 }}
       >
-        <Background color="#111" gap={20} size={0.5} />
       </ReactFlow>
     </div>
   );
@@ -70,11 +80,7 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
     if (!module) return [];
     return module.nodes.map((n) => ({
       ...n,
-      style: {
-        ...(completedNodes.includes(n.id)
-          ? { background: '#1a3a1a', border: '1px solid #22c55e', color: '#86efac' }
-          : { background: '#111', border: '1px solid #222' }),
-      },
+      data: { ...n.data, isCompleted: completedNodes.includes(n.id) },
     }));
   }, [module, completedNodes]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { timeAgo } from "@/lib/format";
 import { progressApi } from "@/lib/api/progress";
@@ -35,6 +35,10 @@ export default function DashboardPage() {
   const [allModules, setAllModules] = useState<ModuleListItem[]>([]);
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [streak, setStreak] = useState(0);
+  const [streakGoal] = useState(30);
+  const [showStreakPopup, setShowStreakPopup] = useState(false);
+  const [brokenStreakValue, setBrokenStreakValue] = useState(0);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -43,17 +47,23 @@ export default function DashboardPage() {
     else setGreeting("Good evening");
   }, []);
 
-  useEffect(() => {
-    if (!user) { setLoading(false); return; }
+  const fetchDashboardData = useCallback(async () => {
+    if (!user) { setLoading(false); return null; }
 
-    Promise.all([
+    return Promise.all([
       progressApi.getStats().catch(() => null),
       progressApi.getAll().catch(() => [] as UserProgress[]),
       modulesApi.list({ limit: "50" }).catch(() => ({ data: [] as ModuleListItem[], pagination: { page: 1, limit: 50, total: 0, totalPages: 0 } })),
       reflectionsApi.list().catch(() => [] as Reflection[]),
-    ]).then(([statsData, saved, modulesRes, refl]) => {
+      progressApi.getStreak().catch(() => ({ streak: 0, showPopup: false })),
+    ]).then(([statsData, saved, modulesRes, refl, streakData]) => {
       setStats(statsData);
       setReflections(refl);
+      setStreak(streakData.streak);
+      if (streakData.showPopup) {
+        setBrokenStreakValue(streakData.streak);
+        setShowStreakPopup(true);
+      }
       const mods = modulesRes.data;
       setAllModules(mods);
 
@@ -66,7 +76,7 @@ export default function DashboardPage() {
       });
       setRecentModules(recent);
 
-      const completed = saved.filter((p) => p.listeningProgress >= 100 || p.readingProgress >= 100);
+      const completed = saved.filter((p) => p.completed);
       const completedMods = mods.filter((m) => completed.some((p) => p.moduleId === m.id));
       const catCount = completedMods.reduce((acc, m) => {
         acc[m.category] = (acc[m.category] || 0) + 1;
@@ -75,6 +85,29 @@ export default function DashboardPage() {
       setCompletedCategoryData(Object.entries(catCount).map(([name, value]) => ({ name, value })));
     }).finally(() => setLoading(false));
   }, [user]);
+
+  const handleStreakPopupOk = async () => {
+    await progressApi.resetStreak();
+    setStreak(0);
+    setShowStreakPopup(false);
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  useEffect(() => {
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") fetchDashboardData();
+    };
+    const handleFocus = () => fetchDashboardData();
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [fetchDashboardData]);
 
   const todayQuote = "Action is the foundational key to all success.";
 
@@ -86,8 +119,6 @@ export default function DashboardPage() {
     business: '#0ea5e9', 'problem-solving': '#14b8a6', 'game-theory': '#f43f5e', resilience: '#22c55e',
     risk: '#ef4444', economics: '#eab308',
   };
-
-  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
   if (!user) {
     return (
@@ -118,38 +149,46 @@ export default function DashboardPage() {
         <p className="text-lg text-[#666]">{todayQuote}</p>
       </header>
 
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5">
+      <div className="flex gap-4 mb-8 overflow-x-auto pb-2 scrollbar-thin">
+        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
           <div className="flex items-center gap-2 text-[#888] mb-3">
             <Headphones size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Listened</span>
           </div>
-          <p className="text-2xl font-black text-white">{stats?.listeningMinutes || 0}<span className="text-[0.875rem] font-normal text-[#555] ml-1">min</span></p>
+          <p className="text-2xl font-black text-white">{stats?.listeningMinutes || 0}<span className="text-[0.875rem] font-normal text-[#555] ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.listenXp || 0} XP</span></p>
           <p className="text-[0.6875rem] text-[#555] mt-1">Total audio time</p>
         </div>
-        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5">
+        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
           <div className="flex items-center gap-2 text-[#888] mb-3">
             <BookOpen size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Read</span>
           </div>
-          <p className="text-2xl font-black text-white">{stats?.readingMinutes || 0}<span className="text-[0.875rem] font-normal text-[#555] ml-1">min</span></p>
+          <p className="text-2xl font-black text-white">{stats?.readingMinutes || 0}<span className="text-[0.875rem] font-normal text-[#555] ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.readXp || 0} XP</span></p>
           <p className="text-[0.6875rem] text-[#555] mt-1">Total reading time</p>
         </div>
-        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5">
+        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
           <div className="flex items-center gap-2 text-[#888] mb-3">
             <CheckCircle2 size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Completed</span>
           </div>
-          <p className="text-2xl font-black text-white">{stats?.completedModules || 0}<span className="text-[0.875rem] font-normal text-[#555] ml-1">/ {stats?.totalModules || 0}</span></p>
+          <p className="text-2xl font-black text-white">{stats?.completedModules || 0}<span className="text-[0.875rem] font-normal text-[#555] ml-1">/ {stats?.totalModules || 0}</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.completedXp || 0} XP</span></p>
           <p className="text-[0.6875rem] text-[#555] mt-1">Modules finished</p>
         </div>
-        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5">
+        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
           <div className="flex items-center gap-2 text-[#888] mb-3">
-            <TrendingUp size={14} />
-            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Completed Nodes</span>
+            <Sparkles size={14} />
+            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Reflections</span>
           </div>
-          <p className="text-2xl font-black text-white">{stats?.completedNodes || 0}</p>
-          <p className="text-[0.6875rem] text-[#555] mt-1">Graph nodes done</p>
+          <p className="text-2xl font-black text-white">{reflections.length}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.reflectionXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-[#555] mt-1">Total reflections</p>
+        </div>
+        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-[#888] mb-3">
+            <Sparkles size={14} />
+            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Highlights</span>
+          </div>
+          <p className="text-2xl font-black text-white">{stats?.highlights || 0}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.highlightXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-[#555] mt-1">Total highlights</p>
         </div>
       </div>
 
@@ -157,19 +196,38 @@ export default function DashboardPage() {
         <div className="bg-[#0a0a0a] rounded-xl border border-white/5 overflow-hidden relative px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 relative z-10 shrink-0">
             <Flame size={14} className="text-[#f97316]" />
-            <span className="text-[0.75rem] font-bold text-[#888]">14 day streak</span>
+            <span className="text-[0.75rem] font-bold text-[#888]">{streak} day streak</span>
           </div>
           <div className="flex-1 mx-6 relative z-10">
             <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#f97316] to-[#fb923c] rounded-full transition-all" style={{ width: `${(14 / 30) * 100}%` }} />
+              <div className="h-full bg-gradient-to-r from-[#f97316] to-[#fb923c] rounded-full transition-all" style={{ width: `${Math.min((streak / streakGoal) * 100, 100)}%` }} />
             </div>
           </div>
           <div className="relative z-10 shrink-0">
-            <span className="text-[0.6875rem] text-[#444] font-bold">30 day goal</span>
+            <span className="text-[0.6875rem] text-[#444] font-bold">{streakGoal} day goal</span>
           </div>
           <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#f97316]/5 to-transparent rounded-full translate-x-1/4 -translate-y-1/4" />
         </div>
       </div>
+
+      {showStreakPopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#111] border border-white/10 rounded-2xl p-8 max-w-sm w-full mx-4 text-center">
+            <Flame size={48} className="text-[#f97316] mx-auto mb-4" />
+            <h2 className="text-xl font-black text-white mb-2">Streak Broken!</h2>
+            <p className="text-[0.875rem] text-[#666] mb-6">
+              You missed a day and lost your <span className="text-white font-bold">{brokenStreakValue}-day</span> streak.
+              <br />Start again today to build a new streak!
+            </p>
+            <button
+              onClick={handleStreakPopupOk}
+              className="bg-white text-black px-8 py-3 rounded-xl font-bold text-[0.875rem] hover:bg-white/90 transition-colors"
+            >
+              OK, I&apos;ll Start Again
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-[2fr_1fr] gap-8">
         <div className="flex flex-col gap-8">
@@ -177,21 +235,21 @@ export default function DashboardPage() {
             <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">Current Rank</h3>
-                <span className="text-[0.75rem] text-[#666]">2,480 XP</span>
+                <span className="text-[0.75rem] text-[#666]">{stats?.totalXp?.toLocaleString() || 0} XP</span>
               </div>
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] flex items-center justify-center text-lg font-bold">S</div>
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] flex items-center justify-center text-lg font-bold">{stats?.rank?.charAt(0) || "B"}</div>
                 <div>
-                  <div className="font-semibold text-lg">Strategist</div>
-                  <div className="text-[0.75rem] text-[#666]">Thinking Level 4</div>
+                  <div className="font-semibold text-lg">{stats?.rank || "Beginner"}</div>
+                  <div className="text-[0.75rem] text-[#666]">Level {stats?.rankLevel || 1}</div>
                 </div>
               </div>
               <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full" style={{ width: `${((2480 - 2000) / (3500 - 2000)) * 100}%` }} />
+                <div className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full" style={{ width: `${stats ? ((stats.totalXp - stats.prevLevelXp) / (stats.nextLevelXp - stats.prevLevelXp)) * 100 : 0}%` }} />
               </div>
               <div className="flex justify-between mt-2 text-[0.6875rem] text-[#666]">
-                <span>2,000 XP</span>
-                <span>Next: Master (3,500 XP)</span>
+                <span>{stats?.prevLevelXp?.toLocaleString() || 0} XP</span>
+                <span>Next: {stats?.nextRank || "—"} ({stats?.nextLevelXp?.toLocaleString() || 0} XP)</span>
               </div>
             </div>
 
@@ -201,8 +259,9 @@ export default function DashboardPage() {
                 <Flame size={16} className="text-[#f97316]" />
               </div>
               <div className="flex items-center justify-between gap-1.5 mb-5">
-                {weekDays.map((day) => {
+                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
                   const now = new Date();
+                  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
                   const dayOfWeek = (now.getDay() + 6) % 7;
                   const daysAgo = dayOfWeek - weekDays.indexOf(day);
                   const targetDate = new Date(now);
@@ -306,10 +365,10 @@ export default function DashboardPage() {
           <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
             <div className="flex items-center gap-2 mb-5">
               <Sparkles size={14} className="text-[#fbbf24]" />
-              <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">Recommended</h3>
+              <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">Latest</h3>
             </div>
             <div className="flex flex-col gap-3">
-              {allModules.slice(0, 3).map((m, i) => {
+              {[...allModules].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3).map((m, i) => {
                 const colors = ['#a78bfa', '#60a5fa', '#34d399'];
                 return (
                   <Link key={m.slug} href={`/models/${m.slug}`} className="group flex items-center gap-3 no-underline hover:bg-[#111] rounded-xl px-3 py-2.5 transition-all -mx-3">

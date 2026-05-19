@@ -33,8 +33,12 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const listenSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const readSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const articleRef = useRef<HTMLDivElement>(null);
+  const fetchedSlugRef = useRef("");
+  const completedRef = useRef(false);
 
   useEffect(() => {
+    if (fetchedSlugRef.current === slug) return;
+    fetchedSlugRef.current = slug;
     modulesApi.getBySlug(slug).then((m) => {
       setModule(m);
       setLoading(false);
@@ -171,6 +175,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       const hasRead = saved.readingProgress > 0;
       if (!hasListen && !hasRead) return;
 
+      completedRef.current = completed;
       if (hasListen) {
         setSavedListeningProgress(saved.listeningProgress);
         setProgress(saved.listeningProgress);
@@ -210,7 +215,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   }, [progress, isPlaying, slug, currentCharIndex, rate, saveProgress]);
 
   useEffect(() => {
-    if (!articleRef.current) return;
     const onScroll = () => {
       const article = articleRef.current;
       if (!article) return;
@@ -222,6 +226,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       const pct = Math.min(100, Math.round((scrolled / articleHeight) * 100));
       if (readSaveTimer.current) clearTimeout(readSaveTimer.current);
       readSaveTimer.current = setTimeout(() => {
+        if (completedRef.current) return;
         saveProgress({
           readingProgress: pct,
           scrollPosition: window.scrollY,
@@ -233,7 +238,8 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   }, [slug, saveProgress]);
 
   const saveOnLeave = useCallback(() => {
-    const data: Record<string, any> = { scrollPosition: window.scrollY };
+    if (completedRef.current) return;
+    const data: Record<string, any> = {};
     if (progress > 0) {
       data.listeningProgress = progress;
       data.currentCharIndex = currentCharIndex;
@@ -241,6 +247,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     }
     const article = articleRef.current;
     if (article) {
+      data.scrollPosition = window.scrollY;
       const rect = article.getBoundingClientRect();
       const articleTop = rect.top + window.scrollY;
       const articleHeight = article.offsetHeight;
@@ -249,6 +256,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       const pct = Math.min(100, Math.round((scrolled / articleHeight) * 100));
       data.readingProgress = pct;
     }
+    if (Object.keys(data).length === 0) return;
     saveProgress(data);
   }, [slug, progress, currentCharIndex, rate, saveProgress]);
 
@@ -358,9 +366,11 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const handleMarkComplete = async () => {
     const newCompleted = !isCompleted;
     setIsCompleted(newCompleted);
+    completedRef.current = newCompleted;
     await saveProgress({
       listeningProgress: newCompleted ? 100 : 0,
       readingProgress: newCompleted ? 100 : 0,
+      completed: newCompleted,
     });
     if (newCompleted) {
       setSavedListeningProgress(100);

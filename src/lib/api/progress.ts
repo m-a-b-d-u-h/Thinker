@@ -45,4 +45,10 @@ export const progressApi = {
 
   getCompletedNodes: (slug: string) =>
     api.get<string[]>([`/progress/${slug}/completed-nodes`].join("")),
+
+  getStreak: () =>
+    api.get<{ streak: number; showPopup: boolean }>("/progress/streak"),
+
+  resetStreak: () =>
+    api.post<{ streak: number }>("/progress/streak/reset"),
 };
