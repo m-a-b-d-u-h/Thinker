@@ -47,6 +47,7 @@ model User {
   highlights        Highlight[]
   favorites         Favorite[]
   quizAttempts      QuizAttempt[]
+  actionPlans       ActionPlan[]
   payments          Payment[]
 }
 
@@ -70,6 +71,7 @@ model Module {
   highlights      Highlight[]
   favorites       Favorite[]
   quizAttempts    QuizAttempt[]
+  actionPlans     ActionPlan[]
 }
 
 model ModuleNode {
@@ -183,6 +185,21 @@ model QuizAttempt {
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+}
+
+model ActionPlan {
+  id        String   @id @default(cuid())
+  userId    String
+  moduleId  String
+  title     String
+  content   Json
+  appliedAt DateTime @default(now())
+  completed Boolean  @default(false)
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId])
 }
 
 model Payment {

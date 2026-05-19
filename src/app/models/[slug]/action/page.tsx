@@ -2,55 +2,98 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, ArrowRight, RotateCcw, Plus, Trash2, Type, CheckSquare, Sliders, List } from "lucide-react";
-import { notFound } from "next/navigation";
+import { CheckCircle2, ArrowRight, Plus, Trash2, Type, CheckSquare, Sliders, List } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import { modulesApi } from "@/lib/api/modules";
-import type { Module } from "@/lib/types";
+import { actionsApi } from "@/lib/api/actions";
+import type { Module, MatrixRow } from "@/lib/types";
 
 type InputType = 'text' | 'checkbox' | 'slider' | 'radio';
 
-interface MatrixRow {
-  id: number;
-  type: InputType;
-  label: string;
-  value: any;
-  options?: string[];
-}
+const defaultMatrix: MatrixRow[] = [
+  { id: 1, type: 'text', label: "Strategic Stance", value: "Calculated Action" },
+  { id: 2, type: 'slider', label: "Intensity Level", value: 75 },
+  { id: 3, type: 'checkbox', label: "Prioritize Speed?", value: true },
+  { id: 4, type: 'radio', label: "Risk Profile", value: "Low", options: ["Low", "Med", "High"] },
+];
 
 export default function ActionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
   const [module, setModule] = useState<Module | null>(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [isApplied, setIsApplied] = useState(false);
+  const [planId, setPlanId] = useState<string | null>(null);
   const [title, setTitle] = useState("");
-
-  const [matrix, setMatrix] = useState<MatrixRow[]>([
-    { id: 1, type: 'text', label: "Strategic Stance", value: "Calculated Action" },
-    { id: 2, type: 'slider', label: "Intensity Level", value: 75 },
-    { id: 3, type: 'checkbox', label: "Prioritize Speed?", value: true },
-    { id: 4, type: 'radio', label: "Risk Profile", value: "Low", options: ["Low", "Med", "High"] }
-  ]);
+  const [matrix, setMatrix] = useState<MatrixRow[]>(defaultMatrix);
 
   useEffect(() => {
-    modulesApi.getBySlug(slug).then((m) => {
-      setModule(m);
-      setTitle(`${m.title} Protocol`);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    let cancelled = false;
+
+    modulesApi.getBySlug(slug)
+      .then((m) => {
+        if (cancelled) return;
+        setModule(m);
+        setTitle(`${m.title} Protocol`);
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoading(false);
+      });
+
+    actionsApi.getByModule(slug)
+      .then((existing) => {
+        if (cancelled || !existing) return;
+        setTitle(existing.title);
+        setMatrix(existing.content);
+        setIsApplied(true);
+        setPlanId(existing.id);
+      })
+      .catch(() => {});
+
+    return () => { cancelled = true; };
   }, [slug]);
+
+  const handleMarkApplied = async () => {
+    if (!module) return;
+    setSaving(true);
+    try {
+      if (planId) {
+        const updated = await actionsApi.update(planId, { title, content: matrix, completed: !isApplied });
+        setIsApplied(updated.completed);
+      } else {
+        const created = await actionsApi.create({ moduleSlug: slug, title, content: matrix });
+        setPlanId(created.id);
+        setIsApplied(true);
+      }
+    } catch {
+      // silently fail
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 flex justify-center"><div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>;
   }
 
-  if (!module) notFound();
+  if (!module) {
+    return (
+      <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 text-center">
+        <p className="text-[0.875rem] text-[#555]">Module not found or failed to load.</p>
+        <Link href="/models" className="inline-flex items-center gap-1.5 mt-4 text-[0.8125rem] text-[#888] hover:text-white transition-colors">
+          Back to library
+        </Link>
+      </div>
+    );
+  }
 
   const nextId = Math.max(...matrix.map(r => r.id), 0) + 1;
 
   const addRow = (type: InputType) => {
-    let newRow: MatrixRow = { id: nextId, type, label: "", value: type === 'checkbox' ? false : type === 'slider' ? 50 : "" };
+    const newRow: MatrixRow = { id: nextId, type, label: "", value: type === 'checkbox' ? false : type === 'slider' ? 50 : "" };
     if (type === 'radio') { newRow.options = ["Option 1", "Option 2", "Option 3"]; newRow.value = "Option 1"; }
     setMatrix([...matrix, newRow]);
   };
@@ -74,7 +117,7 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
         <header className="mb-12">
           <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000', marginBottom: '1rem' }}>{module.category}</span>
           <h1 className="text-4xl font-bold text-white mt-4 mb-2">Action Plan: {module.title}</h1>
-          <p className="text-lg text-[#666]">Commit to applying what you've learned</p>
+          <p className="text-lg text-[#666]">Commit to applying what you&apos;ve learned</p>
         </header>
 
         <div className="bg-[#111] border border-[#222] rounded-2xl p-8 mb-6">
@@ -211,13 +254,15 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
           </div>
 
           <button
-            onClick={() => setIsApplied(!isApplied)}
+            onClick={handleMarkApplied}
+            disabled={saving}
             className={`w-full py-4 rounded-xl text-[0.9375rem] font-bold cursor-pointer transition-all flex items-center justify-center gap-2 ${
+              saving ? 'opacity-50 pointer-events-none' :
               isApplied ? 'bg-green-500/10 border border-green-500/30 text-green-400' : 'bg-white text-black hover:opacity-90'
             }`}
           >
-            {isApplied ? (
-              <><CheckCircle2 size={18} /> Applied — Mark as Pending</>
+            {saving ? "Saving..." : isApplied ? (
+              <><CheckCircle2 size={18} /> Applied</>
             ) : (
               <><CheckCircle2 size={18} /> Mark as Applied</>
             )}

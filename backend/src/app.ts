@@ -14,6 +14,7 @@ import reflectionsRoutes from "./modules/reflections/reflections.routes";
 import highlightsRoutes from "./modules/highlights/highlights.routes";
 import favoritesRoutes from "./modules/favorites/favorites.routes";
 import quizRoutes from "./modules/quiz/quiz.routes";
+import actionsRoutes from "./modules/actions/actions.routes";
 import paymentsRoutes from "./modules/payments/payments.routes";
 
 const app = express();
@@ -70,6 +71,7 @@ app.use("/api/reflections", reflectionsRoutes);
 app.use("/api/highlights", highlightsRoutes);
 app.use("/api/favorites", favoritesRoutes);
 app.use("/api/quiz", quizRoutes);
+app.use("/api/actions", actionsRoutes);
 app.use("/api/payments", paymentsRoutes);
 
 // 404 handler

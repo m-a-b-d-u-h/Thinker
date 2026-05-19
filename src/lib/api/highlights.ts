@@ -10,7 +10,7 @@ export const highlightsApi = {
   getById: (id: string) =>
     api.get<Highlight>(`/highlights/${id}`),
 
-  create: (body: { text: string; note: string; moduleId: string }) =>
+  create: (body: { text: string; note: string; moduleSlug: string }) =>
     api.post<Highlight>("/highlights", body),
 
   update: (id: string, body: { text?: string; note?: string }) =>

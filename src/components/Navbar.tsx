@@ -9,6 +9,7 @@ import {
   Library,
   Highlighter,
   BookOpen,
+  Target,
   User,
   LogOut,
 } from "lucide-react";
@@ -24,6 +25,7 @@ export default function Navbar() {
     { name: "Favorites", href: "/favorites", icon: Library },
     { name: "Highlight", href: "/highlight", icon: Highlighter },
     { name: "Reflection", href: "/reflection", icon: BookOpen },
+    { name: "Actions", href: "/actions", icon: Target },
   ];
 
   return (

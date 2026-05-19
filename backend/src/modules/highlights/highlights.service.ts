@@ -14,7 +14,7 @@ export namespace HighlightsService {
       where,
       orderBy: { timestamp: "desc" },
       include: {
-        module: { select: { slug: true, title: true } },
+        module: { select: { slug: true, title: true, category: true } },
       },
     });
   }
@@ -38,7 +38,7 @@ export namespace HighlightsService {
         note: input.note || "",
       },
       include: {
-        module: { select: { slug: true, title: true } },
+        module: { select: { slug: true, title: true, category: true } },
       },
     });
   }

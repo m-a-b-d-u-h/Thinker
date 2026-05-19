@@ -157,6 +157,26 @@ export interface Highlight {
   text: string;
   note: string;
   timestamp: string;
+  module?: { slug: string; title: string; category: string };
+}
+
+export interface MatrixRow {
+  id: number;
+  type: string;
+  label: string;
+  value: any;
+  options?: string[];
+}
+
+export interface ActionPlan {
+  id: string;
+  userId: string;
+  moduleId: string;
+  title: string;
+  content: MatrixRow[];
+  appliedAt: string;
+  completed: boolean;
+  module?: { slug: string; title: string; category: string };
 }
 
 export interface ProgressStats {

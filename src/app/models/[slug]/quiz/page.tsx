@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, ArrowRight, RefreshCw } from "lucide-react";
-import { notFound } from "next/navigation";
+import Link from "next/link";
 import { use } from "react";
 import { modulesApi } from "@/lib/api/modules";
 import { quizApi } from "@/lib/api/quiz";
@@ -89,7 +89,16 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
     );
   }
 
-  if (!module || questions.length === 0) notFound();
+  if (!module || questions.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 text-center">
+        <p className="text-[0.875rem] text-[#555]">Module or quiz questions not available.</p>
+        <Link href="/models" className="inline-flex items-center gap-1.5 mt-4 text-[0.8125rem] text-[#888] hover:text-white transition-colors">
+          Back to library
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16">

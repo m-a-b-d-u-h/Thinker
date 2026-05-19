@@ -2,11 +2,12 @@
 
 import { notFound } from "next/navigation";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2 } from "lucide-react";
+import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { modulesApi } from "@/lib/api/modules";
 import { progressApi } from "@/lib/api/progress";
+import { highlightsApi } from "@/lib/api/highlights";
 import { useAuth } from "@/lib/auth-context";
 import type { Module } from "@/lib/types";
 
@@ -35,6 +36,10 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const articleRef = useRef<HTMLDivElement>(null);
   const fetchedSlugRef = useRef("");
   const completedRef = useRef(false);
+
+  const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
+  const [note, setNote] = useState("");
+  const [savingHighlight, setSavingHighlight] = useState(false);
 
   useEffect(() => {
     if (fetchedSlugRef.current === slug) return;
@@ -194,6 +199,70 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     }).catch(() => {});
   }, [module, user]);
 
+  useEffect(() => {
+    if (!module) return;
+    const params = new URLSearchParams(window.location.search);
+    const highlightText = params.get("highlight");
+    if (!highlightText) return;
+
+    const decoded = decodeURIComponent(highlightText);
+    const scrollToText = () => {
+      const article = document.querySelector("article");
+      if (!article) return;
+
+      const nodes: { node: Text; start: number; end: number }[] = [];
+      let charIndex = 0;
+      const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT, null);
+      let n: Text | null;
+      while (n = walker.nextNode() as Text | null) {
+        nodes.push({ node: n, start: charIndex, end: charIndex + n.textContent!.length });
+        charIndex += n.textContent!.length;
+      }
+
+      const totalText = nodes.map(n => n.node.textContent).join("");
+      const pos = totalText.indexOf(decoded);
+      if (pos < 0) return;
+
+      let targetNode: Text | null = null;
+      let offsetStart = 0;
+      for (const entry of nodes) {
+        if (pos >= entry.start && pos < entry.end) {
+          targetNode = entry.node;
+          offsetStart = pos - entry.start;
+          break;
+        }
+      }
+      if (!targetNode) return;
+
+      const range = document.createRange();
+      const endPos = pos + decoded.length;
+      const endInSameNode = endPos <= (nodes.find(n => n.node === targetNode)?.end ?? 0);
+      if (endInSameNode) {
+        range.setStart(targetNode, offsetStart);
+        range.setEnd(targetNode, Math.min(offsetStart + decoded.length, targetNode.textContent!.length));
+      } else {
+        range.setStart(targetNode, offsetStart);
+      }
+
+      const rect = range.getBoundingClientRect();
+      if (rect.width === 0 && rect.height === 0) return;
+      window.scrollTo({ top: window.scrollY + rect.top - 120, behavior: "smooth" });
+
+      if (endInSameNode) {
+        try {
+          const mark = document.createElement("mark");
+          mark.style.backgroundColor = "#fbbf24";
+          mark.style.color = "#000";
+          mark.style.borderRadius = "2px";
+          mark.style.transition = "background-color 2s, color 2s";
+          range.surroundContents(mark);
+          setTimeout(() => { mark.style.backgroundColor = "transparent"; mark.style.color = "inherit"; }, 3000);
+        } catch {}
+      }
+    };
+    setTimeout(scrollToText, 600);
+  }, [module]);
+
   const saveProgress = useCallback(async (data: Record<string, any>) => {
     if (!user) return;
     try {
@@ -272,6 +341,51 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       }
     };
   }, [saveOnLeave]);
+
+  useEffect(() => {
+    const handleSelection = () => {
+      const sel = window.getSelection();
+      if (!sel || sel.isCollapsed || !sel.toString().trim()) {
+        return;
+      }
+      const target = sel.anchorNode?.parentElement;
+      if (target?.closest('[data-highlight-popup]')) return;
+      const range = sel.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setSelection({
+        text: sel.toString().trim(),
+        x: rect.left + rect.width / 2,
+        y: rect.top - 10,
+      });
+    };
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-highlight-popup]')) {
+        setSelection(null);
+        setNote("");
+      }
+    };
+    document.addEventListener("mouseup", handleSelection);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mouseup", handleSelection);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const handleSaveHighlight = async () => {
+    if (!slug || !selection) return;
+    setSavingHighlight(true);
+    try {
+      await highlightsApi.create({ moduleSlug: slug, text: selection.text, note });
+      setSelection(null);
+      setNote("");
+    } catch {
+      // silently fail
+    } finally {
+      setSavingHighlight(false);
+    }
+  };
 
   const handleResumeListening = () => {
     setShowResume(false);
@@ -692,6 +806,39 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           </div>
         </div>
       </div>
+
+      {selection && (
+        <div
+          data-highlight-popup
+          className="fixed z-[2000] bg-[#111] border border-white/10 rounded-2xl p-4 shadow-2xl shadow-black/60 min-w-[300px]"
+          style={{ left: Math.max(16, selection.x - 150), top: Math.max(16, selection.y - 180) }}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2 text-[#fbbf24]">
+              <Highlighter size={14} />
+              <span className="text-[0.6875rem] font-bold uppercase tracking-[0.08em]">Highlight</span>
+            </div>
+            <button onClick={() => { setSelection(null); setNote(""); }} className="text-[#555] hover:text-white transition-colors cursor-pointer bg-transparent border-none p-1">
+              <X size={14} />
+            </button>
+          </div>
+          <p className="text-[0.8125rem] text-[#888] mb-3 line-clamp-2 leading-relaxed">"{selection.text}"</p>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Add a note (optional)"
+            rows={2}
+            className="w-full bg-[#050505] border border-[#222] rounded-xl px-3 py-2 text-[0.8125rem] text-white outline-none resize-none mb-3 placeholder:text-[#444]"
+          />
+          <button
+            onClick={handleSaveHighlight}
+            disabled={savingHighlight}
+            className="w-full py-2.5 bg-white text-black rounded-xl font-bold text-[0.75rem] cursor-pointer hover:opacity-90 transition-all disabled:opacity-50"
+          >
+            {savingHighlight ? "Saving..." : "Save Highlight"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
