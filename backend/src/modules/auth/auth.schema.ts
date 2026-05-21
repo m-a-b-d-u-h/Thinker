@@ -23,7 +23,12 @@ export const updateProfileSchema = z.object({
   avatar: z.string().url().optional(),
 });
 
+export const updatePreferencesSchema = z.object({
+  preferredCategories: z.array(z.string()).min(1, "Select at least one category"),
+});
+
 export type RegisterInput = z.infer<typeof registerSchema>;
 export type LoginInput = z.infer<typeof loginSchema>;
 export type GoogleAuthInput = z.infer<typeof googleAuthSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+export type UpdatePreferencesInput = z.infer<typeof updatePreferencesSchema>;

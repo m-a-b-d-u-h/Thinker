@@ -22,7 +22,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      router.push("/models");
+      if (!user.preferredCategories || user.preferredCategories.length === 0) {
+        router.push("/preferences");
+      } else {
+        router.push("/models");
+      }
     }
   }, [user, router]);
 
@@ -38,7 +42,6 @@ export default function LoginPage() {
       } else {
         await register(email, password, name || undefined);
       }
-      router.push("/models");
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {

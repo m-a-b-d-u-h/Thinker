@@ -19,8 +19,14 @@ import paymentsRoutes from "./modules/payments/payments.routes";
 
 const app = express();
 
-// Security
-app.use(helmet());
+// Security — relaxed for Google OAuth popup
+app.use(
+  helmet({
+    crossOriginOpenerPolicy: { policy: "unsafe-none" },
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+  })
+);
 
 // CORS
 app.use(

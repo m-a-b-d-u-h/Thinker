@@ -9,7 +9,7 @@ export namespace ProgressService {
       orderBy: { lastReadAt: "desc" },
       include: {
         module: {
-          select: { slug: true, title: true, category: true, content: true },
+          select: { slug: true, title: true, category: true, content: true, isPremium: true },
         },
       },
     });
@@ -21,6 +21,7 @@ export namespace ProgressService {
       slug: p.module.slug,
       title: p.module.title,
       category: p.module.category,
+      isPremium: p.module.isPremium,
       listeningProgress: p.listeningProgress,
       readingProgress: p.readingProgress,
       currentCharIndex: p.currentCharIndex,
@@ -93,7 +94,7 @@ export namespace ProgressService {
       title: p.module.title,
       description: p.module.description,
       category: p.module.category,
-      content: p.module.content,
+      content: p.module.isPremium ? "" : p.module.content,
       isPremium: p.module.isPremium,
       createdAt: p.module.createdAt.toISOString(),
       updatedAt: p.module.updatedAt.toISOString(),

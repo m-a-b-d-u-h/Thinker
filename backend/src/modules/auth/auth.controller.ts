@@ -6,6 +6,7 @@ import type {
   LoginInput,
   GoogleAuthInput,
   UpdateProfileInput,
+  UpdatePreferencesInput,
 } from "./auth.schema";
 
 export namespace AuthController {
@@ -52,6 +53,25 @@ export namespace AuthController {
     try {
       const body = req.body as UpdateProfileInput;
       const result = await AuthService.updateProfile(req.user!.userId, body);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  export async function getPreferences(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await AuthService.getPreferences(req.user!.userId);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  export async function updatePreferences(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const body = req.body as UpdatePreferencesInput;
+      const result = await AuthService.updatePreferences(req.user!.userId, body);
       res.json(result);
     } catch (err) {
       next(err);

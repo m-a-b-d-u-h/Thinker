@@ -22,7 +22,7 @@ interface ModulesState {
   error: string | null;
 }
 
-export function useModules(page: number, category: string | null, search: string) {
+export function useModules(page: number, category: string | null, search: string, categories?: string[] | null) {
   const abortRef = useRef<AbortController | null>(null);
   const cacheRef = useRef<Map<string, ModuleListItem[]>>(new Map());
 
@@ -36,12 +36,12 @@ export function useModules(page: number, category: string | null, search: string
     error: null,
   });
 
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categoriesList, setCategoriesList] = useState<string[]>([]);
 
   useEffect(() => {
     let cancelled = false;
     modulesApi.getCategories()
-      .then((cats) => { if (!cancelled) setCategories(cats); })
+      .then((cats) => { if (!cancelled) setCategoriesList(cats); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);
@@ -53,7 +53,7 @@ export function useModules(page: number, category: string | null, search: string
 
     setState((prev) => ({ ...prev, loading: true, error: null }));
 
-    const cacheKey = `page=${page}&cat=${category}&search=${search}`;
+    const cacheKey = `page=${page}&cat=${category}&search=${search}&cats=${categories?.join(",") || ""}`;
     const cached = cacheRef.current.get(cacheKey);
 
     if (cached) {
@@ -64,6 +64,7 @@ export function useModules(page: number, category: string | null, search: string
     try {
       const params: Record<string, string> = { page: String(page), limit: "6" };
       if (category) params.category = category;
+      else if (categories && categories.length > 0) params.categories = categories.join(",");
       if (search) params.search = search;
 
       const res = await modulesApi.list(params);
@@ -88,7 +89,7 @@ export function useModules(page: number, category: string | null, search: string
         }));
       }
     }
-  }, [page, category, search]);
+  }, [page, category, search, categories]);
 
   useEffect(() => {
     fetchModules();
@@ -107,7 +108,7 @@ export function useModules(page: number, category: string | null, search: string
         title: p.title,
         description: p.description,
         category: p.category,
-        content: p.content,
+        content: p.content || "",
         isPremium: p.isPremium,
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
@@ -127,5 +128,5 @@ export function useModules(page: number, category: string | null, search: string
     }
   }, []);
 
-  return { ...state, categories, fetchHistory };
+  return { ...state, categories: categoriesList, fetchHistory };
 }

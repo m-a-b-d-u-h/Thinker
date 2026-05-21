@@ -27,6 +27,18 @@ export function errorHandler(err: Error, _req: Request, res: Response, _next: Ne
     return;
   }
 
+  const stripeErr = err as any;
+  if (stripeErr.statusCode && stripeErr.type?.startsWith?.("stripe_")) {
+    console.error("Stripe error:", stripeErr.message);
+    res.status(stripeErr.statusCode).json({
+      error: {
+        message: stripeErr.message,
+        statusCode: stripeErr.statusCode,
+      },
+    });
+    return;
+  }
+
   console.error("Unhandled error:", err);
 
   res.status(500).json({

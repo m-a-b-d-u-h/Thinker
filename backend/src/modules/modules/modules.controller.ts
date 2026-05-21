@@ -5,11 +5,12 @@ import type { AuthRequest } from "../../types";
 export namespace ModulesController {
   export async function list(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { page, limit, category, search } = req.query;
+      const { page, limit, category, categories, search } = req.query;
       const result = await ModulesService.list({
         page: page ? parseInt(page as string) : undefined,
         limit: limit ? parseInt(limit as string) : undefined,
         category: category as string | undefined,
+        categories: categories as string | undefined,
         search: search as string | undefined,
         userId: req.user?.userId,
       });
@@ -19,11 +20,30 @@ export namespace ModulesController {
     }
   }
 
-  export async function getBySlug(req: Request, res: Response, next: NextFunction) {
+  export async function getBySlug(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const slug = req.params.slug as string;
-      const mod = await ModulesService.getBySlug(slug);
+      const mod = await ModulesService.getBySlug(slug, req.user?.userId);
       res.json(mod);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  export async function getDailyFree(_req: Request, res: Response, next: NextFunction) {
+    try {
+      const mod = await ModulesService.getDailyFree();
+      res.json(mod);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  export async function checkAccess(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const slug = req.params.slug as string;
+      const result = await ModulesService.checkAccess(slug, req.user?.userId);
+      res.json(result);
     } catch (err) {
       next(err);
     }

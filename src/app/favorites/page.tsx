@@ -5,15 +5,19 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { Search, Bookmark } from "lucide-react";
 import { ModuleCard } from "@/components/ModuleCard";
+import Pagination from "@/components/Pagination";
 import { favoritesApi } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/auth-context";
 import type { FavoriteItem } from "@/lib/types";
+
+const PER_PAGE = 10;
 
 export default function FavoritesPage() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     if (!user) { setLoading(false); return; }
@@ -25,6 +29,11 @@ export default function FavoritesPage() {
     m.description.toLowerCase().includes(search.toLowerCase()) ||
     m.category.toLowerCase().includes(search.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(filteredModules.length / PER_PAGE));
+  const pagedModules = filteredModules.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  useEffect(() => { setPage(1); }, [search]);
 
   if (!user) {
     return (
@@ -71,19 +80,22 @@ export default function FavoritesPage() {
         </div>
       </div>
 
-      {filteredModules.length > 0 ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
-          {filteredModules.map((module, idx) => (
-            <motion.div
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-              key={module.slug}
-            >
-              <ModuleCard module={module} />
-            </motion.div>
-          ))}
-        </div>
+      {pagedModules.length > 0 ? (
+        <>
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
+            {pagedModules.map((module, idx) => (
+              <motion.div
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.1 }}
+                key={module.slug}
+              >
+                <ModuleCard module={module} />
+              </motion.div>
+            ))}
+          </div>
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
       ) : (
         <div className="text-center py-20">
           <Bookmark size={32} className="mx-auto text-[#222] mb-4" />

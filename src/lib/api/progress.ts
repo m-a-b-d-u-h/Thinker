@@ -7,7 +7,7 @@ export interface ContinueLearningItem {
   title: string;
   description: string;
   category: string;
-  content: string;
+  content?: string;
   isPremium: boolean;
   createdAt: string;
   updatedAt: string;

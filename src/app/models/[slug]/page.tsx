@@ -2,7 +2,9 @@
 
 import { notFound } from "next/navigation";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X } from "lucide-react";
+import ReactFlow, { Background } from "reactflow";
+import "reactflow/dist/style.css";
+import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X, Crown, Lock, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { modulesApi } from "@/lib/api/modules";
@@ -61,7 +63,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
 
   const unifiedCleanText = useMemo(() => {
     if (!module) return "";
-    const cleanBody = module.content.replace(/[#*`~_]/g, ' ');
+    const cleanBody = (module.content || '').replace(/[#*`~_]/g, ' ');
     return `${module.title}. ${module.description}. ${cleanBody}`;
   }, [module]);
 
@@ -107,7 +109,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     blocks.push({ type: 'p', isDesc: true, segments: [{ text: module.description, start: descStart, end: descStart + module.description.length }], start: descStart, end: descStart + module.description.length });
 
     const bodyStart = descStart + module.description.length + 2;
-    const lines = module.content.split('\n');
+    const lines = (module.content || '').split('\n');
     let currentOffset = bodyStart;
 
     lines.forEach((line) => {
@@ -507,6 +509,55 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   }
 
   if (!module) notFound();
+
+  if (module.locked) {
+    return (
+      <div className="mx-auto w-full max-w-[600px] px-6 py-20 text-center">
+        <div className="w-20 h-20 rounded-3xl bg-[#ffb800]/10 border border-[#ffb800]/20 flex items-center justify-center mx-auto mb-8">
+          <Lock size={36} className="text-[#ffb800]" />
+        </div>
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#ffb800]/10 border border-[#ffb800]/30 rounded-full text-[0.75rem] font-bold text-[#ffb800] uppercase tracking-wider mb-6">
+          <Crown size={14} />
+          Premium Content
+        </div>
+        <h1 className="text-4xl font-black text-white mb-4 tracking-[-0.03em]">{module.title}</h1>
+        <p className="text-lg text-[#666] mb-8 leading-relaxed">{module.description}</p>
+
+        <div className="bg-[#080808] border border-white/5 rounded-2xl p-8 mb-8 text-left">
+          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+            <Sparkles size={18} className="text-[#ffb800]" />
+            Upgrade to Access
+          </h3>
+          <ul className="flex flex-col gap-3 text-[0.875rem] text-[#888] mb-6">
+            <li className="flex items-start gap-3"><Crown size={16} className="text-[#ffb800] flex-shrink-0 mt-0.5" /> Full content with detailed explanations</li>
+            <li className="flex items-start gap-3"><Crown size={16} className="text-[#ffb800] flex-shrink-0 mt-0.5" /> TTS audio narration for hands-free learning</li>
+            <li className="flex items-start gap-3"><Crown size={16} className="text-[#ffb800] flex-shrink-0 mt-0.5" /> Interactive knowledge graph & implementation path</li>
+            <li className="flex items-start gap-3"><Crown size={16} className="text-[#ffb800] flex-shrink-0 mt-0.5" /> Quiz, reflection & action planning tools</li>
+          </ul>
+          <Link href="/#pricing" className="inline-flex items-center justify-center gap-2 w-full px-6 py-4 bg-white text-black rounded-xl font-bold text-[0.9375rem] no-underline hover:bg-white/90 transition-all">
+            <Crown size={18} />
+            View Subscription Plans
+          </Link>
+        </div>
+
+        {module.nodes && module.nodes.length > 0 && (
+          <div className="text-left">
+            <h3 className="text-lg font-bold text-white mb-4">Preview Knowledge Graph</h3>
+            <div className="h-[200px] bg-[#050505] rounded-2xl overflow-hidden border border-white/5">
+              <ReactFlow
+                nodes={module.nodes.map(n => ({ ...n, style: { ...n.style, opacity: 0.4 } }))}
+                edges={module.edges || []}
+                fitView
+                proOptions={{ hideAttribution: true }}
+              >
+                <Background color="#111" gap={20} size={0.5} />
+              </ReactFlow>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const getBlockText = (block: any) => {
     return block.segments

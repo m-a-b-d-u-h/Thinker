@@ -4,13 +4,17 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CheckCircle2, ArrowRight, Target, Trash2 } from "lucide-react";
 import { actionsApi } from "@/lib/api/actions";
+import Pagination from "@/components/Pagination";
 import { useAuth } from "@/lib/auth-context";
 import type { ActionPlan } from "@/lib/types";
+
+const PER_PAGE = 10;
 
 export default function ActionsPage() {
   const { user } = useAuth();
   const [plans, setPlans] = useState<ActionPlan[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   const fetchPlans = async () => {
     try {
@@ -73,8 +77,9 @@ export default function ActionsPage() {
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-4">
-          {plans.map((plan) => (
+        <>
+          <div className="flex flex-col gap-4">
+            {plans.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((plan) => (
             <div key={plan.id} className="bg-[#0d0d0d] rounded-2xl border border-white/5 overflow-hidden">
               <div className="flex items-center gap-4 px-6 py-5">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${plan.completed ? 'bg-green-500/10' : 'bg-white/5'}`}>
@@ -112,7 +117,9 @@ export default function ActionsPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+          <Pagination page={page} totalPages={Math.max(1, Math.ceil(plans.length / PER_PAGE))} onPageChange={setPage} />
+        </>
       )}
     </div>
   );

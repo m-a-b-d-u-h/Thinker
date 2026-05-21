@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
-import { Play, Clock, Search, Sparkles } from "lucide-react";
+import { Play, Clock, Search, Sparkles, Crown, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import ReactFlow, { Background, NodeProps, Handle, Position, ReactFlowProvider } from "reactflow";
@@ -10,6 +10,9 @@ import "reactflow/dist/style.css";
 import { ModuleCard } from "@/components/ModuleCard";
 import { useModules } from "@/lib/use-modules";
 import { useAuth } from "@/lib/auth-context";
+import { modulesApi } from "@/lib/api/modules";
+import Pagination from "@/components/Pagination";
+import type { Module as ModuleType } from "@/lib/types";
 
 const nodeSlugs: Record<string, string> = {
   "First Principles": "first-principles",
@@ -96,12 +99,13 @@ const MarketingFlow = () => {
 };
 
 export default function ProductsPage() {
-  const { user } = useAuth();
+  const { user, preferences } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [dailyFree, setDailyFree] = useState<ModuleType | null>(null);
 
   const { modules, categories, historyModules, totalPages, loading, error, fetchHistory } = useModules(
     currentPage,
@@ -109,7 +113,17 @@ export default function ProductsPage() {
     debouncedSearch,
   );
 
+  const sortedModules = [...modules].sort((a, b) => {
+    const aPref = preferences.includes(a.category) ? 0 : 1;
+    const bPref = preferences.includes(b.category) ? 0 : 1;
+    return aPref - bPref;
+  });
+
   const historyFetchedRef = useRef(false);
+
+  useEffect(() => {
+    modulesApi.getDailyFree().then(setDailyFree).catch(() => {});
+  }, []);
 
   useEffect(() => {
     if (user && !historyFetchedRef.current) {
@@ -122,6 +136,8 @@ export default function ProductsPage() {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  const isSubscribed = user && user.subscriptionStatus && user.subscriptionStatus !== "FREE";
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-6 py-16 min-h-[90vh]">
@@ -156,21 +172,22 @@ export default function ProductsPage() {
           <div className="h-full flex items-center p-8">
             <div className="w-full">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] mb-3 w-fit">
-                Daily Material
+                <Sparkles size={12} className="text-[#fbbf24]" />
+                Daily Free Material
               </div>
               <h3 className="text-xl font-bold text-white mb-2 leading-snug">
-                {modules[0]?.title ?? ''}
+                {dailyFree?.title ?? 'Loading...'}
               </h3>
               <p className="text-[0.8125rem] text-[#666] mb-4 leading-relaxed line-clamp-2">
-                {modules[0]?.description ?? ''}
+                {dailyFree?.description ?? ''}
               </p>
               <div className="flex items-center justify-between">
                 <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10">
-                  {modules[0]?.category ? modules[0].category.charAt(0).toUpperCase() + modules[0].category.slice(1).replace(/-/g, ' ') : ''}
+                  {dailyFree?.category ? dailyFree.category.charAt(0).toUpperCase() + dailyFree.category.slice(1).replace(/-/g, ' ') : ''}
                 </span>
-                <Link href={`/models/${modules[0]?.slug ?? '#'}`} className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-lg no-underline font-bold text-[0.75rem] hover:bg-white/90 transition-all">
+                <Link href={`/models/${dailyFree?.slug ?? '#'}`} className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-lg no-underline font-bold text-[0.75rem] hover:bg-white/90 transition-all">
                   <Play size={12} fill="currentColor" />
-                  Start
+                  Start Free
                 </Link>
               </div>
             </div>
@@ -256,6 +273,7 @@ export default function ProductsPage() {
       <div className="mb-12">
         <div className="mb-5">
           <p className="text-[0.6875rem] font-bold text-[#444] uppercase tracking-[0.1em] mb-3">Categories</p>
+
           <div className={`relative ${!showAllCategories ? 'overflow-hidden max-h-[42px]' : ''}`}>
             <div className="flex items-center gap-2 flex-wrap">
               {categories.map(cat => (
@@ -313,6 +331,18 @@ export default function ProductsPage() {
         <div className="text-center py-10 text-red-400">{error}</div>
       )}
 
+      {!isSubscribed && sortedModules.length > 0 && (
+        <div className="mb-8 p-4 bg-[#ffb800]/5 border border-[#ffb800]/20 rounded-xl flex items-center gap-3">
+          <Crown size={18} className="text-[#ffb800] flex-shrink-0" />
+          <p className="text-[0.875rem] text-[#ccc]">
+            Unlock all modules with a subscription.{" "}
+            <Link href="/#pricing" className="text-[#ffb800] font-bold no-underline hover:underline">
+              View Plans
+            </Link>
+          </p>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-20">
           <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -320,7 +350,7 @@ export default function ProductsPage() {
       ) : (
         <>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
-            {modules.map((module, idx) => (
+            {sortedModules.map((module, idx) => (
               <motion.div
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -332,37 +362,7 @@ export default function ProductsPage() {
             ))}
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex justify-center gap-2 mt-12">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className={`w-10 h-10 rounded-lg bg-[#080808] border border-white/5 text-[#888] flex items-center justify-center transition-all duration-200 ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:border-white/15 cursor-pointer'}`}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`min-w-10 h-10 rounded-lg font-bold text-[0.875rem] transition-all duration-200 ${currentPage === page ? 'bg-white text-black' : 'bg-[#080808] border border-white/5 text-[#888] hover:border-white/15'}`}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                className={`w-10 h-10 rounded-lg bg-[#080808] border border-white/5 text-[#888] flex items-center justify-center transition-all duration-200 ${currentPage === totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:border-white/15 cursor-pointer'}`}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          )}
+          <Pagination page={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </>
       )}
     </div>

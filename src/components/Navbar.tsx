@@ -11,13 +11,14 @@ import {
   BookOpen,
   Target,
   User,
-  LogOut,
+  Crown,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import UserPopup from "@/components/UserPopup";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   const links = [
     { name: "Explore", href: "/models", icon: Compass },
@@ -55,22 +56,15 @@ export default function Navbar() {
         })}
       </div>
 
-      <div className="flex-1 flex justify-end">
-        {user ? (
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="flex items-center gap-2 px-3 py-1.5 rounded border border-white/8 text-gray-400 text-sm font-medium transition-colors hover:text-white hover:border-white/15 hover:bg-white/3">
-              <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">
-                {user.name?.[0] || user.email[0]}
-              </div>
-              <span>{user.name || user.email}</span>
-            </Link>
-            <button
-              onClick={logout}
-              className="flex items-center gap-1.5 px-2 py-1.5 rounded text-gray-500 text-sm transition-colors hover:text-white cursor-pointer"
-            >
-              <LogOut size={14} />
-            </button>
+      <div className="flex-1 flex justify-end items-center gap-3">
+        {user && user.subscriptionStatus && user.subscriptionStatus !== "FREE" && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#fbbf24]/10 border border-[#fbbf24]/20 text-[0.6875rem] font-bold text-[#fbbf24]">
+            <Crown size={12} />
+            Pro
           </div>
+        )}
+        {user ? (
+          <UserPopup />
         ) : (
           <Link href="/login" className="flex items-center gap-2 px-3 py-1.5 rounded border border-white/8 text-gray-400 text-sm font-medium transition-colors hover:text-white hover:border-white/15 hover:bg-white/3">
             <User size={16} />

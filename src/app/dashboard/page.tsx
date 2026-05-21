@@ -17,7 +17,9 @@ import {
   TrendingUp,
   Sparkles,
   ArrowRight,
+  Crown,
 } from "lucide-react";
+import { paymentsApi } from "@/lib/api/payments";
 import {
   Tooltip,
   ResponsiveContainer,
@@ -27,7 +29,7 @@ import {
 } from "recharts";
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [greeting, setGreeting] = useState("");
   const [stats, setStats] = useState<ProgressStats | null>(null);
   const [recentModules, setRecentModules] = useState<{ slug: string; title: string; listened: number; read: number; lastReadAt: string }[]>([]);
@@ -39,6 +41,10 @@ export default function DashboardPage() {
   const [streakGoal] = useState(30);
   const [showStreakPopup, setShowStreakPopup] = useState(false);
   const [brokenStreakValue, setBrokenStreakValue] = useState(0);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [paymentVerified, setPaymentVerified] = useState(false);
+  const [activating, setActivating] = useState(false);
+  const [activateError, setActivateError] = useState<string | null>(null);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -97,6 +103,23 @@ export default function DashboardPage() {
   }, [fetchDashboardData]);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get("session_id");
+    if (sessionId && user && user.subscriptionStatus === "FREE") {
+      setVerifyingPayment(true);
+      paymentsApi
+        .verifySession(sessionId)
+        .then((updatedUser) => {
+          setUser(updatedUser);
+          setPaymentVerified(true);
+          window.history.replaceState({}, "", "/dashboard");
+        })
+        .catch(() => {})
+        .finally(() => setVerifyingPayment(false));
+    }
+  }, [user, setUser]);
+
+  useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible") fetchDashboardData();
     };
@@ -148,6 +171,54 @@ export default function DashboardPage() {
         <h1 className="text-4xl font-black tracking-[-0.02em] mb-2">Ready to Think,</h1>
         <p className="text-lg text-[#666]">{todayQuote}</p>
       </header>
+
+      {paymentVerified && (
+        <div className="mb-8 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3">
+          <Crown size={18} className="text-emerald-500 flex-shrink-0" />
+          <p className="text-[0.875rem] text-emerald-300 font-semibold">
+            Subscription activated! You now have full access.
+          </p>
+        </div>
+      )}
+
+      {verifyingPayment && (
+        <div className="mb-8 p-4 bg-[#fbbf24]/10 border border-[#fbbf24]/20 rounded-xl flex items-center gap-3">
+          <div className="w-4 h-4 border-2 border-[#fbbf24]/30 border-t-[#fbbf24] rounded-full animate-spin" />
+          <p className="text-[0.875rem] text-[#fbbf24]">Activating your subscription...</p>
+        </div>
+      )}
+
+      {user.subscriptionStatus === "FREE" && !paymentVerified && !verifyingPayment && (
+        <div className="mb-8 p-4 bg-[#ffb800]/5 border border-[#ffb800]/20 rounded-xl flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Crown size={18} className="text-[#ffb800] flex-shrink-0" />
+            <p className="text-[0.875rem] text-[#ccc]">
+              Already paid?{" "}
+              <button
+                onClick={async () => {
+                  setActivating(true);
+                  setActivateError(null);
+                  try {
+                    const updatedUser = await paymentsApi.activatePending();
+                    setUser(updatedUser);
+                  } catch (err) {
+                    setActivateError(err instanceof Error ? err.message : "No pending payment found");
+                  } finally {
+                    setActivating(false);
+                  }
+                }}
+                disabled={activating}
+                className="text-[#ffb800] font-bold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50"
+              >
+                {activating ? "Checking..." : "Activate your subscription"}
+              </button>
+            </p>
+          </div>
+          {activateError && (
+            <span className="text-[0.75rem] text-red-400 shrink-0">{activateError}</span>
+          )}
+        </div>
+      )}
 
       <div className="flex gap-4 mb-8 overflow-x-auto pb-2 scrollbar-thin">
         <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">

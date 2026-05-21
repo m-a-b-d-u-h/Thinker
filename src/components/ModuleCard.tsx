@@ -1,12 +1,14 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Play, Network, Headphones, BookOpen, Bookmark } from "lucide-react";
+import { Play, Network, Headphones, BookOpen, Bookmark, Crown, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import ReactFlow, { Handle, Position, ReactFlowProvider, useReactFlow } from "reactflow";
 import "reactflow/dist/style.css";
 import { calculateDurations } from "@/lib/calculate";
 import { favoritesApi } from "@/lib/api/favorites";
+import { useAuth } from "@/lib/auth-context";
 
 interface ModuleData {
   id: string;
@@ -14,10 +16,12 @@ interface ModuleData {
   title: string;
   description: string;
   category: string;
-  content: string;
+  content?: string;
   nodes?: any[];
   edges?: any[];
   isFavorited?: boolean;
+  isPremium?: boolean;
+  isDailyFree?: boolean;
 }
 
 const CustomNode = ({ data }: any) => (
@@ -74,8 +78,21 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
 
 export function ModuleCard({ module }: { module: ModuleData }) {
   const router = useRouter();
-  const durations = calculateDurations(module.content);
+  const { user } = useAuth();
+  const durations = module.content ? calculateDurations(module.content) : { listenMin: 0, readMin: 0 };
   const [isFavorited, setIsFavorited] = useState(module.isFavorited ?? false);
+
+  const isSubscribed = user && user.subscriptionStatus && user.subscriptionStatus !== "FREE";
+  const isAccessible = module.isDailyFree || isSubscribed;
+
+  const handleClick = () => {
+    router.push(`/models/${module.slug}`);
+  };
+
+  const handleStartClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    router.push(`/models/${module.slug}`);
+  };
 
   const toggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -94,9 +111,25 @@ export function ModuleCard({ module }: { module: ModuleData }) {
 
   return (
     <div
-      onClick={() => router.push(`/models/${module.slug}`)}
+      onClick={handleClick}
       className="group relative flex flex-col bg-[#080808] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-[#0c0c0c] hover:border-white/10 hover:-translate-y-1 cursor-pointer"
     >
+      {module.isPremium && !module.isDailyFree && (
+        <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1 bg-[#ffb800]/10 border border-[#ffb800]/30 rounded-full">
+          <Crown size={11} className="text-[#ffb800]" />
+          <span className="text-[0.625rem] font-bold text-[#ffb800] uppercase tracking-wider">Premium</span>
+        </div>
+      )}
+
+      {!isAccessible && (
+        <div className="absolute inset-0 z-20 bg-[#080808]/60 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <Link href="/#pricing" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#ffb800] text-black rounded-xl font-bold text-[0.8125rem] no-underline hover:bg-[#ffb800]/90 transition-all">
+            <Lock size={14} />
+            Subscribe to Access
+          </Link>
+        </div>
+      )}
+
       <div className="absolute inset-0 z-0">
         {module.nodes && module.nodes.length > 0 ? (
           <MiniPreview nodes={module.nodes} edges={module.edges || []} />
@@ -122,11 +155,14 @@ export function ModuleCard({ module }: { module: ModuleData }) {
       <div className="relative z-20 flex items-center justify-between px-8 pb-6 pt-8">
         <div className="flex items-center gap-2">
           <div
-            onClick={() => router.push(`/models/${module.slug}`)}
+            onClick={handleStartClick}
             className="group/btn flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black text-[0.6875rem] font-bold no-underline cursor-pointer hover:bg-white/90 transition-all"
           >
-            <Play size={12} fill="currentColor" />
-            <span>Start Learning</span>
+            {isAccessible ? (
+              <><Play size={12} fill="currentColor" /><span>Start Learning</span></>
+            ) : (
+              <><Lock size={12} /><span>Locked</span></>
+            )}
           </div>
           <button
             onClick={(e) => {
@@ -140,17 +176,19 @@ export function ModuleCard({ module }: { module: ModuleData }) {
           </button>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[0.6875rem] text-[#666] flex items-center gap-2">
-            <span className="flex items-center gap-1">
-              <Headphones size={12} />
-              <span>Listen {durations.listenMin}m</span>
+          {module.content && (
+            <span className="text-[0.6875rem] text-[#666] flex items-center gap-2">
+              <span className="flex items-center gap-1">
+                <Headphones size={12} />
+                <span>Listen {durations.listenMin}m</span>
+              </span>
+              <span className="text-[#444]">·</span>
+              <span className="flex items-center gap-1">
+                <BookOpen size={12} />
+                <span>Read {durations.readMin}m</span>
+              </span>
             </span>
-            <span className="text-[#444]">·</span>
-            <span className="flex items-center gap-1">
-              <BookOpen size={12} />
-              <span>Read {durations.readMin}m</span>
-            </span>
-          </span>
+          )}
           <button
             onClick={toggleFavorite}
             className="p-2.5 rounded-full text-[#888] hover:text-[#fbbf24] hover:bg-white/10 transition-all"

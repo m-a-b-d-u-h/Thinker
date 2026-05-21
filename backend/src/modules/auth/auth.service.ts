@@ -2,7 +2,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "../../lib/prisma";
 import { signToken } from "../../lib/jwt";
 import { ConflictError, NotFoundError, UnauthorizedError } from "../../lib/errors";
-import type { RegisterInput, LoginInput, GoogleAuthInput, UpdateProfileInput } from "./auth.schema";
+import type { RegisterInput, LoginInput, GoogleAuthInput, UpdateProfileInput, UpdatePreferencesInput } from "./auth.schema";
 
 export namespace AuthService {
   export async function register(input: RegisterInput) {
@@ -21,7 +21,7 @@ export namespace AuthService {
     const token = signToken({ userId: user.id, email: user.email });
     return {
       token,
-      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar },
+      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar, subscriptionStatus: user.subscriptionStatus, preferredCategories: user.preferredCategories },
     };
   }
 
@@ -35,7 +35,7 @@ export namespace AuthService {
     const token = signToken({ userId: user.id, email: user.email });
     return {
       token,
-      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar },
+      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar, subscriptionStatus: user.subscriptionStatus, preferredCategories: user.preferredCategories },
     };
   }
 
@@ -65,7 +65,7 @@ export namespace AuthService {
     const token = signToken({ userId: user.id, email: user.email });
     return {
       token,
-      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar },
+      user: { id: user.id, email: user.email, name: user.name, avatar: user.avatar, subscriptionStatus: user.subscriptionStatus, preferredCategories: user.preferredCategories },
     };
   }
 
@@ -80,6 +80,7 @@ export namespace AuthService {
       avatar: user.avatar,
       subscriptionStatus: user.subscriptionStatus,
       subscriptionEnd: user.subscriptionEnd,
+      preferredCategories: user.preferredCategories,
       createdAt: user.createdAt,
     };
   }
@@ -91,5 +92,23 @@ export namespace AuthService {
     });
 
     return { id: user.id, email: user.email, name: user.name, avatar: user.avatar };
+  }
+
+  export async function getPreferences(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { preferredCategories: true },
+    });
+    if (!user) throw new NotFoundError("User");
+    return { preferredCategories: user.preferredCategories };
+  }
+
+  export async function updatePreferences(userId: string, input: UpdatePreferencesInput) {
+    const user = await prisma.user.update({
+      where: { id: userId },
+      data: { preferredCategories: input.preferredCategories },
+      select: { preferredCategories: true },
+    });
+    return { preferredCategories: user.preferredCategories };
   }
 }

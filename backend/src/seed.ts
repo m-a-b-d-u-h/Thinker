@@ -1109,6 +1109,7 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
         description: mod.description,
         category: mod.category,
         content: mod.content,
+        isPremium: true,
         nodes: {
           create: uniqueNodes.map((n) => ({
             id: n.id,
@@ -1151,6 +1152,7 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
         description: mod.description,
         category: mod.category,
         content: mod.content,
+        isPremium: true,
         nodes: {
           create: uniqueNodes.map((n) => ({
             id: n.id,

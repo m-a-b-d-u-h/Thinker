@@ -5,14 +5,18 @@ import { Highlighter, Plus, Search, StickyNote, Pencil, X, Check } from "lucide-
 import Link from "next/link";
 import { formatDate } from "@/lib/format";
 import { highlightsApi } from "@/lib/api/highlights";
+import Pagination from "@/components/Pagination";
 import { useAuth } from "@/lib/auth-context";
 import type { Highlight } from "@/lib/types";
+
+const PER_PAGE = 12;
 
 export default function HighlightPage() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [highlights, setHighlights] = useState<Highlight[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [editNoteValue, setEditNoteValue] = useState("");
   const [savingNote, setSavingNote] = useState(false);
@@ -51,6 +55,11 @@ export default function HighlightPage() {
     h.text.toLowerCase().includes(search.toLowerCase()) ||
     (h as any).moduleSlug?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const pagedHighlights = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+
+  useEffect(() => { setPage(1); }, [search]);
 
   if (!user) {
     return (
@@ -100,8 +109,9 @@ export default function HighlightPage() {
       {filtered.length === 0 ? (
         <div className="text-center py-20 text-[#444] text-[0.875rem]">No highlights found.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {filtered.map((highlight) => (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {pagedHighlights.map((highlight) => (
               <div key={highlight.id} className="bg-[#080808] border border-white/5 rounded-2xl p-8 hover:border-white/10 transition-colors flex flex-col">
               <div className="flex items-center justify-between gap-3 mb-5">
                 {highlight.module ? (
@@ -169,7 +179,9 @@ export default function HighlightPage() {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+        </>
       )}
     </div>
   );

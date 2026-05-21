@@ -6,13 +6,17 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { formatDate } from "@/lib/format";
 import { reflectionsApi } from "@/lib/api/reflections";
+import Pagination from "@/components/Pagination";
 import { useAuth } from "@/lib/auth-context";
 import type { Reflection } from "@/lib/types";
+
+const PER_PAGE = 12;
 
 export default function ReflectionListPage() {
   const { user } = useAuth();
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     reflectionsApi.list().then(setReflections).catch(() => {}).finally(() => setLoading(false));
@@ -60,8 +64,9 @@ export default function ReflectionListPage() {
       {reflections.length === 0 ? (
         <div className="text-center py-20 text-[#444] text-[0.875rem]">No reflections yet.</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          {reflections.map((ref, idx) => (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+            {reflections.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((ref, idx) => (
             <motion.div
               key={ref.id}
               initial={{ opacity: 0, y: 5 }}
@@ -120,7 +125,9 @@ export default function ReflectionListPage() {
               </div>
             </motion.div>
           ))}
-        </div>
+          </div>
+          <Pagination page={page} totalPages={Math.max(1, Math.ceil(reflections.length / PER_PAGE))} onPageChange={setPage} />
+        </>
       )}
     </div>
   );

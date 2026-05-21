@@ -15,4 +15,10 @@ export const authApi = {
 
   updateProfile: (body: { name?: string; avatar?: string }) =>
     api.put<User>("/auth/profile", body),
+
+  getPreferences: () =>
+    api.get<{ preferredCategories: string[] }>("/auth/preferences"),
+
+  updatePreferences: (body: { preferredCategories: string[] }) =>
+    api.put<{ preferredCategories: string[] }>("/auth/preferences", body),
 };

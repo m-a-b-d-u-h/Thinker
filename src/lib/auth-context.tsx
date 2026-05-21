@@ -12,6 +12,9 @@ interface AuthContextValue {
   loginWithGoogle: (credential: string) => Promise<void>;
   logout: () => void;
   setUser: (user: User | null) => void;
+  preferences: string[];
+  setPreferences: (categories: string[]) => Promise<void>;
+  loadPreferences: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -19,6 +22,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [preferences, setPreferencesState] = useState<string[]>([]);
 
   const validateToken = useCallback(async () => {
     const token = localStorage.getItem("token");
@@ -41,10 +45,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     validateToken();
   }, [validateToken]);
 
+  useEffect(() => {
+    if (user?.preferredCategories) {
+      setPreferencesState(user.preferredCategories);
+    }
+  }, [user]);
+
+  const loadPreferences = useCallback(async () => {
+    try {
+      const res = await authApi.getPreferences();
+      setPreferencesState(res.preferredCategories);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const setPreferences = useCallback(async (categories: string[]) => {
+    const res = await authApi.updatePreferences({ preferredCategories: categories });
+    setPreferencesState(res.preferredCategories);
+    setUser((prev) => prev ? { ...prev, preferredCategories: res.preferredCategories } : null);
+  }, []);
+
   const login = useCallback(async (email: string, password: string) => {
     const res = await authApi.login({ email, password });
     localStorage.setItem("token", res.token);
     setUser(res.user);
+    if (res.user.preferredCategories) {
+      setPreferencesState(res.user.preferredCategories);
+    }
   }, []);
 
   const register = useCallback(async (email: string, password: string, name?: string) => {
@@ -68,10 +96,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     localStorage.removeItem("token");
     setUser(null);
+    setPreferencesState([]);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, setUser }}>
+    <AuthContext.Provider value={{ user, loading, login, register, loginWithGoogle, logout, setUser, preferences, setPreferences, loadPreferences }}>
       {children}
     </AuthContext.Provider>
   );

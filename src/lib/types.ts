@@ -43,14 +43,15 @@ export interface Module {
   title: string;
   description: string;
   category: string;
-  content: string;
+  content?: string;
   isPremium: boolean;
   createdAt: string;
   updatedAt: string;
   nodes: ReactFlowNode[];
   edges: ReactFlowEdge[];
-  questions: Question[];
+  questions?: Question[];
   _count?: { questions: number };
+  locked?: boolean;
 }
 
 export interface ModuleListItem {
@@ -59,7 +60,7 @@ export interface ModuleListItem {
   title: string;
   description: string;
   category: string;
-  content: string;
+  content?: string;
   isPremium: boolean;
   createdAt: string;
   updatedAt: string;
@@ -67,6 +68,7 @@ export interface ModuleListItem {
   edges: ReactFlowEdge[];
   _count?: { questions: number };
   isFavorited?: boolean;
+  isDailyFree?: boolean;
 }
 
 export interface PaginatedResponse<T> {
@@ -85,6 +87,7 @@ export interface User {
   name: string | null;
   avatar: string | null;
   subscriptionStatus?: string;
+  preferredCategories?: string[];
 }
 
 export interface AuthResponse {
@@ -133,7 +136,8 @@ export interface FavoriteItem {
   title: string;
   description: string;
   category: string;
-  content: string;
+  content?: string;
+  isPremium?: boolean;
   nodes: ReactFlowNode[];
   edges: ReactFlowEdge[];
   questionCount: number;
