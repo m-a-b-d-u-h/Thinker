@@ -6,10 +6,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ReactFlow, { Background, NodeProps, Handle, Position, useReactFlow, ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
+import KnowledgeGraph from "@/components/KnowledgeGraph";
 import React from "react";
 import { CheckCircle2, Zap, Crown, ShieldCheck, Infinity, Library, Play, ArrowRight, Sparkles, Network, Clock, BookOpen, Star, Quote } from "lucide-react";
 import Marquee from "react-fast-marquee";
 import Navbar from "@/components/Navbar";
+import { ModuleCard } from "@/components/ModuleCard";
 import { modulesApi } from "@/lib/api/modules";
 import { paymentsApi } from "@/lib/api/payments";
 import { useAuth } from "@/lib/auth-context";
@@ -94,7 +96,7 @@ export default function Home() {
   const [subscribing, setSubscribing] = useState<string | null>(null);
 
   useEffect(() => {
-    modulesApi.list({ limit: "3" }).then((res) => setModules(res.data)).catch(() => {});
+    modulesApi.list({ limit: "4" }).then((res) => setModules(res.data)).catch(() => {});
   }, []);
 
   const handleSubscribe = async (planType: "MONTHLY" | "YEARLY" | "LIFETIME") => {
@@ -120,21 +122,6 @@ export default function Home() {
       setSubscribing(null);
     }
   };
-
-  const nodes = useMemo(() => [
-    { id: '1', position: { x: 0, y: 0 }, data: { label: '' }, style: { width: 12, height: 12, borderRadius: '50%', background: '#fff', border: 'none', boxShadow: '0 0 15px #fff' } },
-    { id: '2', position: { x: 100, y: -50 }, data: { label: '' }, style: { width: 8, height: 8, borderRadius: '50%', background: '#fff', border: 'none', opacity: 0.6 } },
-    { id: '3', position: { x: -80, y: -100 }, data: { label: '' }, style: { width: 8, height: 8, borderRadius: '50%', background: '#fff', border: 'none', opacity: 0.6 } },
-    { id: '4', position: { x: 150, y: 80 }, data: { label: '' }, style: { width: 10, height: 10, borderRadius: '50%', background: '#fff', border: 'none', opacity: 0.8 } },
-    { id: '5', position: { x: -120, y: 50 }, data: { label: '' }, style: { width: 6, height: 6, borderRadius: '50%', background: '#fff', border: 'none', opacity: 0.4 } },
-  ], []);
-
-  const edges = useMemo(() => [
-    { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: 'rgba(255,255,255,0.1)' } },
-    { id: 'e1-3', source: '1', target: '3', animated: true, style: { stroke: 'rgba(255,255,255,0.1)' } },
-    { id: 'e1-4', source: '1', target: '4', animated: true, style: { stroke: 'rgba(255,255,255,0.1)' } },
-    { id: 'e1-5', source: '1', target: '5', animated: true, style: { stroke: 'rgba(255,255,255,0.1)' } },
-  ], []);
 
   const plans = [
     {
@@ -168,7 +155,7 @@ export default function Home() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const sampleProducts = modules.slice(0, 2);
+  const sampleProducts = modules.slice(0, 4);
   const [openFaq, setOpenFaq] = useState<string | null>(null);
 
   return (
@@ -206,45 +193,10 @@ export default function Home() {
             <p className="text-muted text-lg max-w-[600px] mx-auto">A sneak peek into the cognitive frameworks available.</p>
           </header>
 
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-10">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6">
             {sampleProducts.map((module, idx) => (
               <motion.div initial={{ opacity: 0, y: 5 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.1 }} key={module.id}>
-                <Link href={`/models/${module.slug}`} className="group flex flex-col bg-[#080808] border border-white/5 rounded-[32px] p-8 transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-2 hover:shadow-2xl hover:shadow-black/60 text-white no-underline h-full">
-                  <div>
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000', fontSize: '0.625rem', fontWeight: 800 }}>{module.category}</span>
-                      <div className="flex items-center gap-1.5 text-[#333]">
-                        <Sparkles size={12} />
-                        <span className="text-[0.625rem] font-bold uppercase tracking-wider">Theory Engine</span>
-                      </div>
-                    </div>
-                    <h2 className="text-2xl font-black text-white mb-2 leading-[1.2]">{module.title}</h2>
-                    <p className="text-base text-[#666] leading-relaxed h-[3em] overflow-hidden">{module.description}</p>
-                  </div>
-
-                  {module.nodes && module.nodes.length > 0 ? (
-                    <MiniPreview nodes={module.nodes} edges={module.edges || []} />
-                  ) : (
-                    <div className="h-[260px] bg-white/[0.01] rounded-3xl flex items-center justify-center text-[#222] my-6">
-                      <Network size={28} />
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between border-t border-white/5 pt-5 mt-auto">
-                    <div className="flex items-center gap-5">
-                      <div className="flex items-center gap-2 text-[0.8125rem] font-bold text-white">
-                        <div className="w-8 h-8 rounded-full bg-white text-black flex items-center justify-center">
-                          <Play size={14} fill="currentColor" />
-                        </div>
-                        Listen & Learn
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[#333] text-[0.75rem] font-semibold">
-                        <Clock size={14} /> {calculateTime(module.content)}
-                      </div>
-                    </div>
-                    <ArrowRight size={20} className="text-[#222] group-hover:text-white group-hover:translate-x-1 transition-all" />
-                  </div>
-                </Link>
+                <ModuleCard module={module} />
               </motion.div>
             ))}
           </div>
@@ -315,9 +267,9 @@ export default function Home() {
             <div className="absolute top-10 left-[16.67%] right-[16.67%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-0" />
 
             {[
-              { step: '01', title: 'Explore', desc: 'Browse through mental models and frameworks across different collections.', icon: Network, color: '#a78bfa' },
-              { step: '02', title: 'Learn', desc: 'Listen to theories with TTS, highlight key insights, and build understanding.', icon: BookOpen, color: '#fb923c' },
-              { step: '03', title: 'Apply', desc: 'Take action with implementation paths and track your progress in the knowledge graph.', icon: Zap, color: '#2dd4bf' },
+              { step: '01', title: 'Explore', desc: 'Browse an expansive library of mental models, filter by category, and discover your daily free theory.', icon: Network, color: '#a78bfa' },
+              { step: '02', title: 'Learn', desc: 'Read with immersive TTS narration, highlight key passages, and track your progress automatically.', icon: BookOpen, color: '#fb923c' },
+              { step: '03', title: 'Master', desc: 'Build action protocols, reflect with guided prompts, quiz yourself, and visualize connections in your knowledge graph.', icon: Zap, color: '#2dd4bf' },
             ].map((item, idx) => (
               <motion.div
                 key={item.step}
@@ -344,33 +296,33 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Obsidian-style Graph Section */}
-        <section className="py-16">
-          <div className="grid grid-cols-2 gap-16 items-center">
-            <div>
-              <h2 className="text-5xl font-black mb-6 leading-[1.1]">
-                Your Mind, <br/><span className="text-[#444]">Visualized.</span>
-              </h2>
-              <p className="text-muted text-lg mb-8">
-                1section tracks your mental growth in a connected Obsidian-style knowledge graph. See how different mental models overlap and build upon each other.
-              </p>
-              <div className="flex gap-4">
-                <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                  <div className="text-white font-bold text-xl">14+</div>
-                  <div className="text-[#555] text-[0.75rem] uppercase">Active Models</div>
-                </div>
-                <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                  <div className="text-white font-bold text-xl">84%</div>
-                  <div className="text-[#555] text-[0.75rem] uppercase">Retention Rate</div>
+        {/* Knowledge Graph Section */}
+        <section className="py-24">
+          <div className="mx-auto max-w-[1200px] px-6">
+            <div className="grid grid-cols-[1fr_1.5fr] gap-12 items-center">
+              <div>
+                <h2 className="text-5xl font-black mb-6 leading-[1.1]">
+                  Your Mind, <br/><span className="text-[#444]">Visualized.</span>
+                </h2>
+                <p className="text-muted text-lg mb-8 leading-relaxed">
+                  Every framework you master becomes a living node in your personal thought universe. Watch your understanding deepen as ideas connect, overlap, and compound into something bigger.
+                </p>
+                <div className="flex gap-4">
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                    <div className="text-white font-bold text-xl">14+</div>
+                    <div className="text-[#555] text-[0.75rem] uppercase">Frameworks</div>
+                  </div>
+                  <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                    <div className="text-white font-bold text-xl">84%</div>
+                    <div className="text-[#555] text-[0.75rem] uppercase">Knowledge Retained</div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="h-[500px] bg-[#050505] rounded-[32px] overflow-hidden relative border border-white/5 shadow-2xl shadow-black/50">
-              <ReactFlow nodes={nodes} edges={edges} proOptions={{ hideAttribution: true }} fitView zoomOnScroll={false} panOnDrag={false} style={{ pointerEvents: 'none' }}>
-                <Background color="#111" gap={30} size={1} />
-              </ReactFlow>
-              <div className="absolute inset-0 shadow-[inset_0_0_80px_rgba(0,0,0,0.9)] pointer-events-none" />
+              <div className="h-[600px] bg-[#050505] rounded-[32px] overflow-hidden relative border border-white/5 shadow-2xl shadow-black/50">
+                <KnowledgeGraph />
+                <div className="absolute inset-0 shadow-[inset_0_0_80px_rgba(0,0,0,0.9)] pointer-events-none" />
+              </div>
             </div>
           </div>
         </section>
@@ -453,7 +405,7 @@ export default function Home() {
             <p className="text-muted text-xl max-w-[600px] mx-auto">{user && user.subscriptionStatus !== "FREE" ? "You're already subscribed. Manage your plan below." : "Choose a plan that fits your goals. Cancel anytime."}</p>
           </header>
 
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
             {(() => {
               const planOrder = ["Free", "1 Month", "1 Year", "Lifetime"];
               const statusToPlan: Record<string, string> = { FREE: "Free", MONTHLY: "1 Month", YEARLY: "1 Year", LIFETIME: "Lifetime" };

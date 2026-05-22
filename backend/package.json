@@ -11,6 +11,9 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx src/seed.ts",
     "db:studio": "prisma studio",
+    "stripe:login": "stripe.exe login",
+    "stripe:listen": "stripe.exe listen --forward-to localhost:4000/api/payments/webhook",
+    "stripe:trigger": "stripe.exe trigger checkout.session.completed",
     "lint": "eslint src/"
   },
   "dependencies": {

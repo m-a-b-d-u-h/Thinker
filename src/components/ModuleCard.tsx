@@ -66,7 +66,7 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
   const styledEdges = useMemo(() => edges.map(e => ({
     ...e,
     animated: true,
-    style: { stroke: 'rgba(255,255,255,0.2)', strokeWidth: 1.5 }
+    style: { stroke: 'rgba(255,255,255,0.45)', strokeWidth: 2.5 }
   })), [edges]);
 
   return (
