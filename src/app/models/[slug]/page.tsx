@@ -621,15 +621,15 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   };
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 pb-[160px] pt-8">
-      <div className="grid grid-cols-[1fr_320px] gap-8 items-start">
-        <article ref={articleRef} className="max-w-[65ch] mx-auto">
+    <div className="max-w-[1100px] mx-auto px-4 pb-[180px] pt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
+        <article ref={articleRef} className="max-w-[65ch] mx-auto w-full">
           {contentBlocks.map((block, idx) => (
             <HighlightBlock key={idx} block={block} />
           ))}
         </article>
 
-        <div className="sticky top-[100px] pl-6 border-l border-[#333]">
+        <div className="hidden lg:block sticky top-[100px] pl-6 border-l border-[#333]">
           <div className="text-[0.6875rem] font-semibold text-[#444] uppercase tracking-[0.1em] mb-6">Contents</div>
           <nav className="flex flex-col gap-3">
             {contentBlocks
@@ -769,10 +769,10 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
         </button>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-[#050505cc] backdrop-blur-[30px] border-t border-[var(--border)] z-[1000] py-6 shadow-2xl shadow-black/50">
-        <div className="mx-auto w-full max-w-[1200px] px-6 flex flex-col gap-5">
-          <div className="flex items-center gap-5">
-            <span className="text-[0.75rem] text-[#555] min-w-[40px] tabular-nums">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#050505cc] backdrop-blur-[30px] border-t border-[var(--border)] z-[1000] py-4 md:py-6 shadow-2xl shadow-black/50">
+        <div className="mx-auto w-full max-w-[1200px] px-3 md:px-6 flex flex-col gap-3 md:gap-5">
+          <div className="flex items-center gap-3 md:gap-5">
+            <span className="text-[0.75rem] text-[#555] min-w-[32px] md:min-w-[40px] tabular-nums">
               {durationInfo.currentFormatted(progress)}
             </span>
             <div className="relative flex-grow h-1 bg-[#1a1a1a] rounded-sm">
@@ -787,47 +787,47 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
               />
               <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] pointer-events-none" style={{ left: `${progress}%` }} />
             </div>
-            <span className="text-[0.75rem] text-[#555] min-w-[40px] tabular-nums">
+            <span className="text-[0.75rem] text-[#555] min-w-[32px] md:min-w-[40px] tabular-nums">
               {durationInfo.totalFormatted}
             </span>
           </div>
 
           <div className="flex items-center justify-between">
-            <div className="flex gap-6 items-center flex-1">
+            <div className="flex gap-2 md:gap-6 items-center flex-1">
               <div className="relative">
-                <button onClick={() => setShowVoiceList(!showVoiceList)} className="bg-transparent border-none text-[#888] flex items-center gap-2 cursor-pointer text-[0.875rem]">
-                  <Volume2 size={18} />
-                  <span>{selectedVoice ? voices.find(v => v.name === selectedVoice)?.displayName || "Voice" : "Voice"}</span>
-                  <ChevronUp size={14} className={`transition-transform duration-300 ${showVoiceList ? '' : 'rotate-180'}`} />
+                <button onClick={() => setShowVoiceList(!showVoiceList)} className="bg-transparent border-none text-[#888] flex items-center gap-1 md:gap-2 cursor-pointer text-[0.75rem] md:text-[0.875rem]">
+                  <Volume2 size={16} className="md:block" />
+                  <span className="hidden md:inline">{selectedVoice ? voices.find(v => v.name === selectedVoice)?.displayName || "Voice" : "Voice"}</span>
+                  <ChevronUp size={12} className={`md:block transition-transform duration-300 ${showVoiceList ? '' : 'rotate-180'}`} />
                 </button>
                 <AnimatePresence>
                   {showVoiceList && (
-                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute bottom-[150%] left-0 w-[180px] max-h-[250px] overflow-y-auto bg-[#111] border border-[#222] rounded-xl p-2 shadow-2xl shadow-black/80 z-[1001]">
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute bottom-[150%] left-0 w-[160px] md:w-[180px] max-h-[200px] md:max-h-[250px] overflow-y-auto bg-[#111] border border-[#222] rounded-xl p-2 shadow-2xl shadow-black/80 z-[1001]">
                       {voices.map((voice: any) => (
-                        <button key={voice.name} onClick={() => { setShowVoiceList(false); updateVoice(voice.name); }} className={`w-full px-3 py-2 text-left text-[0.8125rem] rounded-lg cursor-pointer ${selectedVoice === voice.name ? 'text-white bg-[#1a1a1a]' : 'text-[#666] hover:bg-[#1a1a1a]'}`}>{voice.displayName}</button>
+                        <button key={voice.name} onClick={() => { setShowVoiceList(false); updateVoice(voice.name); }} className={`w-full px-2 md:px-3 py-2 text-left text-[0.75rem] md:text-[0.8125rem] rounded-lg cursor-pointer ${selectedVoice === voice.name ? 'text-white bg-[#1a1a1a]' : 'text-[#666] hover:bg-[#1a1a1a]'}`}>{voice.displayName}</button>
                       ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-              <div className="flex items-center gap-2 text-[#444]">
-                <FastForward size={16} />
-                <select value={rate} onChange={(e) => updateRate(parseFloat(e.target.value))} className="bg-transparent border-none text-[#888] text-[0.8125rem] cursor-pointer outline-none">
+              <div className="flex items-center gap-1 md:gap-2 text-[#444]">
+                <FastForward size={14} className="md:block" />
+                <select value={rate} onChange={(e) => updateRate(parseFloat(e.target.value))} className="bg-transparent border-none text-[#888] text-[0.75rem] md:text-[0.8125rem] cursor-pointer outline-none">
                   <option value="0.8">0.8x</option><option value="1">1.0x</option><option value="1.2">1.2x</option><option value="1.5">1.5x</option>
                 </select>
               </div>
             </div>
-            <div className="flex gap-6 items-center flex-1 justify-center">
-              <button onClick={toggleSpeech} className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center border-none cursor-pointer shadow-lg shadow-white/20">
-                {isPlaying ? <Square size={24} fill="currentColor" /> : <Play size={24} fill="currentColor" className="ml-1" />}
+            <div className="flex gap-3 md:gap-6 items-center flex-1 justify-center">
+              <button onClick={toggleSpeech} className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white text-black flex items-center justify-center border-none cursor-pointer shadow-lg shadow-white/20">
+                {isPlaying ? <Square size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
               </button>
             </div>
-            <div className="flex gap-6 items-center flex-1 justify-end">
-              <div className="flex items-center gap-3">
+            <div className="flex gap-2 md:gap-6 items-center flex-1 justify-end">
+              <div className="hidden md:flex items-center gap-3">
                 <Volume2 size={18} className="text-[#444]" />
-                <input type="range" min="0" max="1" step="0.1" value={volume} onChange={(e) => updateVolume(parseFloat(e.target.value))} className="w-[100px] h-0.5 accent-white cursor-pointer" />
+                <input type="range" min="0" max="1" step="0.1" value={volume} onChange={(e) => updateVolume(parseFloat(e.target.value))} className="w-[80px] md:w-[100px] h-0.5 accent-white cursor-pointer" />
               </div>
-              <button className="text-[#444] bg-transparent border-none cursor-pointer" onClick={() => setShowSettings(!showSettings)}><Settings2 size={20} /></button>
+              <button className="text-[#444] bg-transparent border-none cursor-pointer" onClick={() => setShowSettings(!showSettings)}><Settings2 size={18} className="md:text-[20px]" /></button>
             </div>
           </div>
         </div>
@@ -836,8 +836,8 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       {selection && (
         <div
           data-highlight-popup
-          className="fixed z-[2000] bg-[#111] border border-white/10 rounded-2xl p-4 shadow-2xl shadow-black/60 min-w-[300px]"
-          style={{ left: Math.max(16, selection.x - 150), top: Math.max(16, selection.y - 180) }}
+          className="fixed z-[2000] bg-[#111] border border-white/10 rounded-2xl p-4 shadow-2xl shadow-black/60 min-w-[260px] md:min-w-[300px]"
+          style={{ left: Math.max(16, Math.min(selection.x - 150, window.innerWidth - 300)), top: Math.max(16, selection.y - 180) }}
         >
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2 text-[#fbbf24]">

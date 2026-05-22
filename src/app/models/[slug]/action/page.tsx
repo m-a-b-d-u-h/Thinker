@@ -47,12 +47,12 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
   };
 
   if (isLoading || planLoading) {
-    return <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 flex justify-center"><div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>;
+    return <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-16 flex justify-center"><div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>;
   }
 
   if (!module) {
     return (
-      <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 text-center">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-16 text-center">
         <p className="text-[0.875rem] text-[#555]">Module not found or failed to load.</p>
         <Link href="/models" className="inline-flex items-center gap-1.5 mt-4 text-[0.8125rem] text-[#888] hover:text-white transition-colors">
           Back to library
@@ -83,7 +83,7 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
   ];
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16">
+    <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-16">
       <div className="max-w-[900px] mx-auto">
         <header className="mb-12">
           <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000', marginBottom: '1rem' }}>{module.category}</span>
@@ -119,13 +119,13 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
                   className="flex items-center gap-4 bg-[#050505] border border-[#222] rounded-xl p-4"
                 >
                   {row.type === 'text' && (
-                    <div className="flex-1 flex items-center gap-3">
+                    <div className="flex-1 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-3">
                       <input
                         type="text"
                         placeholder="Label"
                         value={row.label}
                         onChange={(e) => updateRow(row.id, { label: e.target.value })}
-                        className="w-1/3 bg-transparent border border-[#222] rounded-lg px-3 py-2 text-white text-[0.875rem] outline-none"
+                        className="w-full md:w-1/3 bg-transparent border border-[#222] rounded-lg px-3 py-2 text-white text-[0.875rem] outline-none"
                       />
                       <input
                         type="text"
@@ -137,7 +137,7 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
                     </div>
                   )}
                   {row.type === 'checkbox' && (
-                    <div className="flex-1 flex items-center gap-3">
+                    <div className="flex-1 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-3">
                       <input
                         type="text"
                         placeholder="Label"
@@ -157,13 +157,13 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
                     </div>
                   )}
                   {row.type === 'slider' && (
-                    <div className="flex-1 flex items-center gap-3">
+                    <div className="flex-1 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-3">
                       <input
                         type="text"
                         placeholder="Label"
                         value={row.label}
                         onChange={(e) => updateRow(row.id, { label: e.target.value })}
-                        className="w-1/3 bg-transparent border border-[#222] rounded-lg px-3 py-2 text-white text-[0.875rem] outline-none"
+                        className="w-full md:w-1/3 bg-transparent border border-[#222] rounded-lg px-3 py-2 text-white text-[0.875rem] outline-none"
                       />
                       <input
                         type="range"
@@ -176,15 +176,15 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
                     </div>
                   )}
                   {row.type === 'radio' && (
-                    <div className="flex-1 flex items-center gap-3">
+                    <div className="flex-1 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-3">
                       <input
                         type="text"
                         placeholder="Label"
                         value={row.label}
                         onChange={(e) => updateRow(row.id, { label: e.target.value })}
-                        className="w-1/4 bg-transparent border border-[#222] rounded-lg px-3 py-2 text-white text-[0.875rem] outline-none"
+                        className="w-full md:w-1/4 bg-transparent border border-[#222] rounded-lg px-3 py-2 text-white text-[0.875rem] outline-none"
                       />
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {row.options?.map((opt: string) => (
                           <label key={opt} className="flex items-center gap-1.5 cursor-pointer text-[0.8125rem] text-white/70">
                             <input
@@ -201,7 +201,7 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
                                 const newOptions = row.options?.map(o => o === opt ? e.target.value : o);
                                 updateRow(row.id, { options: newOptions });
                               }}
-                              className="bg-transparent border border-[#222] rounded px-2 py-1 text-white text-[0.8125rem] w-[80px] outline-none"
+                              className="bg-transparent border border-[#222] rounded px-2 py-1 text-white text-[0.8125rem] w-[70px] md:w-[80px] outline-none"
                             />
                           </label>
                         ))}

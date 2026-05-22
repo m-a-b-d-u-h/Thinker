@@ -107,7 +107,7 @@ export default function DashboardPage() {
 
   if (!user) {
     return (
-      <div className="mx-auto w-full max-w-[1200px] px-6 py-16 text-center">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-16 text-center">
         <h1 className="text-3xl font-black mb-4">Sign in to view your dashboard</h1>
         <Link href="/login" className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg font-semibold">
           Sign In
@@ -117,7 +117,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-6 py-16">
+    <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-16">
       <header className="mb-10">
         <div className="mb-2">
           <span className="text-[0.875rem] text-[#444] uppercase tracking-[0.1em]">{greeting}</span>
@@ -174,7 +174,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="flex gap-4 mb-8 overflow-x-auto pb-2 scrollbar-thin">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
           <div className="flex items-center gap-2 text-[#888] mb-3">
             <Headphones size={14} />
@@ -254,9 +254,9 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-[2fr_1fr] gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
         <div className="flex flex-col gap-8">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">Current Rank</h3>

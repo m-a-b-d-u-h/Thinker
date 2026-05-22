@@ -57,7 +57,7 @@ export default function ReflectionPage({ params }: { params: Promise<{ slug: str
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 flex justify-center">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-16 flex justify-center">
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     );
@@ -66,7 +66,7 @@ export default function ReflectionPage({ params }: { params: Promise<{ slug: str
   if (!module) notFound();
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16">
+    <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-16">
       <div className="max-w-[700px] mx-auto">
         <header className="mb-12">
           <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000', marginBottom: '1rem' }}>{module.category}</span>

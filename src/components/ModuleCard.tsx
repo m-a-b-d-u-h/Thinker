@@ -144,28 +144,28 @@ export function ModuleCard({ module }: { module: ModuleData }) {
 
       <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#080808] via-[#080808]/80 to-transparent z-10" />
 
-      <div className="relative z-20 p-8 pb-3">
-        <div className="flex items-start justify-between gap-3">
-          <h2 className="text-lg font-black text-white leading-[1.25] line-clamp-2 flex-1">{module.title}</h2>
-          <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10 mt-1">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
+      <div className="relative z-20 p-4 md:p-8 pb-2 md:pb-3">
+        <div className="flex items-start justify-between gap-2 md:gap-3">
+          <h2 className="text-base md:text-lg font-black text-white leading-[1.25] line-clamp-2 flex-1">{module.title}</h2>
+          <span className="shrink-0 px-2 md:px-3 py-1 rounded-full text-[0.5625rem] md:text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10 mt-1">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
         </div>
-        <p className="text-[0.75rem] text-[#777] leading-relaxed mt-1">{module.description}</p>
+        <p className="text-[0.6875rem] md:text-[0.75rem] text-[#777] leading-relaxed mt-1 line-clamp-2">{module.description}</p>
       </div>
 
-      <div className="flex-1 relative z-10 min-h-[160px]" />
+      <div className="flex-1 relative z-10 min-h-[140px] md:min-h-[180px]" />
 
-      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#080808] via-[#080808]/90 to-transparent z-10" />
+      <div className="absolute inset-x-0 bottom-0 h-24 md:h-32 bg-gradient-to-t from-[#080808] via-[#080808]/90 to-transparent z-10" />
 
-      <div className="relative z-20 flex items-center justify-between px-8 pb-6 pt-8">
-        <div className="flex items-center gap-2">
+      <div className="relative z-20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 px-4 md:px-8 pb-4 md:pb-6 pt-6 md:pt-8">
+        <div className="hidden sm:flex items-center gap-1.5 md:gap-2">
           <div
             onClick={handleStartClick}
-            className="group/btn flex items-center gap-2 px-4 py-2 rounded-full bg-white text-black text-[0.6875rem] font-bold no-underline cursor-pointer hover:bg-white/90 transition-all"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white text-black text-[0.625rem] md:text-[0.6875rem] font-bold no-underline cursor-pointer hover:bg-white/90 transition-all"
           >
             {isAccessible ? (
-              <><Play size={12} fill="currentColor" /><span>Start Learning</span></>
+              <><Play size={11} fill="currentColor" /><span>Start Learning</span></>
             ) : (
-              <><Lock size={12} /><span>Locked</span></>
+              <><Lock size={11} /><span>Locked</span></>
             )}
           </div>
           <button
@@ -173,31 +173,31 @@ export function ModuleCard({ module }: { module: ModuleData }) {
               e.stopPropagation();
               router.push(`/models/${module.slug}/path`);
             }}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-white/5 text-white/60 text-[0.6875rem] font-semibold hover:bg-white/10 hover:text-white/80 transition-all"
+            className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 text-white/60 text-[0.625rem] md:text-[0.6875rem] font-semibold hover:bg-white/10 hover:text-white/80 transition-all"
           >
-            <Network size={12} />
+            <Network size={11} />
             <span>Path</span>
           </button>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 ml-auto">
           {(durations.listenMin > 0 || durations.readMin > 0) && (
-            <span className="text-[0.6875rem] text-[#666] flex items-center gap-2">
+            <span className="text-[0.625rem] md:text-[0.6875rem] text-[#666] flex items-center gap-1.5 md:gap-2">
               <span className="flex items-center gap-1">
-                <Headphones size={12} />
-                <span>Listen {durations.listenMin}m</span>
+                <Headphones size={11} />
+                <span className="hidden xl:inline">Listen </span><span>{durations.listenMin}m</span>
               </span>
               <span className="text-[#444]">·</span>
               <span className="flex items-center gap-1">
-                <BookOpen size={12} />
-                <span>Read {durations.readMin}m</span>
+                <BookOpen size={11} />
+                <span className="hidden xl:inline">Read </span><span>{durations.readMin}m</span>
               </span>
             </span>
           )}
           <button
             onClick={toggleFavorite}
-            className="p-2.5 rounded-full text-[#888] hover:text-[#fbbf24] hover:bg-white/10 transition-all"
+            className="p-2 rounded-full text-[#888] hover:text-[#fbbf24] hover:bg-white/10 transition-all"
           >
-            <Bookmark size={16} fill={isFavorited ? "#fbbf24" : "none"} stroke={isFavorited ? "#fbbf24" : "currentColor"} />
+            <Bookmark size={14} fill={isFavorited ? "#fbbf24" : "none"} stroke={isFavorited ? "#fbbf24" : "currentColor"} />
           </button>
         </div>
       </div>

@@ -104,7 +104,6 @@ export default function ProductsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [showAllCategories, setShowAllCategories] = useState(false);
   const [dailyFree, setDailyFree] = useState<ModuleType | null>(null);
 
   const { modules, categories, historyModules, totalPages, loading, error, fetchHistory } = useModules(
@@ -140,11 +139,11 @@ export default function ProductsPage() {
   const isSubscribed = user && user.subscriptionStatus && user.subscriptionStatus !== "FREE";
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-6 py-16 min-h-[90vh]">
+    <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-16 min-h-[90vh]">
       {/* Knowledge Graph Banner + Daily Material */}
       <div className="mb-8">
         {!isSubscribed && (
-          <div className="grid grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div className="h-[280px] bg-[#0a0a0c] rounded-3xl border border-white/10 overflow-hidden relative">
               <div className="absolute inset-0">
                 <MarketingFlow />
@@ -218,7 +217,7 @@ export default function ProductsPage() {
             <h2 className="text-3xl font-black tracking-[-0.04em]">Your Learning <span className="text-[#444]">History</span></h2>
           </div>
 
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-5">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-5">
             {historyModules.map((module, idx) => (
               <motion.div
                 key={module.id}
@@ -278,37 +277,16 @@ export default function ProductsPage() {
         <div className="mb-5">
           <p className="text-[0.6875rem] font-bold text-[#444] uppercase tracking-[0.1em] mb-3">Categories</p>
 
-          <div className={`relative ${!showAllCategories ? 'overflow-hidden max-h-[42px]' : ''}`}>
-            <div className="flex items-center gap-2 flex-wrap">
-              {categories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => { setSelectedCategory(selectedCategory === cat ? null : cat); setCurrentPage(1); }}
-                  className={`px-4 py-2.5 rounded-full text-[0.75rem] font-semibold transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#080808] border border-white/5 text-[#555] hover:border-white/15 hover:text-white'}`}
-                >
-                  {cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}
-                </button>
-              ))}
-            </div>
-            {!showAllCategories && (
-              <>
-                <div className="absolute right-0 top-0 bottom-0 w-64 bg-gradient-to-l from-[#0a0a0c] via-[#0a0a0c]/90 to-transparent pointer-events-none" />
-                <button
-                  onClick={() => setShowAllCategories(true)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 px-4 py-2.5 rounded-full text-[0.75rem] font-semibold bg-[#080808] border border-white/10 text-white hover:bg-white/15 transition-all whitespace-nowrap z-10"
-                >
-                  More
-                </button>
-              </>
-            )}
-            {showAllCategories && (
+          <div className="flex items-center gap-2 flex-wrap">
+            {categories.map(cat => (
               <button
-                onClick={() => setShowAllCategories(false)}
-                className="mt-2 px-4 py-2.5 rounded-full text-[0.75rem] font-semibold bg-white/10 border border-white/10 text-white hover:bg-white/15 transition-all whitespace-nowrap"
+                key={cat}
+                onClick={() => { setSelectedCategory(selectedCategory === cat ? null : cat); setCurrentPage(1); }}
+                className={`px-4 py-2.5 rounded-full text-[0.75rem] font-semibold transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#080808] border border-white/5 text-[#555] hover:border-white/15 hover:text-white'}`}
               >
-                Less
+                {cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}
               </button>
-            )}
+            ))}
           </div>
           {selectedCategory && (
             <button
@@ -353,7 +331,7 @@ export default function ProductsPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-8">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] md:grid-cols-[repeat(auto-fill,minmax(400px,1fr))] gap-4 md:gap-8">
             {sortedModules.map((module, idx) => (
               <motion.div
                 initial={{ opacity: 0, y: 5 }}

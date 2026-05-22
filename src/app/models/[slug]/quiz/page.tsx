@@ -73,7 +73,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 flex justify-center">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-16 flex justify-center">
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     );
@@ -81,7 +81,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
 
   if (!module || questions.length === 0) {
     return (
-      <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 text-center">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-16 text-center">
         <p className="text-[0.875rem] text-[#555]">Module or quiz questions not available.</p>
         <Link href="/models" className="inline-flex items-center gap-1.5 mt-4 text-[0.8125rem] text-[#888] hover:text-white transition-colors">
           Back to library
@@ -91,7 +91,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16">
+    <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-16">
       <div className="max-w-[700px] mx-auto">
         <header className="mb-12">
           <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000', marginBottom: '1rem' }}>{module.category}</span>

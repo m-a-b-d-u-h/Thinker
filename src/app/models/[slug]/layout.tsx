@@ -32,14 +32,14 @@ export default function ModuleLayout({
               <ChevronLeft size={18} />
               <span>Back to Library</span>
             </Link>
-            <div className="flex gap-1">
+            <div className="flex gap-1 overflow-x-auto scrollbar-thin -mb-px pb-px">
               {tabs.map((tab) => {
                 const isActive = pathname === tab.path;
                 return (
                   <Link
                     key={tab.path}
                     href={tab.path}
-                    className={`px-4 py-2 no-underline text-[0.8125rem] rounded-lg transition-all ${
+                    className={`shrink-0 px-3 md:px-4 py-2 no-underline text-[0.8125rem] rounded-lg transition-all ${
                       isActive ? 'text-white bg-white/[0.05]' : 'text-[#666] hover:text-white'
                     }`}
                   >

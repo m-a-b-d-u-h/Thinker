@@ -21,7 +21,7 @@ export default function ActionsPage() {
 
   if (!user) {
     return (
-      <div className="mx-auto w-full max-w-[1200px] px-6 py-16 text-center">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-16 text-center">
         <h1 className="text-3xl font-black mb-4">Sign in to view your action plans</h1>
         <Link href="/login" className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg font-semibold">
           Sign In
@@ -32,14 +32,14 @@ export default function ActionsPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-[1200px] px-6 py-16 flex justify-center">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-16 flex justify-center">
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-6 py-16">
+    <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-16">
       <header className="mb-10">
         <h1 className="text-4xl font-black tracking-[-0.02em] mb-2">Action Plans</h1>
         <p className="text-lg text-[#666]">Your commitments to apply what you&apos;ve learned</p>

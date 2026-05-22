@@ -187,7 +187,7 @@ export default function Home() {
   return (
     <>
       <Navbar />
-      <div className="mx-auto w-full max-w-[1200px] px-6">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-14 md:pb-0">
         {/* Hero Section */}
         <section className="min-h-screen flex items-center py-20">
           <div className="w-full grid lg:grid-cols-2 gap-12 items-center">
@@ -334,7 +334,7 @@ export default function Home() {
             <p className="text-muted text-lg max-w-[600px] mx-auto">A sneak peek into the cognitive frameworks available.</p>
           </header>
 
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-6">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-4 md:gap-6">
             {sampleProducts.map((module, idx) => (
               <motion.div initial={{ opacity: 0, y: 5 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: idx * 0.1 }} key={module.id}>
                 <ModuleCard module={module} />
@@ -379,8 +379,8 @@ export default function Home() {
             <p className="text-muted text-lg max-w-[600px] mx-auto">Transform your thinking in three simple steps.</p>
           </header>
 
-          <div className="grid grid-cols-3 gap-8 relative">
-            <div className="absolute top-10 left-[16.67%] right-[16.67%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-0" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+            <div className="hidden md:block absolute top-10 left-[16.67%] right-[16.67%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-0" />
 
             {[
               { step: '01', title: 'Explore', desc: 'Browse an expansive library of mental models, filter by category, and discover your daily free theory.', icon: Network, color: '#a78bfa' },
@@ -414,8 +414,8 @@ export default function Home() {
 
         {/* Knowledge Graph Section */}
         <section className="py-24">
-          <div className="mx-auto max-w-[1200px] px-6">
-            <div className="grid grid-cols-[1fr_1.5fr] gap-12 items-center">
+            <div className="mx-auto max-w-[1200px] px-4 md:px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-8 lg:gap-12 items-center">
               <div>
                 <h2 className="text-5xl font-black mb-6 leading-[1.1]">
                   Your Mind, <br/><span className="text-[#444]">Visualized.</span>
