@@ -33,7 +33,8 @@ export default function Navbar() {
     <nav className="w-full h-16 bg-[#020202] border-b border-white/3 fixed inset-x-0 z-50 flex items-center justify-between px-8 backdrop-blur">
       <div className="flex-1">
         <Link href="/" className="flex items-center gap-2 no-underline">
-          <img src="/1section.png" alt="1SECTION" className="h-7 w-auto" />
+          <img src="/1section.png" alt="1SECTION" className="h-6 w-auto" />
+          <span className="text-[1rem] font-bold text-white tracking-[-0.02em]">1section</span>
         </Link>
       </div>
 

@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, ArrowRight, Plus, Trash2, Type, CheckSquare, Sliders, List } from "lucide-react";
 import Link from "next/link";
-import React from "react";
-import { modulesApi } from "@/lib/api/modules";
-import { actionsApi } from "@/lib/api/actions";
-import type { Module, MatrixRow } from "@/lib/types";
+import { use } from "react";
+import { useModule, useActionPlanByModule, useCreateActionPlan, useUpdateActionPlan } from "@/lib/query-hooks";
+import type { MatrixRow } from "@/lib/types";
 
 type InputType = 'text' | 'checkbox' | 'slider' | 'radio';
 
@@ -19,54 +18,26 @@ const defaultMatrix: MatrixRow[] = [
 ];
 
 export default function ActionPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = React.use(params);
-  const [module, setModule] = useState<Module | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { slug } = use(params);
+  const { data: module, isLoading } = useModule(slug);
+  const { data: existingPlan, isLoading: planLoading } = useActionPlanByModule(slug);
+  const createMutation = useCreateActionPlan();
+  const updateMutation = useUpdateActionPlan();
   const [saving, setSaving] = useState(false);
-  const [isApplied, setIsApplied] = useState(false);
-  const [planId, setPlanId] = useState<string | null>(null);
-  const [title, setTitle] = useState("");
-  const [matrix, setMatrix] = useState<MatrixRow[]>(defaultMatrix);
+  const [title, setTitle] = useState(existingPlan?.title || (module ? `${module.title} Protocol` : ""));
+  const [matrix, setMatrix] = useState<MatrixRow[]>(existingPlan?.content || defaultMatrix);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    modulesApi.getBySlug(slug)
-      .then((m) => {
-        if (cancelled) return;
-        setModule(m);
-        setTitle(`${m.title} Protocol`);
-        setLoading(false);
-      })
-      .catch(() => {
-        if (cancelled) return;
-        setLoading(false);
-      });
-
-    actionsApi.getByModule(slug)
-      .then((existing) => {
-        if (cancelled || !existing) return;
-        setTitle(existing.title);
-        setMatrix(existing.content);
-        setIsApplied(true);
-        setPlanId(existing.id);
-      })
-      .catch(() => {});
-
-    return () => { cancelled = true; };
-  }, [slug]);
+  const isApplied = !!existingPlan;
+  const planId = existingPlan?.id || null;
 
   const handleMarkApplied = async () => {
     if (!module) return;
     setSaving(true);
     try {
       if (planId) {
-        const updated = await actionsApi.update(planId, { title, content: matrix, completed: !isApplied });
-        setIsApplied(updated.completed);
+        await updateMutation.mutateAsync({ id: planId, title, content: matrix, completed: !isApplied });
       } else {
-        const created = await actionsApi.create({ moduleSlug: slug, title, content: matrix });
-        setPlanId(created.id);
-        setIsApplied(true);
+        await createMutation.mutateAsync({ moduleSlug: slug, title, content: matrix });
       }
     } catch {
       // silently fail
@@ -75,7 +46,7 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
     }
   };
 
-  if (loading) {
+  if (isLoading || planLoading) {
     return <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 flex justify-center"><div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>;
   }
 

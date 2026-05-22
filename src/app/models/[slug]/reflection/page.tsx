@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { notFound } from "next/navigation";
 import { use } from "react";
 import { BookOpen, Lightbulb, Target, Zap, Sparkles, Trash2, History } from "lucide-react";
-import { modulesApi } from "@/lib/api/modules";
-import { reflectionsApi } from "@/lib/api/reflections";
+import { useModule, useReflections, useCreateReflection, useDeleteReflection } from "@/lib/query-hooks";
 import { useAuth } from "@/lib/auth-context";
-import type { Module, Reflection } from "@/lib/types";
 
 const prompts = [
   { icon: Lightbulb, label: "Key Insight", text: "What was the single most important idea you learned from this module?" },
@@ -20,32 +18,21 @@ const prompts = [
 export default function ReflectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const { user } = useAuth();
-  const [module, setModule] = useState<Module | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { data: module, isLoading } = useModule(slug);
+  const { data: allReflections } = useReflections();
+  const createMutation = useCreateReflection();
+  const deleteMutation = useDeleteReflection();
   const [content, setContent] = useState("");
   const [saved, setSaved] = useState(false);
-  const [existingReflections, setExistingReflections] = useState<Reflection[]>([]);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    modulesApi.getBySlug(slug).then((m) => {
-      setModule(m);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-  }, [slug]);
-
-  useEffect(() => {
-    if (!user) return;
-    reflectionsApi.list().then((refs) => {
-      setExistingReflections(refs.filter((r) => r.module?.slug === slug));
-    }).catch(() => {});
-  }, [user, slug]);
+  const existingReflections = (allReflections || []).filter((r) => r.module?.slug === slug);
 
   const handleSave = async () => {
     if (!user || !module || !content.trim()) return;
     setSaving(true);
     try {
-      await reflectionsApi.create({
+      await createMutation.mutateAsync({
         title: `Reflection on ${module.title}`,
         content: content.trim(),
         moduleSlug: slug,
@@ -53,8 +40,6 @@ export default function ReflectionPage({ params }: { params: Promise<{ slug: str
       setContent("");
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-      const refs = await reflectionsApi.list();
-      setExistingReflections(refs.filter((r) => r.module?.slug === slug));
     } catch {
       alert("Failed to save reflection");
     } finally {
@@ -63,17 +48,14 @@ export default function ReflectionPage({ params }: { params: Promise<{ slug: str
   };
 
   const handleDelete = async (id: string) => {
-    try {
-      await reflectionsApi.remove(id);
-      setExistingReflections((prev) => prev.filter((r) => r.id !== id));
-    } catch {}
+    await deleteMutation.mutateAsync(id);
   };
 
   const applyPrompt = (promptText: string) => {
     setContent((prev) => (prev ? `${prev}\n\n${promptText}\n` : `${promptText}\n`));
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 flex justify-center">
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />

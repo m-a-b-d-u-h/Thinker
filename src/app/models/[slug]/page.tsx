@@ -7,17 +7,16 @@ import "reactflow/dist/style.css";
 import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X, Crown, Lock, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { modulesApi } from "@/lib/api/modules";
 import { progressApi } from "@/lib/api/progress";
-import { highlightsApi } from "@/lib/api/highlights";
 import { useAuth } from "@/lib/auth-context";
-import type { Module } from "@/lib/types";
+import { useModule, useRecommended, useProgress, useCreateHighlight } from "@/lib/query-hooks";
 
 export default function ModulePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
   const { user } = useAuth();
-  const [module, setModule] = useState<Module | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: module, isLoading } = useModule(slug);
+  const { data: recommendations = [] } = useRecommended(slug);
+  const { data: savedProgress } = useProgress(slug);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [voices, setVoices] = useState<any[]>([]);
@@ -32,28 +31,14 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const [savedReadingProgress, setSavedReadingProgress] = useState<number | null>(null);
   const [showResume, setShowResume] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [recommendations, setRecommendations] = useState<Module[]>([]);
   const listenSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const readSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const articleRef = useRef<HTMLDivElement>(null);
-  const fetchedSlugRef = useRef("");
   const completedRef = useRef(false);
 
   const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
   const [note, setNote] = useState("");
-  const [savingHighlight, setSavingHighlight] = useState(false);
-
-  useEffect(() => {
-    if (fetchedSlugRef.current === slug) return;
-    fetchedSlugRef.current = slug;
-    modulesApi.getBySlug(slug).then((m) => {
-      setModule(m);
-      setLoading(false);
-      modulesApi.getRecommended(slug).then(setRecommendations).catch(() => {});
-    }).catch(() => {
-      setLoading(false);
-    });
-  }, [slug]);
+  const createHighlight = useCreateHighlight();
 
   const synthRef = useRef<SpeechSynthesis | null>(null);
   if (typeof window !== 'undefined' && !synthRef.current) {
@@ -173,33 +158,30 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   }, []);
 
   useEffect(() => {
-    if (!module || !user) return;
-    progressApi.getBySlug(module.slug).then((saved) => {
-      if (!saved) return;
-      const completed = saved.listeningProgress >= 100 || saved.readingProgress >= 100;
-      setIsCompleted(completed);
-      const hasListen = saved.listeningProgress > 0;
-      const hasRead = saved.readingProgress > 0;
-      if (!hasListen && !hasRead) return;
+    if (!module || !user || !savedProgress) return;
+    const completed = savedProgress.listeningProgress >= 100 || savedProgress.readingProgress >= 100;
+    setIsCompleted(completed);
+    const hasListen = savedProgress.listeningProgress > 0;
+    const hasRead = savedProgress.readingProgress > 0;
+    if (!hasListen && !hasRead) return;
 
-      completedRef.current = completed;
-      if (hasListen) {
-        setSavedListeningProgress(saved.listeningProgress);
-        setProgress(saved.listeningProgress);
-        setCurrentCharIndex(saved.currentCharIndex);
-        setRate(saved.audioRate);
+    completedRef.current = completed;
+    if (hasListen) {
+      setSavedListeningProgress(savedProgress.listeningProgress);
+      setProgress(savedProgress.listeningProgress);
+      setCurrentCharIndex(savedProgress.currentCharIndex);
+      setRate(savedProgress.audioRate);
+    }
+    if (hasRead) {
+      setSavedReadingProgress(savedProgress.readingProgress);
+      if (savedProgress.scrollPosition > 0) {
+        setTimeout(() => {
+          window.scrollTo({ top: savedProgress.scrollPosition, behavior: "instant" });
+        }, 100);
       }
-      if (hasRead) {
-        setSavedReadingProgress(saved.readingProgress);
-        if (saved.scrollPosition > 0) {
-          setTimeout(() => {
-            window.scrollTo({ top: saved.scrollPosition, behavior: "instant" });
-          }, 100);
-        }
-      }
-      setShowResume(true);
-    }).catch(() => {});
-  }, [module, user]);
+    }
+    setShowResume(true);
+  }, [module, user, savedProgress]);
 
   useEffect(() => {
     if (!module) return;
@@ -377,15 +359,12 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
 
   const handleSaveHighlight = async () => {
     if (!slug || !selection) return;
-    setSavingHighlight(true);
     try {
-      await highlightsApi.create({ moduleSlug: slug, text: selection.text, note });
+      await createHighlight.mutateAsync({ moduleSlug: slug, text: selection.text, note });
       setSelection(null);
       setNote("");
     } catch {
       // silently fail
-    } finally {
-      setSavingHighlight(false);
     }
   };
 
@@ -399,12 +378,8 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
 
   const handleResumeReading = () => {
     setShowResume(false);
-    if (savedReadingProgress !== null) {
-      progressApi.getBySlug(slug).then((saved) => {
-        if (saved && saved.scrollPosition > 0) {
-          window.scrollTo({ top: saved.scrollPosition, behavior: "smooth" });
-        }
-      }).catch(() => {});
+    if (savedReadingProgress !== null && savedProgress && savedProgress.scrollPosition > 0) {
+      window.scrollTo({ top: savedProgress.scrollPosition, behavior: "smooth" });
     }
   };
 
@@ -500,7 +475,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -883,10 +858,10 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           />
           <button
             onClick={handleSaveHighlight}
-            disabled={savingHighlight}
+            disabled={createHighlight.isPending}
             className="w-full py-2.5 bg-white text-black rounded-xl font-bold text-[0.75rem] cursor-pointer hover:opacity-90 transition-all disabled:opacity-50"
           >
-            {savingHighlight ? "Saving..." : "Save Highlight"}
+            {createHighlight.isPending ? "Saving..." : "Save Highlight"}
           </button>
         </div>
       )}

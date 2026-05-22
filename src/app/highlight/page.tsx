@@ -1,57 +1,25 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Highlighter, Plus, Search, StickyNote, Pencil, X, Check } from "lucide-react";
+import React, { useState } from "react";
+import { Highlighter, Search, StickyNote, Pencil, X, Check } from "lucide-react";
 import Link from "next/link";
 import { formatDate } from "@/lib/format";
-import { highlightsApi } from "@/lib/api/highlights";
 import Pagination from "@/components/Pagination";
+import { useHighlights, useUpdateHighlight } from "@/lib/query-hooks";
 import { useAuth } from "@/lib/auth-context";
-import type { Highlight } from "@/lib/types";
 
 const PER_PAGE = 12;
 
 export default function HighlightPage() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
-  const [highlights, setHighlights] = useState<Highlight[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [editNoteValue, setEditNoteValue] = useState("");
-  const [savingNote, setSavingNote] = useState(false);
+  const { data: highlights, isLoading } = useHighlights();
+  const updateMutation = useUpdateHighlight();
 
-  useEffect(() => {
-    if (!user) { setLoading(false); return; }
-    highlightsApi.list().then(setHighlights).catch(() => {}).finally(() => setLoading(false));
-  }, [user]);
-
-  const updateNote = async (id: string, note: string) => {
-    setHighlights(prev => prev.map(h => h.id === id ? { ...h, note } : h));
-    try {
-      await highlightsApi.update(id, { note });
-    } catch {}
-  };
-
-  const handleStartEdit = (id: string, currentNote: string) => {
-    setEditingNote(id);
-    setEditNoteValue(currentNote);
-  };
-
-  const handleCancelEdit = () => {
-    setEditingNote(null);
-    setEditNoteValue("");
-  };
-
-  const handleSaveNote = async (id: string) => {
-    setSavingNote(true);
-    await updateNote(id, editNoteValue);
-    setSavingNote(false);
-    setEditingNote(null);
-    setEditNoteValue("");
-  };
-
-  const filtered = highlights.filter(h =>
+  const filtered = (highlights || []).filter(h =>
     h.text.toLowerCase().includes(search.toLowerCase()) ||
     (h as any).moduleSlug?.toLowerCase().includes(search.toLowerCase())
   );
@@ -59,7 +27,13 @@ export default function HighlightPage() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   const pagedHighlights = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE);
 
-  useEffect(() => { setPage(1); }, [search]);
+  React.useEffect(() => { setPage(1); }, [search]);
+
+  const handleSaveNote = async (id: string) => {
+    await updateMutation.mutateAsync({ id, note: editNoteValue });
+    setEditingNote(null);
+    setEditNoteValue("");
+  };
 
   if (!user) {
     return (
@@ -73,7 +47,7 @@ export default function HighlightPage() {
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-6 py-16 flex justify-center">
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -153,11 +127,11 @@ export default function HighlightPage() {
                       autoFocus
                     />
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={handleCancelEdit} className="px-4 py-2 bg-transparent border border-[#222] rounded-xl text-[0.75rem] text-[#555] cursor-pointer hover:text-white transition-colors flex items-center gap-1.5">
+                      <button onClick={() => { setEditingNote(null); setEditNoteValue(""); }} className="px-4 py-2 bg-transparent border border-[#222] rounded-xl text-[0.75rem] text-[#555] cursor-pointer hover:text-white transition-colors flex items-center gap-1.5">
                         <X size={14} /> Cancel
                       </button>
-                      <button onClick={() => handleSaveNote(highlight.id)} disabled={savingNote} className="px-4 py-2 bg-white text-black rounded-xl text-[0.75rem] font-bold cursor-pointer hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-1.5">
-                        <Check size={14} /> {savingNote ? "Saving..." : "Save"}
+                      <button onClick={() => handleSaveNote(highlight.id)} disabled={updateMutation.isPending} className="px-4 py-2 bg-white text-black rounded-xl text-[0.75rem] font-bold cursor-pointer hover:opacity-90 transition-all disabled:opacity-50 flex items-center gap-1.5">
+                        <Check size={14} /> {updateMutation.isPending ? "Saving..." : "Save"}
                       </button>
                     </div>
                   </div>
@@ -171,7 +145,7 @@ export default function HighlightPage() {
                         <span className="text-[0.875rem] text-[#444] italic">No note</span>
                       )}
                     </div>
-                    <button onClick={() => handleStartEdit(highlight.id, highlight.note)} className="shrink-0 text-[#444] hover:text-white transition-colors cursor-pointer bg-transparent border-none p-1">
+                    <button onClick={() => { setEditingNote(highlight.id); setEditNoteValue(highlight.note); }} className="shrink-0 text-[#444] hover:text-white transition-colors cursor-pointer bg-transparent border-none p-1">
                       <Pencil size={14} />
                     </button>
                   </div>

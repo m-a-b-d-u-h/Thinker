@@ -6,23 +6,16 @@ import { motion } from "framer-motion";
 import { Search, Bookmark } from "lucide-react";
 import { ModuleCard } from "@/components/ModuleCard";
 import Pagination from "@/components/Pagination";
-import { favoritesApi } from "@/lib/api/favorites";
+import { useFavorites } from "@/lib/query-hooks";
 import { useAuth } from "@/lib/auth-context";
-import type { FavoriteItem } from "@/lib/types";
 
 const PER_PAGE = 10;
 
 export default function FavoritesPage() {
   const { user } = useAuth();
   const [search, setSearch] = useState("");
-  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    if (!user) { setLoading(false); return; }
-    favoritesApi.list().then(setFavorites).catch(() => {}).finally(() => setLoading(false));
-  }, [user]);
+  const { data: favorites, isLoading } = useFavorites();
 
   const filteredModules = (favorites || []).filter(m =>
     m.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -47,7 +40,7 @@ export default function FavoritesPage() {
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-6 py-16 flex justify-center">
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />

@@ -1,32 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { BookOpen, Calendar, Trash2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { formatDate } from "@/lib/format";
-import { reflectionsApi } from "@/lib/api/reflections";
 import Pagination from "@/components/Pagination";
+import { useReflections, useDeleteReflection } from "@/lib/query-hooks";
 import { useAuth } from "@/lib/auth-context";
-import type { Reflection } from "@/lib/types";
 
 const PER_PAGE = 12;
 
 export default function ReflectionListPage() {
   const { user } = useAuth();
-  const [reflections, setReflections] = useState<Reflection[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    reflectionsApi.list().then(setReflections).catch(() => {}).finally(() => setLoading(false));
-  }, []);
+  const { data: reflections, isLoading } = useReflections();
+  const deleteMutation = useDeleteReflection();
 
   const handleDelete = async (id: string) => {
-    try {
-      await reflectionsApi.remove(id);
-      setReflections((prev) => prev.filter((r) => r.id !== id));
-    } catch {}
+    await deleteMutation.mutateAsync(id);
   };
 
   if (!user) {
@@ -41,7 +33,7 @@ export default function ReflectionListPage() {
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-6 py-16 flex justify-center">
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -58,10 +50,10 @@ export default function ReflectionListPage() {
           </div>
         </div>
         <h1 className="text-5xl font-black mb-4 tracking-[-0.04em]">Reflections</h1>
-        <p className="text-muted text-lg max-w-[500px]">Review your learning reflections ({reflections.length})</p>
+        <p className="text-muted text-lg max-w-[500px]">Review your learning reflections ({reflections?.length || 0})</p>
       </header>
 
-      {reflections.length === 0 ? (
+      {!reflections || reflections.length === 0 ? (
         <div className="text-center py-20 text-[#444] text-[0.875rem]">No reflections yet.</div>
       ) : (
         <>
@@ -117,7 +109,8 @@ export default function ReflectionListPage() {
                   <button
                     type="button"
                     onClick={() => handleDelete(ref.id)}
-                    className="p-1.5 rounded-lg text-[#444] opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-white/5 transition-all cursor-pointer bg-transparent border-none"
+                    disabled={deleteMutation.isPending}
+                    className="p-1.5 rounded-lg text-[#444] opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-white/5 transition-all cursor-pointer bg-transparent border-none disabled:opacity-30"
                   >
                     <Trash2 size={14} />
                   </button>

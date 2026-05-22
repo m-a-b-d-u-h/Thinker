@@ -1,44 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, ArrowRight, Target, Trash2 } from "lucide-react";
-import { actionsApi } from "@/lib/api/actions";
 import Pagination from "@/components/Pagination";
+import { useActionPlans, useDeleteActionPlan } from "@/lib/query-hooks";
 import { useAuth } from "@/lib/auth-context";
-import type { ActionPlan } from "@/lib/types";
 
 const PER_PAGE = 10;
 
 export default function ActionsPage() {
   const { user } = useAuth();
-  const [plans, setPlans] = useState<ActionPlan[]>([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-
-  const fetchPlans = async () => {
-    try {
-      const data = await actionsApi.list();
-      setPlans(data);
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (user) fetchPlans();
-    else setLoading(false);
-  }, [user]);
+  const { data: plans, isLoading } = useActionPlans();
+  const deleteMutation = useDeleteActionPlan();
 
   const handleDelete = async (id: string) => {
-    try {
-      await actionsApi.remove(id);
-      setPlans(prev => prev.filter(p => p.id !== id));
-    } catch {
-      // silently fail
-    }
+    await deleteMutation.mutateAsync(id);
   };
 
   if (!user) {
@@ -52,7 +30,7 @@ export default function ActionsPage() {
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-6 py-16 flex justify-center">
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
@@ -67,7 +45,7 @@ export default function ActionsPage() {
         <p className="text-lg text-[#666]">Your commitments to apply what you&apos;ve learned</p>
       </header>
 
-      {plans.length === 0 ? (
+      {!plans || plans.length === 0 ? (
         <div className="bg-[#0d0d0d] rounded-2xl p-12 border border-white/5 text-center">
           <Target size={40} className="mx-auto mb-4 text-[#333]" />
           <p className="text-[0.875rem] text-[#555] mb-2">No action plans yet.</p>
@@ -109,7 +87,8 @@ export default function ActionsPage() {
                   </Link>
                   <button
                     onClick={() => handleDelete(plan.id)}
-                    className="p-2 text-[#555] hover:text-red-400 transition-colors cursor-pointer bg-transparent border-none"
+                    disabled={deleteMutation.isPending}
+                    className="p-2 text-[#555] hover:text-red-400 transition-colors cursor-pointer bg-transparent border-none disabled:opacity-30"
                   >
                     <Trash2 size={14} />
                   </button>

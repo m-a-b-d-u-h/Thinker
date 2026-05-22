@@ -1,13 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
 import { timeAgo } from "@/lib/format";
-import { progressApi } from "@/lib/api/progress";
-import { modulesApi } from "@/lib/api/modules";
-import { reflectionsApi } from "@/lib/api/reflections";
 import { useAuth } from "@/lib/auth-context";
-import type { UserProgress, ModuleListItem, ProgressStats, Reflection } from "@/lib/types";
 import {
   Flame,
   Play,
@@ -27,24 +23,48 @@ import {
   Pie,
   Cell
 } from "recharts";
+import { useDashboardStats, useAllProgress, useModulesList, useReflections, useStreak, useResetStreak } from "@/lib/query-hooks";
 
 export default function DashboardPage() {
   const { user, setUser } = useAuth();
   const [greeting, setGreeting] = useState("");
-  const [stats, setStats] = useState<ProgressStats | null>(null);
-  const [recentModules, setRecentModules] = useState<{ slug: string; title: string; listened: number; read: number; lastReadAt: string }[]>([]);
-  const [completedCategoryData, setCompletedCategoryData] = useState<{ name: string; value: number }[]>([]);
-  const [allModules, setAllModules] = useState<ModuleListItem[]>([]);
-  const [reflections, setReflections] = useState<Reflection[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [streak, setStreak] = useState(0);
-  const [streakGoal] = useState(30);
-  const [showStreakPopup, setShowStreakPopup] = useState(false);
-  const [brokenStreakValue, setBrokenStreakValue] = useState(0);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [paymentVerified, setPaymentVerified] = useState(false);
   const [activating, setActivating] = useState(false);
   const [activateError, setActivateError] = useState<string | null>(null);
+
+  const { data: stats } = useDashboardStats();
+  const { data: saved = [] } = useAllProgress();
+  const { data: modulesRes } = useModulesList({ limit: "50" });
+  const { data: reflections = [] } = useReflections();
+  const { data: streakData } = useStreak();
+  const resetStreak = useResetStreak();
+
+  const allModules = modulesRes?.data || [];
+
+  const recentModules = useMemo(() => {
+    const recent: { slug: string; title: string; listened: number; read: number; lastReadAt: string }[] = [];
+    saved.slice(0, 5).forEach((p: any) => {
+      const mod = allModules.find((m: any) => m.id === p.moduleId);
+      if (mod) {
+        recent.push({ slug: mod.slug, title: mod.title, listened: p.listeningProgress, read: p.readingProgress, lastReadAt: p.lastReadAt });
+      }
+    });
+    return recent;
+  }, [saved, allModules]);
+
+  const completedCategoryData = useMemo(() => {
+    const completed = saved.filter((p: any) => p.completed);
+    const completedMods = allModules.filter((m: any) => completed.some((p: any) => p.moduleId === m.id));
+    const catCount = completedMods.reduce((acc: Record<string, number>, m: any) => {
+      acc[m.category] = (acc[m.category] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    return Object.entries(catCount).map(([name, value]) => ({ name, value }));
+  }, [saved, allModules]);
+
+  const streak = streakData?.streak ?? 0;
+  const showStreakPopup = streakData?.showPopup ?? false;
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -53,54 +73,9 @@ export default function DashboardPage() {
     else setGreeting("Good evening");
   }, []);
 
-  const fetchDashboardData = useCallback(async () => {
-    if (!user) { setLoading(false); return null; }
-
-    return Promise.all([
-      progressApi.getStats().catch(() => null),
-      progressApi.getAll().catch(() => [] as UserProgress[]),
-      modulesApi.list({ limit: "50" }).catch(() => ({ data: [] as ModuleListItem[], pagination: { page: 1, limit: 50, total: 0, totalPages: 0 } })),
-      reflectionsApi.list().catch(() => [] as Reflection[]),
-      progressApi.getStreak().catch(() => ({ streak: 0, showPopup: false })),
-    ]).then(([statsData, saved, modulesRes, refl, streakData]) => {
-      setStats(statsData);
-      setReflections(refl);
-      setStreak(streakData.streak);
-      if (streakData.showPopup) {
-        setBrokenStreakValue(streakData.streak);
-        setShowStreakPopup(true);
-      }
-      const mods = modulesRes.data;
-      setAllModules(mods);
-
-      const recent: { slug: string; title: string; listened: number; read: number; lastReadAt: string }[] = [];
-      saved.slice(0, 5).forEach((p) => {
-        const mod = mods.find((m) => m.id === p.moduleId);
-        if (mod) {
-          recent.push({ slug: mod.slug, title: mod.title, listened: p.listeningProgress, read: p.readingProgress, lastReadAt: p.lastReadAt });
-        }
-      });
-      setRecentModules(recent);
-
-      const completed = saved.filter((p) => p.completed);
-      const completedMods = mods.filter((m) => completed.some((p) => p.moduleId === m.id));
-      const catCount = completedMods.reduce((acc, m) => {
-        acc[m.category] = (acc[m.category] || 0) + 1;
-        return acc;
-      }, {} as Record<string, number>);
-      setCompletedCategoryData(Object.entries(catCount).map(([name, value]) => ({ name, value })));
-    }).finally(() => setLoading(false));
-  }, [user]);
-
-  const handleStreakPopupOk = async () => {
-    await progressApi.resetStreak();
-    setStreak(0);
-    setShowStreakPopup(false);
-  };
-
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+  const handleStreakPopupOk = useCallback(async () => {
+    await resetStreak.mutateAsync();
+  }, [resetStreak]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -118,19 +93,6 @@ export default function DashboardPage() {
         .finally(() => setVerifyingPayment(false));
     }
   }, [user, setUser]);
-
-  useEffect(() => {
-    const handleVisibility = () => {
-      if (document.visibilityState === "visible") fetchDashboardData();
-    };
-    const handleFocus = () => fetchDashboardData();
-    document.addEventListener("visibilitychange", handleVisibility);
-    window.addEventListener("focus", handleFocus);
-    return () => {
-      document.removeEventListener("visibilitychange", handleVisibility);
-      window.removeEventListener("focus", handleFocus);
-    };
-  }, [fetchDashboardData]);
 
   const todayQuote = "Action is the foundational key to all success.";
 
@@ -150,14 +112,6 @@ export default function DashboardPage() {
         <Link href="/login" className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg font-semibold">
           Sign In
         </Link>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="mx-auto w-full max-w-[1200px] px-6 py-16 flex justify-center">
-        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     );
   }
@@ -271,11 +225,11 @@ export default function DashboardPage() {
           </div>
           <div className="flex-1 mx-6 relative z-10">
             <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-[#f97316] to-[#fb923c] rounded-full transition-all" style={{ width: `${Math.min((streak / streakGoal) * 100, 100)}%` }} />
+              <div className="h-full bg-gradient-to-r from-[#f97316] to-[#fb923c] rounded-full transition-all" style={{ width: `${Math.min((streak / 30) * 100, 100)}%` }} />
             </div>
           </div>
           <div className="relative z-10 shrink-0">
-            <span className="text-[0.6875rem] text-[#444] font-bold">{streakGoal} day goal</span>
+            <span className="text-[0.6875rem] text-[#444] font-bold">30 day goal</span>
           </div>
           <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#f97316]/5 to-transparent rounded-full translate-x-1/4 -translate-y-1/4" />
         </div>
@@ -287,7 +241,7 @@ export default function DashboardPage() {
             <Flame size={48} className="text-[#f97316] mx-auto mb-4" />
             <h2 className="text-xl font-black text-white mb-2">Streak Broken!</h2>
             <p className="text-[0.875rem] text-[#666] mb-6">
-              You missed a day and lost your <span className="text-white font-bold">{brokenStreakValue}-day</span> streak.
+              You missed a day and lost your <span className="text-white font-bold">{streak}-day</span> streak.
               <br />Start again today to build a new streak!
             </p>
             <button
@@ -337,7 +291,7 @@ export default function DashboardPage() {
                   const daysAgo = dayOfWeek - weekDays.indexOf(day);
                   const targetDate = new Date(now);
                   targetDate.setDate(now.getDate() - Math.abs(daysAgo));
-                  const hasReflection = reflections.some(r => {
+                  const hasReflection = reflections.some((r: any) => {
                     const rDate = new Date(r.timestamp);
                     return rDate.toDateString() === targetDate.toDateString();
                   });
@@ -353,7 +307,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-[0.75rem] text-[#666]">
                 <span className="text-xl font-bold text-white">
-                  {reflections.filter(r => {
+                  {reflections.filter((r: any) => {
                     const now = new Date();
                     const rDate = new Date(r.timestamp);
                     const diffDays = Math.floor((now.getTime() - rDate.getTime()) / 86400000);
@@ -439,7 +393,7 @@ export default function DashboardPage() {
               <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">Latest</h3>
             </div>
             <div className="flex flex-col gap-3">
-              {[...allModules].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3).map((m, i) => {
+              {[...allModules].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3).map((m: any, i: number) => {
                 const colors = ['#a78bfa', '#60a5fa', '#34d399'];
                 return (
                   <Link key={m.slug} href={`/models/${m.slug}`} className="group flex items-center gap-3 no-underline hover:bg-[#111] rounded-xl px-3 py-2.5 transition-all -mx-3">

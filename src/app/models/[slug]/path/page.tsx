@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useMemo, useRef, useEffect } from "react";
 import { notFound } from "next/navigation";
 import React from "react";
 import ReactFlow, { Handle, Position, NodeProps } from "reactflow";
 import "reactflow/dist/style.css";
-import { modulesApi } from "@/lib/api/modules";
+import { useModule } from "@/lib/query-hooks";
 import { progressApi } from "@/lib/api/progress";
 import { useAuth } from "@/lib/auth-context";
-import type { Module } from "@/lib/types";
+import { useQuery } from "@tanstack/react-query";
 
 const CustomNode = ({ data }: NodeProps) => (
   <div className={`rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap ${
@@ -62,29 +62,22 @@ function Flow({ nodes, edges }: { nodes: any[]; edges: any[] }) {
 export default function PathPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
   const { user } = useAuth();
-  const [module, setModule] = useState<Module | null>(null);
-  const [completedNodes, setCompletedNodes] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    modulesApi.getBySlug(slug).then((m) => {
-      setModule(m);
-      setLoading(false);
-    }).catch(() => setLoading(false));
-    if (user) {
-      progressApi.getCompletedNodes(slug).then(setCompletedNodes).catch(() => {});
-    }
-  }, [slug, user]);
+  const { data: module, isLoading } = useModule(slug);
+  const { data: completedNodes = [] } = useQuery({
+    queryKey: ["completed-nodes", slug],
+    queryFn: () => progressApi.getCompletedNodes(slug),
+    enabled: !!user && !!slug,
+  });
 
   const styledNodes = useMemo(() => {
     if (!module) return [];
-    return module.nodes.map((n) => ({
+    return module.nodes.map((n: any) => ({
       ...n,
       data: { ...n.data, isCompleted: completedNodes.includes(n.id) },
     }));
   }, [module, completedNodes]);
 
-  if (loading) {
+  if (isLoading) {
     return <div className="mx-auto w-full max-w-[1200px] px-6 pb-[160px] pt-16 flex justify-center"><div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>;
   }
 

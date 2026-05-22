@@ -12,10 +12,9 @@ import { CheckCircle2, Zap, Crown, ShieldCheck, Infinity, Library, Play, ArrowRi
 import Marquee from "react-fast-marquee";
 import Navbar from "@/components/Navbar";
 import { ModuleCard } from "@/components/ModuleCard";
-import { modulesApi } from "@/lib/api/modules";
 import { paymentsApi } from "@/lib/api/payments";
 import { useAuth } from "@/lib/auth-context";
-import type { ModuleListItem, CategoryWithCount } from "@/lib/types";
+import { useModulesList, useCategories } from "@/lib/query-hooks";
 
 // Custom Node Component for MiniPreview
 const CustomNode = ({ data }: NodeProps) => (
@@ -92,14 +91,12 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
 export default function Home() {
   const router = useRouter();
   const { user } = useAuth();
-  const [modules, setModules] = useState<ModuleListItem[]>([]);
   const [subscribing, setSubscribing] = useState<string | null>(null);
-  const [collections, setCollections] = useState<CategoryWithCount[]>([]);
 
-  useEffect(() => {
-    modulesApi.list({ limit: "4" }).then((res) => setModules(res.data)).catch(() => {});
-    modulesApi.getCategories().then(setCollections).catch(() => {});
-  }, []);
+  const { data: modulesData } = useModulesList({ limit: "4" });
+  const { data: collections } = useCategories();
+
+  const sampleProducts = modulesData?.data || [];
 
   const categoryMeta: Record<string, { icon: any; desc: string }> = {
     mindset: { icon: Network, desc: "Develop powerful thinking frameworks" },
@@ -185,7 +182,6 @@ export default function Home() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const sampleProducts = modules.slice(0, 4);
   const [openFaq, setOpenFaq] = useState<string | null>(null);
 
   return (
@@ -355,44 +351,24 @@ export default function Home() {
 
         {/* Browse by Collection Section */}
         <section className="py-16">
-          <header className="mb-12 text-center">
-            <h2 className="text-5xl font-black mb-4 tracking-[-0.04em]">Browse by <span className="text-[#444]">Collection</span></h2>
-            <p className="text-muted text-lg max-w-[600px] mx-auto">Explore frameworks organized by focus area.</p>
+          <header className="mb-8 text-center">
+            <h2 className="text-3xl font-black tracking-[-0.03em]">Browse by <span className="text-[#444]">Collection</span></h2>
           </header>
 
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-5">
-            {collections.sort((a, b) => b.count - a.count).slice(0, 8).map((collection, idx) => {
-              const meta = categoryMeta[collection.name] || { icon: Library, desc: "Explore this collection" };
-              const Icon = meta.icon;
-              return (
-                <motion.div
-                  key={collection.name}
-                  initial={{ opacity: 0, y: 5 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="bg-[#080808] border border-white/5 rounded-2xl p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:border-white/10"
-                  whileHover={{ y: -6, borderColor: 'rgba(255,255,255,0.1)' }}
-                >
-                  <div className="flex items-start justify-between mb-5">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-orange-500/10 text-orange-500">
-                      <Icon size={24} />
-                    </div>
-                    <span className="text-[0.75rem] font-bold text-[#444] bg-white/5 px-3 py-1 rounded-full">
-                      {collection.count} {collection.count === 1 ? 'theory' : 'theories'}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-black mb-2 text-white">{collection.name.charAt(0).toUpperCase() + collection.name.slice(1).replace(/-/g, ' ')}</h3>
-                  <p className="text-[0.875rem] text-[#666] leading-relaxed">{meta.desc}</p>
-                </motion.div>
-              );
-            })}
-          </div>
-
-          <div className="text-center mt-10">
-            <Link href="/collection" className="inline-flex items-center gap-2 bg-transparent border border-[#222] text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/5 transition-all">
-              View All Collections <ArrowRight size={16} />
-            </Link>
+          <div className="flex flex-wrap justify-center gap-2">
+            {(collections || []).sort((a, b) => b.count - a.count).map((collection, idx) => (
+              <motion.span
+                key={collection.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.03 }}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/5 text-sm text-[#888] cursor-pointer transition-all hover:bg-white/10 hover:text-white hover:border-white/10 no-underline"
+              >
+                <span className="font-semibold">{collection.name.charAt(0).toUpperCase() + collection.name.slice(1).replace(/-/g, ' ')}</span>
+                <span className="text-[0.6875rem] text-[#555]">{collection.count}</span>
+              </motion.span>
+            ))}
           </div>
         </section>
 

@@ -1,4 +1,4 @@
-import { api } from "@/lib/api";
+import { api } from "@/lib/axios";
 import type { UserProgress, ProgressStats } from "@/lib/types";
 
 export interface ContinueLearningItem {
@@ -19,10 +19,10 @@ export interface ContinueLearningItem {
 
 export const progressApi = {
   getAll: () =>
-    api.get<UserProgress[]>("/progress"),
+    api.get<UserProgress[]>("/progress").then(r => r.data),
 
   getBySlug: (slug: string) =>
-    api.get<UserProgress | null>(`/progress/${slug}`),
+    api.get<UserProgress | null>(`/progress/${slug}`).then(r => r.data),
 
   upsert: (slug: string, body: Partial<{
     listeningProgress: number;
@@ -32,23 +32,23 @@ export const progressApi = {
     audioRate: number;
     completed: boolean;
   }>) =>
-    api.put<UserProgress>(`/progress/${slug}`, body),
+    api.put<UserProgress>(`/progress/${slug}`, body).then(r => r.data),
 
   getContinueLearning: () =>
-    api.get<ContinueLearningItem[]>("/progress/continue-learning"),
+    api.get<ContinueLearningItem[]>("/progress/continue-learning").then(r => r.data),
 
   getStats: () =>
-    api.get<ProgressStats>("/progress/stats"),
+    api.get<ProgressStats>("/progress/stats").then(r => r.data),
 
   addCompletedNode: (slug: string, nodeId: string) =>
-    api.post<{ id: string }>(`/progress/${slug}/completed-nodes`, { nodeId }),
+    api.post<{ id: string }>(`/progress/${slug}/completed-nodes`, { nodeId }).then(r => r.data),
 
   getCompletedNodes: (slug: string) =>
-    api.get<string[]>([`/progress/${slug}/completed-nodes`].join("")),
+    api.get<string[]>(`/progress/${slug}/completed-nodes`).then(r => r.data),
 
   getStreak: () =>
-    api.get<{ streak: number; showPopup: boolean }>("/progress/streak"),
+    api.get<{ streak: number; showPopup: boolean }>("/progress/streak").then(r => r.data),
 
   resetStreak: () =>
-    api.post<{ streak: number }>("/progress/streak/reset"),
+    api.post<{ streak: number }>("/progress/streak/reset").then(r => r.data),
 };

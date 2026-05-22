@@ -1,20 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, ArrowRight, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
-import { modulesApi } from "@/lib/api/modules";
-import { quizApi } from "@/lib/api/quiz";
-import type { Module, QuizQuestion, QuizSubmitResponse } from "@/lib/types";
+import { useModule, useQuizQuestions, useSubmitQuiz } from "@/lib/query-hooks";
+import type { QuizSubmitResponse } from "@/lib/types";
 
 export default function QuizPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
-  const [module, setModule] = useState<Module | null>(null);
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const { data: module, isLoading: moduleLoading } = useModule(slug);
+  const { data: questions = [], isLoading: questionsLoading } = useQuizQuestions(slug);
+  const submitMutation = useSubmitQuiz();
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -24,14 +22,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
   const [result, setResult] = useState<QuizSubmitResponse | null>(null);
   const [allAnswers, setAllAnswers] = useState<number[]>([]);
 
-  useEffect(() => {
-    modulesApi.getBySlug(slug).then((m) => {
-      setModule(m);
-    }).catch(() => {});
-    quizApi.getQuestions(slug).then((q) => {
-      setQuestions(q);
-    }).catch(() => {}).finally(() => setLoading(false));
-  }, [slug]);
+  const loading = moduleLoading || questionsLoading;
 
   const handleSelect = (index: number) => {
     if (showResult) return;
@@ -58,15 +49,13 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
   };
 
   const submitQuiz = async () => {
-    setSubmitting(true);
     try {
-      const res = await quizApi.submit(slug, { answers: allAnswers });
+      const res = await submitMutation.mutateAsync({ slug, answers: allAnswers });
       setResult(res);
     } catch {
       setResult({ score, total: questions.length, percentage: Math.round((score / questions.length) * 100), answers: [] });
     } finally {
       setFinished(true);
-      setSubmitting(false);
     }
   };
 
@@ -77,6 +66,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
     setScore(0);
     setFinished(false);
     setResult(null);
+    setAllAnswers([]);
   };
 
   const percentage = Math.round((score / (questions.length || 1)) * 100);
@@ -127,7 +117,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
                 </h2>
 
                 <div className="flex flex-col gap-3 mb-8">
-                  {questions[currentQuestion]?.options.map((option, idx) => {
+                  {questions[currentQuestion]?.options.map((option: string, idx: number) => {
                     const isCorrectOption = module.questions?.[currentQuestion]?.correctAnswer === idx;
                     const isWrongSelected = showResult && selectedAnswer === idx && !isCorrectOption;
                     const isCorrectSelected = showResult && selectedAnswer === idx && isCorrectOption;
@@ -205,7 +195,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
 
             {result?.answers && result.answers.length > 0 && (
               <div className="text-left mb-8 space-y-3">
-                {result.answers.map((a, idx) => (
+                {result.answers.map((a: any, idx: number) => (
                   <div key={idx} className={`p-4 rounded-xl border ${a.correct ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
                     <p className="text-[0.875rem] text-white/80 mb-1">
                       <span className="font-bold">{a.correct ? "✓" : "✗"}</span> Question {idx + 1}
