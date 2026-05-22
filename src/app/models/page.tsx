@@ -5,8 +5,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { Play, Clock, Search, Sparkles, Crown, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import ReactFlow, { Background, NodeProps, Handle, Position, ReactFlowProvider } from "reactflow";
-import "reactflow/dist/style.css";
+import { ReactFlow, Background, Handle, Position, ReactFlowProvider } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { ModuleCard } from "@/components/ModuleCard";
 import { useModules } from "@/lib/use-modules";
 import { useAuth } from "@/lib/auth-context";
@@ -23,7 +23,7 @@ const nodeSlugs: Record<string, string> = {
   "Opportunity Cost": "opportunity-cost",
 };
 
-const MarketingNode = ({ data }: NodeProps) => {
+const MarketingNode = ({ data }: { data: any }) => {
   const router = useRouter();
   const slug = nodeSlugs[data.label];
   return (

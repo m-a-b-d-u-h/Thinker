@@ -3,14 +3,14 @@
 import { useMemo, useRef, useEffect } from "react";
 import { notFound } from "next/navigation";
 import React from "react";
-import ReactFlow, { Handle, Position, NodeProps } from "reactflow";
-import "reactflow/dist/style.css";
+import { ReactFlow, Handle, Position } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { useModule } from "@/lib/query-hooks";
 import { progressApi } from "@/lib/api/progress";
 import { useAuth } from "@/lib/auth-context";
 import { useQuery } from "@tanstack/react-query";
 
-const CustomNode = ({ data }: NodeProps) => (
+const CustomNode = ({ data }: { data: any }) => (
   <div className={`rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap ${
     data.isCompleted
       ? 'bg-[#1a3a1a] border border-green-500 text-[#86efac]'
@@ -24,7 +24,7 @@ const CustomNode = ({ data }: NodeProps) => (
 
 const nodeTypes = { custom: CustomNode };
 
-function Flow({ nodes, edges }: { nodes: any[]; edges: any[] }) {
+const Flow = React.memo(({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
   const reactFlowInstance = useRef<any>(null);
 
   const styledEdges = useMemo(() => edges.map(e => ({
@@ -57,7 +57,7 @@ function Flow({ nodes, edges }: { nodes: any[]; edges: any[] }) {
       </ReactFlow>
     </div>
   );
-}
+});
 
 export default function PathPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);

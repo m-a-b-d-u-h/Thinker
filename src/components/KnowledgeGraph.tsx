@@ -1,16 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import ReactFlow, {
-  Background,
-  Handle,
-  Position,
-  ReactFlowProvider,
-  NodeProps,
-  Node,
-  Edge,
-} from "reactflow";
-import "reactflow/dist/style.css";
+import { ReactFlow, Background, Handle, Position, ReactFlowProvider, type Node, type Edge } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 
 const COLORS: Record<string, { label: string; color: string }> = {
   mindset: { label: "Mindset", color: "#a78bfa" },
@@ -68,7 +60,7 @@ const CROSS_EDGES: [string, string][] = [
   ["implementation", "atomic"],
 ];
 
-const GraphNode = ({ data }: NodeProps<{ label: string; color: string; isCenter?: boolean }>) => {
+const GraphNode = ({ data }: { data: { label: string; color: string; isCenter?: boolean } }) => {
   if (data.isCenter) {
     return (
       <div className="flex flex-col items-center select-none">

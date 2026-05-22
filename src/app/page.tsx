@@ -4,8 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import ReactFlow, { Background, NodeProps, Handle, Position, useReactFlow, ReactFlowProvider } from "reactflow";
-import "reactflow/dist/style.css";
+import { ReactFlow, Background, Handle, Position, useReactFlow, ReactFlowProvider } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import KnowledgeGraph from "@/components/KnowledgeGraph";
 import React from "react";
 import { CheckCircle2, Zap, Crown, ShieldCheck, Infinity, Library, Play, ArrowRight, Sparkles, Network, Clock, BookOpen, Star, Quote } from "lucide-react";
@@ -17,7 +17,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useModulesList, useCategories } from "@/lib/query-hooks";
 
 // Custom Node Component for MiniPreview
-const CustomNode = ({ data }: NodeProps) => (
+const CustomNode = ({ data }: { data: any }) => (
   <div className="bg-[#111] text-white border border-[#222] rounded-xl px-3 py-2.5 text-xs font-bold text-center min-w-[120px]">
     <Handle type="target" position={Position.Top} className="!bg-[#333] !border-0 !w-2 !h-2" />
     {data.label}

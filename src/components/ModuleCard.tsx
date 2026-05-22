@@ -4,8 +4,8 @@ import React, { useMemo, useState } from "react";
 import { Play, Network, Headphones, BookOpen, Bookmark, Crown, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import ReactFlow, { Handle, Position, ReactFlowProvider, useReactFlow } from "reactflow";
-import "reactflow/dist/style.css";
+import { ReactFlow, Handle, Position, ReactFlowProvider, useReactFlow } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
 import { calculateDurations } from "@/lib/calculate";
 import { favoritesApi } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/auth-context";
@@ -36,7 +36,7 @@ const CustomNode = ({ data }: any) => (
 
 const nodeTypes = { custom: CustomNode };
 
-const FlowAutoFit = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
+const FlowAutoFit = React.memo(({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
   const { fitView } = useReactFlow();
 
   React.useEffect(() => {
@@ -57,9 +57,9 @@ const FlowAutoFit = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
     >
     </ReactFlow>
   );
-};
+});
 
-const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
+const MiniPreview = React.memo(({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
   const styledNodes = useMemo(() => nodes.map(n => ({
     ...n,
     type: 'custom'
@@ -76,7 +76,7 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
       <FlowAutoFit nodes={styledNodes} edges={styledEdges} />
     </ReactFlowProvider>
   );
-};
+});
 
 export function ModuleCard({ module }: { module: ModuleData }) {
   const router = useRouter();
