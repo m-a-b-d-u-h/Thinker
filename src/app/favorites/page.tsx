@@ -90,7 +90,7 @@ export default function FavoritesPage() {
                 transition={{ delay: idx * 0.1 }}
                 key={module.slug}
               >
-                <ModuleCard module={module} />
+                <ModuleCard module={{ ...module, isFavorited: true }} />
               </motion.div>
             ))}
           </div>

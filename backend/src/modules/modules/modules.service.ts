@@ -95,23 +95,28 @@ export namespace ModulesService {
     const dailyFreeSlug = await getDailyFreeSlug();
 
     return {
-      data: modules.map((m: any) => ({
-        id: m.id,
-        slug: m.slug,
-        title: m.title,
-        description: m.description,
-        category: m.category,
-        isPremium: m.isPremium,
-        createdAt: m.createdAt,
-        updatedAt: m.updatedAt,
-        nodes: m.nodes.map(transformNode),
-        edges: m.edges.map(transformEdge),
-        _count: m._count,
-        isFavorited: query.userId ? m.favorites?.length > 0 : false,
-        isDailyFree: m.slug === dailyFreeSlug,
-        favorites: undefined,
-        content: undefined,
-      })),
+      data: modules.map((m: any) => {
+        const words = (m.content || "").split(/\s+/).filter(Boolean).length;
+        return {
+          id: m.id,
+          slug: m.slug,
+          title: m.title,
+          description: m.description,
+          category: m.category,
+          isPremium: m.isPremium,
+          createdAt: m.createdAt,
+          updatedAt: m.updatedAt,
+          nodes: m.nodes.map(transformNode),
+          edges: m.edges.map(transformEdge),
+          _count: m._count,
+          isFavorited: query.userId ? m.favorites?.length > 0 : false,
+          isDailyFree: m.slug === dailyFreeSlug,
+          favorites: undefined,
+          content: undefined,
+          listenMin: Math.max(1, Math.ceil(words / 150)),
+          readMin: Math.max(1, Math.ceil(words / 240)),
+        };
+      }),
       pagination: {
         page,
         limit,
@@ -193,12 +198,12 @@ export namespace ModulesService {
   }
 
   export async function getCategories() {
-    const categories = await prisma.module.findMany({
-      select: { category: true },
-      distinct: ["category"],
+    const catCounts = await prisma.module.groupBy({
+      by: ["category"],
+      _count: { category: true },
       orderBy: { category: "asc" },
     });
-    return categories.map((c) => c.category);
+    return catCounts.map((c) => ({ name: c.category, count: c._count.category }));
   }
 
   export async function getRecommended(slug: string, limit: number = 3) {

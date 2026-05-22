@@ -22,6 +22,8 @@ interface ModuleData {
   isFavorited?: boolean;
   isPremium?: boolean;
   isDailyFree?: boolean;
+  listenMin?: number;
+  readMin?: number;
 }
 
 const CustomNode = ({ data }: any) => (
@@ -79,7 +81,9 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
 export function ModuleCard({ module }: { module: ModuleData }) {
   const router = useRouter();
   const { user } = useAuth();
-  const durations = module.content ? calculateDurations(module.content) : { listenMin: 0, readMin: 0 };
+  const durations = module.content
+    ? calculateDurations(module.content)
+    : { listenMin: module.listenMin ?? 0, readMin: module.readMin ?? 0 };
   const [isFavorited, setIsFavorited] = useState(module.isFavorited ?? false);
 
   const isSubscribed = user && user.subscriptionStatus && user.subscriptionStatus !== "FREE";
@@ -176,7 +180,7 @@ export function ModuleCard({ module }: { module: ModuleData }) {
           </button>
         </div>
         <div className="flex items-center gap-3">
-          {module.content && (
+          {(durations.listenMin > 0 || durations.readMin > 0) && (
             <span className="text-[0.6875rem] text-[#666] flex items-center gap-2">
               <span className="flex items-center gap-1">
                 <Headphones size={12} />

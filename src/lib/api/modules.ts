@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import type { Module, ModuleListItem, PaginatedResponse } from "@/lib/types";
+import type { Module, ModuleListItem, PaginatedResponse, CategoryWithCount } from "@/lib/types";
 
 export const modulesApi = {
   list: (params?: { page?: string; limit?: string; category?: string; categories?: string; search?: string }) =>
@@ -15,7 +15,7 @@ export const modulesApi = {
     api.get<{ accessible: boolean; isDailyFree: boolean }>(`/modules/${slug}/access`),
 
   getCategories: () =>
-    api.get<string[]>("/modules/categories"),
+    api.get<CategoryWithCount[]>("/modules/categories"),
 
   getRecommended: (slug: string) =>
     api.get<Module[]>(`/modules/${slug}/recommended`),

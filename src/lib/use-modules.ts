@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { modulesApi } from "@/lib/api/modules";
 import { progressApi, type ContinueLearningItem } from "@/lib/api/progress";
-import type { ModuleListItem } from "@/lib/types";
+import type { ModuleListItem, CategoryWithCount } from "@/lib/types";
 
 interface HistoryModule extends ModuleListItem {
   progress: {
@@ -41,7 +41,7 @@ export function useModules(page: number, category: string | null, search: string
   useEffect(() => {
     let cancelled = false;
     modulesApi.getCategories()
-      .then((cats) => { if (!cancelled) setCategoriesList(cats); })
+      .then((cats) => { if (!cancelled) setCategoriesList(cats.map(c => c.name)); })
       .catch(() => {});
     return () => { cancelled = true; };
   }, []);

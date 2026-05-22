@@ -15,7 +15,7 @@ import { ModuleCard } from "@/components/ModuleCard";
 import { modulesApi } from "@/lib/api/modules";
 import { paymentsApi } from "@/lib/api/payments";
 import { useAuth } from "@/lib/auth-context";
-import type { ModuleListItem } from "@/lib/types";
+import type { ModuleListItem, CategoryWithCount } from "@/lib/types";
 
 // Custom Node Component for MiniPreview
 const CustomNode = ({ data }: NodeProps) => (
@@ -94,10 +94,40 @@ export default function Home() {
   const { user } = useAuth();
   const [modules, setModules] = useState<ModuleListItem[]>([]);
   const [subscribing, setSubscribing] = useState<string | null>(null);
+  const [collections, setCollections] = useState<CategoryWithCount[]>([]);
 
   useEffect(() => {
     modulesApi.list({ limit: "4" }).then((res) => setModules(res.data)).catch(() => {});
+    modulesApi.getCategories().then(setCollections).catch(() => {});
   }, []);
+
+  const categoryMeta: Record<string, { icon: any; desc: string }> = {
+    mindset: { icon: Network, desc: "Develop powerful thinking frameworks" },
+    clarity: { icon: Sparkles, desc: "Cut through complexity with precision" },
+    habit: { icon: ShieldCheck, desc: "Build systems that stick" },
+    action: { icon: Zap, desc: "Convert knowledge into results" },
+    strategy: { icon: Crown, desc: "Plan for long-term success" },
+    "decision-making": { icon: CheckCircle2, desc: "Make better choices faster" },
+    communication: { icon: Clock, desc: "Express ideas effectively" },
+    relationships: { icon: Library, desc: "Build meaningful connections" },
+    focus: { icon: Zap, desc: "Sharpen your concentration" },
+    productivity: { icon: Zap, desc: "Do more with less effort" },
+    creativity: { icon: Sparkles, desc: "Unlock innovative thinking" },
+    learning: { icon: BookOpen, desc: "Accelerate your skill acquisition" },
+    wellbeing: { icon: ShieldCheck, desc: "Nurture your mental health" },
+    logic: { icon: Network, desc: "Reason with precision" },
+    psychology: { icon: BookOpen, desc: "Understand the mind" },
+    success: { icon: Crown, desc: "Achieve your goals" },
+    stoicism: { icon: ShieldCheck, desc: "Build resilience and calm" },
+    "cognitive-bias": { icon: Network, desc: "Recognize thinking traps" },
+    business: { icon: Crown, desc: "Grow your venture" },
+    "mental-model": { icon: Network, desc: "Build a lattice of mental models" },
+    "problem-solving": { icon: Zap, desc: "Solve tough problems" },
+    "game-theory": { icon: Network, desc: "Master strategic thinking" },
+    resilience: { icon: ShieldCheck, desc: "Bounce back stronger" },
+    risk: { icon: ShieldCheck, desc: "Navigate uncertainty" },
+    economics: { icon: Crown, desc: "Understand market forces" },
+  };
 
   const handleSubscribe = async (planType: "MONTHLY" | "YEARLY" | "LIFETIME") => {
     if (!user) {
@@ -163,27 +193,142 @@ export default function Home() {
       <Navbar />
       <div className="mx-auto w-full max-w-[1200px] px-6">
         {/* Hero Section */}
-        <section className="min-h-[80vh] flex flex-col justify-center items-center text-center py-20">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 text-[#ffb800] bg-[#ffb8001a] px-5 py-2 rounded-full mb-8 font-bold uppercase tracking-wider text-[0.75rem] border border-[#ffb80033]">
-            <Library size={14} /> The Ultimate Cognitive Library
-          </motion.div>
+        <section className="min-h-screen flex items-center py-20">
+          <div className="w-full grid lg:grid-cols-2 gap-12 items-center">
+            {/* Left: Text */}
+            <div>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 text-[#ffb800] bg-[#ffb8001a] px-5 py-2 rounded-full mb-8 font-bold uppercase tracking-wider text-[0.75rem] border border-[#ffb80033] w-fit">
+                <Library size={14} /> The Ultimate Cognitive Library
+              </motion.div>
 
-          <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-[clamp(3.5rem,8vw,6.5rem)] font-black tracking-[-0.04em] leading-[1.1] mb-6">
-            Master your <br /> <span className="bg-gradient-to-br from-white to-[#555] bg-clip-text text-transparent">thinking library.</span>
-          </motion.h1>
+              <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-[clamp(2.5rem,5vw,4.5rem)] font-black tracking-[-0.04em] leading-[1.1] mb-6">
+                Master your <br /> <span className="bg-gradient-to-br from-white to-[#555] bg-clip-text text-transparent">thinking library.</span>
+              </motion.h1>
 
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-lg text-[#888] max-w-[650px] mx-auto mb-12 leading-relaxed">
-            Explore an expansive library of mental models, cognitive tools, and frameworks. Internalize complex concepts through interactive mapping and committed action.
-          </motion.p>
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-lg text-[#888] max-w-[500px] mb-8 leading-relaxed">
+                Explore an expansive library of mental models, cognitive tools, and frameworks. Internalize complex concepts through interactive mapping and committed action.
+              </motion.p>
 
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex gap-4 justify-center flex-wrap">
-            <Link href="/models" className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
-              Continue Learning
-            </Link>
-            <Link href="/models" className="inline-flex items-center gap-2 bg-transparent border border-[#222] text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/5 transition-all">
-              View Modules
-            </Link>
-          </motion.div>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex gap-4 flex-wrap mb-10">
+                <Link href="/models" className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all">
+                  Continue Learning
+                </Link>
+                <Link href="/models" className="inline-flex items-center gap-2 bg-transparent border border-[#222] text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/5 transition-all">
+                  View Modules
+                </Link>
+              </motion.div>
+
+              {/* App Store Badges */}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-center gap-4">
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-[#080808] border border-white/5 rounded-xl opacity-50 cursor-not-allowed">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                  <div className="text-left">
+                    <div className="text-[0.5rem] text-[#666] leading-tight">Download on the</div>
+                    <div className="text-[0.8125rem] font-bold text-white leading-tight">App Store</div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-[#080808] border border-white/5 rounded-xl opacity-50 cursor-not-allowed">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 0 1 0 1.732l-2.807 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/></svg>
+                  <div className="text-left">
+                    <div className="text-[0.5rem] text-[#666] leading-tight">Get it on</div>
+                    <div className="text-[0.8125rem] font-bold text-white leading-tight">Google Play</div>
+                  </div>
+                </div>
+                <span className="text-[0.625rem] text-[#444] font-semibold">Mobile app in development</span>
+              </motion.div>
+            </div>
+
+            {/* Right: Device Mockups */}
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="relative">
+              {/* Desktop Mockup */}
+              <div className="rounded-xl border border-white/10 overflow-hidden shadow-2xl shadow-black/50 bg-[#050505]">
+                <div className="h-7 bg-[#111] flex items-center px-4 gap-2 border-b border-white/5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
+                  <div className="ml-6 flex-1 max-w-[300px] h-4 rounded-md bg-white/5 flex items-center justify-center text-[0.5rem] text-[#555] font-semibold">1section.app/models</div>
+                </div>
+                <div className="aspect-[16/10] bg-[#0a0a0c] grid grid-cols-2 gap-px">
+                  <div className="p-5 flex flex-col gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 rounded-lg bg-white/10" />
+                      <div className="h-2.5 w-20 rounded-full bg-white/10" />
+                      <div className="h-5 w-16 rounded-full bg-[#ffb800]/20 ml-auto" />
+                    </div>
+                    <div className="h-5 w-3/4 rounded bg-white/10" />
+                    <div className="h-3 w-full rounded bg-white/5" />
+                    <div className="h-3 w-2/3 rounded bg-white/5" />
+                    <div className="mt-auto grid grid-cols-2 gap-2">
+                      <div className="aspect-[4/3] rounded-lg bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/5 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded border border-white/10" />
+                      </div>
+                      <div className="aspect-[4/3] rounded-lg bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/5 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded border border-white/10" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white/[0.02] p-5 flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded bg-white/10" />
+                      <div className="h-2.5 w-16 rounded-full bg-white/10" />
+                    </div>
+                    <div className="h-4 w-full rounded bg-white/5" />
+                    <div className="h-4 w-3/4 rounded bg-white/5" />
+                    <div className="flex gap-2 mt-auto">
+                      <div className="flex-1 h-8 rounded-lg bg-white/10" />
+                      <div className="flex-1 h-8 rounded-lg border border-white/10" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tablet Mockup */}
+              <div className="absolute -bottom-6 -left-6 w-[200px] rounded-2xl border border-white/10 overflow-hidden shadow-xl shadow-black/40 bg-[#050505] hidden md:block">
+                <div className="aspect-[4/3] bg-[#0a0a0c] p-4 flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-[#ffb800]" />
+                    <div className="h-2 w-12 rounded-full bg-white/10" />
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="w-12 h-16 rounded-lg bg-white/5" />
+                    <div className="flex-1 flex flex-col gap-1">
+                      <div className="h-2 w-full rounded bg-white/10" />
+                      <div className="h-2 w-2/3 rounded bg-white/5" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <div className="w-12 h-16 rounded-lg bg-white/5" />
+                    <div className="flex-1 flex flex-col gap-1">
+                      <div className="h-2 w-full rounded bg-white/10" />
+                      <div className="h-2 w-2/3 rounded bg-white/5" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Phone Mockup */}
+              <div className="absolute -top-4 -right-4 w-[140px] rounded-[1.5rem] border border-white/10 overflow-hidden shadow-xl shadow-black/40 bg-[#050505] hidden sm:block">
+                <div className="h-5 bg-[#111] flex items-center justify-center gap-2 border-b border-white/5">
+                  <div className="w-12 h-1.5 rounded-full bg-[#222]" />
+                </div>
+                <div className="aspect-[9/16] bg-[#0a0a0c] p-3 flex flex-col gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#ffb800]" />
+                    <div className="flex-1" />
+                    <div className="w-4 h-4 rounded bg-white/10" />
+                  </div>
+                  <div className="h-2 w-3/4 rounded bg-white/10" />
+                  <div className="w-full h-16 rounded-lg bg-gradient-to-b from-[#ffb800]/10 to-transparent border border-[#ffb800]/10 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-[#ffb800]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                  </div>
+                  <div className="flex gap-1.5 mt-auto">
+                    <div className="flex-1 h-6 rounded-md bg-white/10" />
+                    <div className="flex-1 h-6 rounded-md border border-white/10" />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </section>
 
         {/* Sample Products Section */}
@@ -216,37 +361,32 @@ export default function Home() {
           </header>
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(240px,1fr))] gap-5">
-            {[
-              { name: 'Mindset', desc: 'Develop powerful thinking frameworks', icon: Network, color: 'var(--color-c-mindset)', count: 12 },
-              { name: 'Clarity', desc: 'Cut through complexity with precision', icon: Sparkles, color: 'var(--color-c-clarity)', count: 8 },
-              { name: 'Habit', desc: 'Build systems that stick', icon: ShieldCheck, color: 'var(--color-c-habit)', count: 10 },
-              { name: 'Action', desc: 'Convert knowledge into results', icon: Zap, color: 'var(--color-c-action)', count: 15 },
-              { name: 'Strategy', desc: 'Plan for long-term success', icon: Crown, color: '#f472b6', count: 9 },
-              { name: 'Decision', desc: 'Make better choices faster', icon: CheckCircle2, color: '#38bdf8', count: 11 },
-              { name: 'Communication', desc: 'Express ideas effectively', icon: Clock, color: '#a3e635', count: 7 },
-              { name: 'Relationships', desc: 'Build meaningful connections', icon: Library, color: '#fb923c', count: 6 },
-            ].map((collection, idx) => (
-              <motion.div
-                key={collection.name}
-                initial={{ opacity: 0, y: 5 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.1 }}
-                className="bg-[#080808] border border-white/5 rounded-2xl p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:border-white/10"
-                whileHover={{ y: -6, borderColor: 'rgba(255,255,255,0.1)' }}
-              >
-                <div className="flex items-start justify-between mb-5">
-                  <div className="w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: `${collection.color}15`, color: collection.color }}>
-                    <collection.icon size={24} />
+            {collections.sort((a, b) => b.count - a.count).slice(0, 8).map((collection, idx) => {
+              const meta = categoryMeta[collection.name] || { icon: Library, desc: "Explore this collection" };
+              const Icon = meta.icon;
+              return (
+                <motion.div
+                  key={collection.name}
+                  initial={{ opacity: 0, y: 5 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-[#080808] border border-white/5 rounded-2xl p-7 cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:border-white/10"
+                  whileHover={{ y: -6, borderColor: 'rgba(255,255,255,0.1)' }}
+                >
+                  <div className="flex items-start justify-between mb-5">
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-orange-500/10 text-orange-500">
+                      <Icon size={24} />
+                    </div>
+                    <span className="text-[0.75rem] font-bold text-[#444] bg-white/5 px-3 py-1 rounded-full">
+                      {collection.count} {collection.count === 1 ? 'theory' : 'theories'}
+                    </span>
                   </div>
-                  <span className="text-[0.75rem] font-bold text-[#444] bg-white/5 px-3 py-1 rounded-full">
-                    {collection.count} theories
-                  </span>
-                </div>
-                <h3 className="text-lg font-black mb-2 text-white">{collection.name}</h3>
-                <p className="text-[0.875rem] text-[#666] leading-relaxed">{collection.desc}</p>
-              </motion.div>
-            ))}
+                  <h3 className="text-lg font-black mb-2 text-white">{collection.name.charAt(0).toUpperCase() + collection.name.slice(1).replace(/-/g, ' ')}</h3>
+                  <p className="text-[0.875rem] text-[#666] leading-relaxed">{meta.desc}</p>
+                </motion.div>
+              );
+            })}
           </div>
 
           <div className="text-center mt-10">
@@ -490,6 +630,10 @@ export default function Home() {
                   ) : (
                     <button
                       onClick={() => {
+                        if (plan.name === "Free") {
+                          router.push("/login");
+                          return;
+                        }
                         const planTypes: Record<string, "MONTHLY" | "YEARLY" | "LIFETIME"> = {
                           "1 Month": "MONTHLY",
                           "1 Year": "YEARLY",

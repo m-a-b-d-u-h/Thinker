@@ -69,6 +69,8 @@ export interface ModuleListItem {
   _count?: { questions: number };
   isFavorited?: boolean;
   isDailyFree?: boolean;
+  listenMin?: number;
+  readMin?: number;
 }
 
 export interface PaginatedResponse<T> {
@@ -213,4 +215,9 @@ export interface PaginationInfo {
   limit: number;
   total: number;
   totalPages: number;
+}
+
+export interface CategoryWithCount {
+  name: string;
+  count: number;
 }
