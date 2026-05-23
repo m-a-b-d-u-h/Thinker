@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Settings, LogOut, X } from "lucide-react";
+import { Settings, LogOut, X } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 
 const ALL_CATEGORIES = [
@@ -65,9 +65,6 @@ export default function UserPopup() {
         onClick={() => { setOpen(!open); setEditing(false); }}
         className="flex items-center gap-2 px-3 py-1.5 rounded border border-white/8 text-gray-400 text-sm font-medium transition-colors hover:text-white hover:border-white/15 hover:bg-white/3 cursor-pointer"
       >
-        <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">
-          {user.name?.[0] || user.email[0]}
-        </div>
         <span>{user.name || user.email}</span>
       </button>
 
@@ -82,9 +79,6 @@ export default function UserPopup() {
           >
             <div className="p-4 border-b border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-sm font-bold text-white">
-                  {user.name?.[0] || user.email[0]}
-                </div>
                 <div className="min-w-0">
                   <div className="text-sm font-bold text-white truncate">
                     {user.name || "User"}

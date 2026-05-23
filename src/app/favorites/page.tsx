@@ -30,7 +30,7 @@ export default function FavoritesPage() {
 
   if (!user) {
     return (
-      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-16 text-center">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-10 md:py-16 text-center">
         <Bookmark size={32} className="mx-auto text-[#222] mb-4" />
         <h1 className="text-3xl font-black mb-4">Sign in to view your favorites</h1>
         <Link href="/login" className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg font-semibold">
@@ -42,14 +42,14 @@ export default function FavoritesPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-16 flex justify-center">
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-10 md:py-16 flex justify-center">
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-16">
+    <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-10 md:py-16">
       <header className="mb-12">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center text-white">

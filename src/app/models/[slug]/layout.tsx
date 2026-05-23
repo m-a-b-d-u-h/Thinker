@@ -30,7 +30,7 @@ export default function ModuleLayout({
           <div className="flex items-center justify-between">
             <Link href="/models" className="flex items-center gap-2 text-[#666] no-underline text-[0.875rem] hover:text-white transition-colors">
               <ChevronLeft size={18} />
-              <span>Back to Library</span>
+              <span className="hidden sm:inline">Back to Library</span>
             </Link>
             <div className="flex gap-1 overflow-x-auto scrollbar-thin -mb-px pb-px">
               {tabs.map((tab) => {

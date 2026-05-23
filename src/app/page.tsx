@@ -418,19 +418,19 @@ export default function Home() {
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-8 lg:gap-12 items-center">
               <div>
                 <h2 className="text-5xl font-black mb-6 leading-[1.1]">
-                  Your Mind, <br/><span className="text-[#444]">Visualized.</span>
+                  Your Knowledge, <br/><span className="text-[#444]">Visualized.</span>
                 </h2>
                 <p className="text-muted text-lg mb-8 leading-relaxed">
-                  Every framework you master becomes a living node in your personal thought universe. Watch your understanding deepen as ideas connect, overlap, and compound into something bigger.
+                  Each mental model you learn appears as a node in your interactive knowledge graph. See how frameworks connect, overlap, and build on each other as you progress through the library.
                 </p>
                 <div className="flex gap-4">
                   <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                    <div className="text-white font-bold text-xl">14+</div>
-                    <div className="text-[#555] text-[0.75rem] uppercase">Frameworks</div>
+                    <div className="text-white font-bold text-xl">TTS</div>
+                    <div className="text-[#555] text-[0.75rem] uppercase">Audio Narration</div>
                   </div>
                   <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                    <div className="text-white font-bold text-xl">84%</div>
-                    <div className="text-[#555] text-[0.75rem] uppercase">Knowledge Retained</div>
+                    <div className="text-white font-bold text-xl">5</div>
+                    <div className="text-[#555] text-[0.75rem] uppercase">Learning Tools</div>
                   </div>
                 </div>
               </div>
