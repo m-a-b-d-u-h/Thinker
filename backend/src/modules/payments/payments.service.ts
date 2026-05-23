@@ -64,95 +64,6 @@ const PLAN_TO_SUBSCRIPTION: Record<string, SubscriptionStatus> = {
 };
 
 export namespace PaymentsService {
-  export async function verifySession(userId: string, sessionId: string) {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
-
-    if (session.payment_status !== "paid" && session.status !== "complete") {
-      throw new AppError("Payment not completed", 400);
-    }
-
-    const metaUserId = session.metadata?.userId;
-    const planType = session.metadata?.planType as PlanType | undefined;
-
-    if (!metaUserId || metaUserId !== userId) {
-      throw new AppError("Session does not belong to this user", 403);
-    }
-    if (!planType) {
-      throw new AppError("Invalid session metadata", 400);
-    }
-
-    // Handle upgrade payment — cancel old subscription
-    if (session.metadata?.isUpgrade === "true") {
-      const previousPlan = session.metadata?.previousPlan;
-      if (previousPlan && previousPlan !== "FREE") {
-        const subs = await stripe.subscriptions.list({ customer: session.customer as string, status: "active", limit: 1 });
-        for (const sub of subs.data) {
-          await stripe.subscriptions.cancel(sub.id);
-        }
-      }
-    }
-
-    const subscriptionStatus = PLAN_TO_SUBSCRIPTION[planType] || "MONTHLY";
-    const subscriptionEnd =
-      planType === "MONTHLY"
-        ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        : planType === "YEARLY"
-          ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-          : null;
-
-    await Promise.all([
-      prisma.payment.upsert({
-        where: { stripePaymentId: sessionId },
-        update: {},
-        create: {
-          userId,
-          stripePaymentId: sessionId,
-          amount: session.amount_total || 0,
-          currency: session.currency || "usd",
-          status: "SUCCEEDED",
-          planType,
-        },
-      }),
-      prisma.user.update({
-        where: { id: userId },
-        data: { subscriptionStatus, subscriptionEnd },
-      }),
-    ]);
-
-    return prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        avatar: true,
-        subscriptionStatus: true,
-        preferredCategories: true,
-      },
-    });
-  }
-
-  export async function activatePending(userId: string) {
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) throw new AppError("User not found", 404);
-    if (!user.stripeCustomerId) throw new AppError("No Stripe customer found", 400);
-    if (user.subscriptionStatus !== "FREE") return user;
-
-    const sessions = await stripe.checkout.sessions.list({
-      customer: user.stripeCustomerId,
-      limit: 5,
-      expand: ["data.line_items"],
-    });
-
-    const paid = sessions.data.find(
-      (s) => s.payment_status === "paid" && s.metadata?.planType
-    );
-
-    if (!paid) throw new AppError("No completed payment found", 404);
-
-    return verifySession(userId, paid.id);
-  }
-
   export async function upgradeSubscription(userId: string, newPlanType: PlanType) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError("User not found", 404);
@@ -174,17 +85,12 @@ export namespace PaymentsService {
       const subs = await stripe.subscriptions.list({ customer: stripeCustomerId, status: "active", limit: 1 });
       if (subs.data.length === 0) throw new AppError("No active subscription", 400);
       const sub = subs.data[0];
-      const updatedSub = await stripe.subscriptions.update(sub.id, {
+      await stripe.subscriptions.update(sub.id, {
         items: [{ id: sub.items.data[0].id, price: priceId }],
+        metadata: { userId, planType: "YEARLY" },
         proration_behavior: "always_invoice",
       });
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          subscriptionStatus: "YEARLY",
-          subscriptionEnd: new Date((updatedSub.current_period_end || 0) * 1000),
-        },
-      });
+      // Webhook customer.subscription.updated will sync the status + plan type
       return { success: true };
     }
 
@@ -204,7 +110,7 @@ export namespace PaymentsService {
           },
           quantity: 1,
         }],
-        success_url: `${env.clientUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${env.clientUrl}/payment/success`,
         cancel_url: `${env.clientUrl}/#pricing`,
         metadata: { userId, planType: "LIFETIME", isUpgrade: "true", previousPlan: currentPlan },
       });
@@ -235,11 +141,16 @@ export namespace PaymentsService {
       });
     }
 
+    const isSubscription = input.planType !== "LIFETIME";
+
     const session = await stripe.checkout.sessions.create({
       customer: stripeCustomerId,
-      mode: input.planType === "LIFETIME" ? "payment" : "subscription",
+      mode: isSubscription ? "subscription" : "payment",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: input.successUrl || `${env.clientUrl}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      ...(isSubscription
+        ? { subscription_data: { metadata: { userId, planType: input.planType } } }
+        : {}),
+      success_url: input.successUrl || `${env.clientUrl}/payment/success`,
       cancel_url: input.cancelUrl || `${env.clientUrl}/#pricing`,
       metadata: { userId, planType: input.planType },
     });
@@ -261,15 +172,41 @@ export namespace PaymentsService {
           break;
         }
 
-        const status: PaymentStatus = "SUCCEEDED";
         const subscriptionStatus = PLAN_TO_SUBSCRIPTION[planType] || "MONTHLY";
 
-        const subscriptionEnd =
-          planType === "MONTHLY"
-            ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-            : planType === "YEARLY"
-              ? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-              : null;
+        // Retrieve actual Stripe subscription data if available
+        let stripeSubscriptionId: string | null = null;
+        let subscriptionEnd: Date | null = null;
+
+        if (session.mode === "subscription" && session.subscription) {
+          const subscription = await stripe.subscriptions.retrieve(
+            session.subscription as string
+          );
+          stripeSubscriptionId = subscription.id;
+          subscriptionEnd = new Date(
+            (subscription.current_period_end || 0) * 1000
+          );
+        }
+
+        // Handle upgrade — cancel any old active subscriptions
+        if (session.metadata?.isUpgrade === "true") {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { stripeCustomerId: true },
+          });
+          if (user?.stripeCustomerId) {
+            const oldSubs = await stripe.subscriptions.list({
+              customer: user.stripeCustomerId,
+              status: "active",
+              limit: 10,
+            });
+            for (const sub of oldSubs.data) {
+              if (sub.id !== stripeSubscriptionId) {
+                await stripe.subscriptions.cancel(sub.id);
+              }
+            }
+          }
+        }
 
         await Promise.all([
           prisma.payment.upsert({
@@ -278,9 +215,10 @@ export namespace PaymentsService {
             create: {
               userId,
               stripePaymentId: session.id,
+              stripeSubscriptionId,
               amount: session.amount_total || 0,
               currency: session.currency || "usd",
-              status,
+              status: "SUCCEEDED",
               planType,
             },
           }),
@@ -289,6 +227,7 @@ export namespace PaymentsService {
             data: {
               subscriptionStatus,
               subscriptionEnd,
+              stripeSubscriptionId,
             },
           }),
         ]);
@@ -299,31 +238,68 @@ export namespace PaymentsService {
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const subscription = event.data.object;
-        const customerId = subscription.customer as string;
 
-        const user = await prisma.user.findUnique({
-          where: { stripeCustomerId: customerId },
+        // Read plan type from subscription metadata (set during checkout or upgrade)
+        const planType = subscription.metadata?.planType as
+          | PlanType
+          | undefined;
+
+        // Prefer lookup by subscription ID, fallback to customer ID
+        let user = await prisma.user.findUnique({
+          where: { stripeSubscriptionId: subscription.id },
         });
 
-        if (user) {
-          const isActive =
-            subscription.status === "active" || subscription.status === "trialing";
-          if (isActive) {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: {
-                subscriptionEnd: new Date((subscription.current_period_end || 0) * 1000),
-              },
-            });
-          } else {
-            await prisma.user.update({
-              where: { id: user.id },
-              data: {
-                subscriptionStatus: "FREE",
-                subscriptionEnd: null,
-              },
-            });
+        if (!user) {
+          const customerId = subscription.customer as string;
+          user = await prisma.user.findUnique({
+            where: { stripeCustomerId: customerId },
+          });
+          if (!user) break;
+        }
+
+        const isActive =
+          subscription.status === "active" ||
+          subscription.status === "trialing";
+
+        if (isActive) {
+          const updateData: Record<string, any> = {
+            stripeSubscriptionId: subscription.id,
+            subscriptionEnd: new Date(
+              (subscription.current_period_end || 0) * 1000
+            ),
+          };
+
+          // Sync plan type if available from subscription metadata
+          if (planType && PLAN_TO_SUBSCRIPTION[planType]) {
+            updateData.subscriptionStatus = PLAN_TO_SUBSCRIPTION[planType];
           }
+
+          await prisma.user.update({
+            where: { id: user.id },
+            data: updateData,
+          });
+        } else {
+          // Check if this is an upgrade scenario — user may have a recent lifetime payment
+          if (user.subscriptionStatus === "LIFETIME") break;
+
+          const recentUpgrade = await prisma.payment.findFirst({
+            where: {
+              userId: user.id,
+              planType: "LIFETIME",
+              status: "SUCCEEDED",
+              createdAt: { gte: new Date(Date.now() - 60000) }, // within last 60s
+            },
+          });
+          if (recentUpgrade) break;
+
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              subscriptionStatus: "FREE",
+              stripeSubscriptionId: null,
+              subscriptionEnd: null,
+            },
+          });
         }
         break;
       }
@@ -339,6 +315,7 @@ export namespace PaymentsService {
         subscriptionStatus: true,
         subscriptionEnd: true,
         stripeCustomerId: true,
+        stripeSubscriptionId: true,
       },
     });
 
@@ -346,7 +323,31 @@ export namespace PaymentsService {
     return user;
   }
 
-  export async function getHistory(userId: string) {
+  export async function createPortalSession(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { stripeCustomerId: true },
+    });
+
+    if (!user?.stripeCustomerId) {
+      throw new AppError("No Stripe customer found", 400);
+    }
+
+    const session = await stripe.billingPortal.sessions.create({
+      customer: user.stripeCustomerId,
+      return_url: `${env.clientUrl}/dashboard`,
+    });
+
+    return { url: session.url };
+  }
+
+  export async function getHistory(userId: string, all?: boolean) {
+    if (all) {
+      return prisma.payment.findMany({
+        orderBy: { createdAt: "desc" },
+        include: { user: { select: { name: true, email: true } } },
+      });
+    }
     return prisma.payment.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },

@@ -145,7 +145,7 @@ export namespace ModulesService {
     };
   }
 
-  export async function getBySlug(slug: string, userId?: string) {
+  export async function getBySlug(slug: string, userId?: string, admin?: boolean) {
     const dailyFreeSlug = await getDailyFreeSlug();
     const isDailyFree = dailyFreeSlug === slug;
 
@@ -162,8 +162,8 @@ export namespace ModulesService {
 
     const isSubscribed = await hasActiveSubscription(userId);
 
-    // Free access for daily free module OR subscribed users
-    if (isDailyFree || isSubscribed) {
+    // Free access for admin, daily free module, subscribed users, or free modules
+    if (admin || isDailyFree || isSubscribed || !module.isPremium) {
       const fullModule = await prisma.module.findUnique({
         where: { slug },
         include: moduleInclude,
@@ -231,5 +231,133 @@ export namespace ModulesService {
 
     const isSubscribed = await hasActiveSubscription(userId);
     return { accessible: isSubscribed, isDailyFree: false };
+  }
+
+  export async function create(data: {
+    slug: string;
+    title: string;
+    description: string;
+    category: string;
+    content: string;
+    isPremium?: boolean;
+    nodes?: { id: string; positionX: number; positionY: number; label: string; type?: string; style?: any }[];
+    edges?: { id: string; source: string; target: string; label?: string; animated?: boolean }[];
+    questions?: { question: string; options: string[]; correctAnswer: number; explanation?: string }[];
+  }) {
+    const existing = await prisma.module.findUnique({ where: { slug: data.slug } });
+    if (existing) throw new Error("A module with this slug already exists");
+
+    return prisma.module.create({
+      data: {
+        slug: data.slug,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        content: data.content,
+        isPremium: data.isPremium ?? false,
+        nodes: data.nodes?.length
+          ? { create: data.nodes.map((n) => ({ id: n.id, positionX: n.positionX, positionY: n.positionY, label: n.label, type: n.type ?? "custom", style: n.style })) }
+          : undefined,
+        edges: data.edges?.length
+          ? { create: data.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, label: e.label, animated: e.animated ?? true })) }
+          : undefined,
+        questions: data.questions?.length
+          ? { create: data.questions.map((q) => ({ question: q.question, options: q.options, correctAnswer: q.correctAnswer, explanation: q.explanation ?? "" })) }
+          : undefined,
+      },
+      include: moduleInclude,
+    });
+  }
+
+  export async function update(
+    slug: string,
+    data: {
+      slug?: string;
+      title?: string;
+      description?: string;
+      category?: string;
+      content?: string;
+      isPremium?: boolean;
+      nodes?: { id: string; positionX: number; positionY: number; label: string; type?: string; style?: any }[];
+      edges?: { id: string; source: string; target: string; label?: string; animated?: boolean }[];
+      questions?: { question: string; options: string[]; correctAnswer: number; explanation?: string }[];
+    }
+  ) {
+    const existing = await prisma.module.findUnique({ where: { slug } });
+    if (!existing) throw new NotFoundError("Module");
+
+    const updateData: any = {};
+
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.content !== undefined) updateData.content = data.content;
+    if (data.isPremium !== undefined) updateData.isPremium = data.isPremium;
+    if (data.slug !== undefined) {
+      const slugExists = await prisma.module.findUnique({ where: { slug: data.slug } });
+      if (slugExists && slugExists.id !== existing.id) throw new Error("A module with this slug already exists");
+      updateData.slug = data.slug;
+    }
+
+    if (data.nodes !== undefined) {
+      await prisma.moduleNode.deleteMany({ where: { moduleId: existing.id } });
+      if (data.nodes.length > 0) {
+        await prisma.moduleNode.createMany({
+          data: data.nodes.map((n) => ({
+            id: n.id,
+            moduleId: existing.id,
+            positionX: n.positionX,
+            positionY: n.positionY,
+            label: n.label,
+            type: n.type ?? "custom",
+            style: n.style,
+          })),
+        });
+      }
+    }
+
+    if (data.edges !== undefined) {
+      await prisma.moduleEdge.deleteMany({ where: { moduleId: existing.id } });
+      if (data.edges.length > 0) {
+        await prisma.moduleEdge.createMany({
+          data: data.edges.map((e) => ({
+            id: e.id,
+            moduleId: existing.id,
+            source: e.source,
+            target: e.target,
+            label: e.label,
+            animated: e.animated ?? true,
+          })),
+        });
+      }
+    }
+
+    if (data.questions !== undefined) {
+      await prisma.question.deleteMany({ where: { moduleId: existing.id } });
+      if (data.questions.length > 0) {
+        await prisma.question.createMany({
+          data: data.questions.map((q) => ({
+            moduleId: existing.id,
+            question: q.question,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+            explanation: q.explanation ?? "",
+          })),
+        });
+      }
+    }
+
+    return prisma.module.update({
+      where: { id: existing.id },
+      data: updateData,
+      include: moduleInclude,
+    });
+  }
+
+  export async function remove(slug: string) {
+    const mod = await prisma.module.findUnique({ where: { slug } });
+    if (!mod) throw new NotFoundError("Module");
+
+    await prisma.module.delete({ where: { id: mod.id } });
   }
 }

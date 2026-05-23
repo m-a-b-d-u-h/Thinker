@@ -33,9 +33,10 @@ model User {
   name              String?
   avatar            String?
   googleId          String?            @unique
-  stripeCustomerId  String?            @unique
-  subscriptionStatus SubscriptionStatus @default(FREE)
-  subscriptionEnd   DateTime?
+  stripeCustomerId      String?            @unique
+  stripeSubscriptionId  String?            @unique
+  subscriptionStatus    SubscriptionStatus @default(FREE)
+  subscriptionEnd       DateTime?
   streakCount          Int                @default(0)
   lastActiveDate       DateTime?
   preferredCategories  String[]
@@ -50,6 +51,7 @@ model User {
   quizAttempts      QuizAttempt[]
   actionPlans       ActionPlan[]
   payments          Payment[]
+  reviews           Review[]
 }
 
 model Module {
@@ -73,6 +75,7 @@ model Module {
   favorites       Favorite[]
   quizAttempts    QuizAttempt[]
   actionPlans     ActionPlan[]
+  reviews         Review[]
 }
 
 model ModuleNode {
@@ -203,10 +206,23 @@ model ActionPlan {
   @@unique([userId, moduleId])
 }
 
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  moduleId  String?
+  rating    Int
+  comment   String   @default("")
+  createdAt DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
+}
+
 model Payment {
   id               String        @id @default(cuid())
   userId           String
   stripePaymentId  String        @unique
+  stripeSubscriptionId String?
   amount           Int
   currency         String        @default("usd")
   status           PaymentStatus @default(PENDING)

@@ -13,5 +13,6 @@ router.get("/me", authenticate, AuthController.getMe);
 router.put("/profile", authenticate, validate(updateProfileSchema), AuthController.updateProfile);
 router.get("/preferences", authenticate, AuthController.getPreferences);
 router.put("/preferences", authenticate, validate(updatePreferencesSchema), AuthController.updatePreferences);
+router.get("/users", authenticate, AuthController.listUsers);
 
 export default router;

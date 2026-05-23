@@ -10,11 +10,10 @@ router.post("/webhook", PaymentsController.handleWebhook);
 
 router.use(authenticate);
 
-router.post("/verify-session", PaymentsController.verifySession);
-router.post("/activate-pending", PaymentsController.activatePending);
 router.post("/upgrade", PaymentsController.upgradeSubscription);
 router.post("/create-checkout-session", validate(createCheckoutSchema), PaymentsController.createCheckoutSession);
 router.get("/subscription", PaymentsController.getSubscription);
 router.get("/history", PaymentsController.getHistory);
+router.post("/portal", PaymentsController.createPortalSession);
 
 export default router;

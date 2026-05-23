@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
-import Navbar from "@/components/Navbar";
 
 const ALL_CATEGORIES = [
   "mindset", "clarity", "habit", "focus",
@@ -53,9 +52,7 @@ export default function PreferencesPage() {
   if (!user) return null;
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-[#030303] flex items-center justify-center p-8">
+    <div className="min-h-screen bg-[#030303] flex items-center justify-center p-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -105,7 +102,6 @@ export default function PreferencesPage() {
             </p>
           </div>
         </motion.div>
-      </div>
-    </>
+    </div>
   );
 }

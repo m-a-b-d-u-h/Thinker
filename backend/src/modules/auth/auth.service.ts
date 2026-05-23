@@ -111,4 +111,22 @@ export namespace AuthService {
     });
     return { preferredCategories: user.preferredCategories };
   }
+
+  export async function listUsers() {
+    return prisma.user.findMany({
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        avatar: true,
+        subscriptionStatus: true,
+        subscriptionEnd: true,
+        streakCount: true,
+        lastActiveDate: true,
+        preferredCategories: true,
+        createdAt: true,
+      },
+    });
+  }
 }

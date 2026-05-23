@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -35,6 +36,17 @@ async function main() {
     },
   });
   console.log(`Created demo user: ${demoUser.email}`);
+
+  // Create admin user
+  const adminPassword = await bcrypt.hash("mabduh", 12);
+  const adminUser = await prisma.user.create({
+    data: {
+      email: "imuhammadabduh@gmail.com",
+      name: "Admin",
+      passwordHash: adminPassword,
+    },
+  });
+  console.log(`Created admin user: ${adminUser.email}`);
 
   function makeNodes(modSlug: string, nodes: any[]) {
     return nodes.map((n) => ({

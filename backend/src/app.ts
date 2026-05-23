@@ -16,6 +16,7 @@ import favoritesRoutes from "./modules/favorites/favorites.routes";
 import quizRoutes from "./modules/quiz/quiz.routes";
 import actionsRoutes from "./modules/actions/actions.routes";
 import paymentsRoutes from "./modules/payments/payments.routes";
+import reviewsRoutes from "./modules/reviews/reviews.routes";
 
 const app = express();
 
@@ -29,9 +30,20 @@ app.use(
 );
 
 // CORS
+const allowedOrigins = [
+  env.clientUrl,
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
+];
 app.use(
   cors({
-    origin: env.clientUrl,
+    origin: (origin, cb) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -79,6 +91,7 @@ app.use("/api/favorites", favoritesRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/actions", actionsRoutes);
 app.use("/api/payments", paymentsRoutes);
+app.use("/api/reviews", reviewsRoutes);
 
 // 404 handler
 app.use((_req, res) => {

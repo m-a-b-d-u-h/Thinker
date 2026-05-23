@@ -77,4 +77,13 @@ export namespace AuthController {
       next(err);
     }
   }
+
+  export async function listUsers(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const users = await AuthService.listUsers();
+      res.json(users);
+    } catch (err) {
+      next(err);
+    }
+  }
 }

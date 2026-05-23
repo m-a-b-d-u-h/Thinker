@@ -16,6 +16,7 @@ import {
   Crown,
 } from "lucide-react";
 import { paymentsApi } from "@/lib/api/payments";
+import { authApi } from "@/lib/api/auth";
 import {
   Tooltip,
   ResponsiveContainer,
@@ -30,8 +31,6 @@ export default function DashboardPage() {
   const [greeting, setGreeting] = useState("");
   const [verifyingPayment, setVerifyingPayment] = useState(false);
   const [paymentVerified, setPaymentVerified] = useState(false);
-  const [activating, setActivating] = useState(false);
-  const [activateError, setActivateError] = useState<string | null>(null);
 
   const { data: stats } = useDashboardStats();
   const { data: saved = [] } = useAllProgress();
@@ -80,19 +79,32 @@ export default function DashboardPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get("session_id");
-    if (sessionId && user && user.subscriptionStatus === "FREE") {
-      setVerifyingPayment(true);
-      paymentsApi
-        .verifySession(sessionId)
-        .then((updatedUser) => {
-          setUser(updatedUser);
-          setPaymentVerified(true);
-          window.history.replaceState({}, "", "/dashboard");
-        })
-        .catch(() => {})
-        .finally(() => setVerifyingPayment(false));
-    }
-  }, [user, setUser]);
+    if (!sessionId || paymentVerified) return;
+
+    setVerifyingPayment(true);
+    let cancelled = false;
+
+    const poll = async () => {
+      if (cancelled) return;
+      try {
+        const sub = await paymentsApi.getSubscription();
+        if (sub.subscriptionStatus !== "FREE") {
+          const me = await authApi.getMe();
+          if (!cancelled) {
+            setUser(me);
+            setPaymentVerified(true);
+            setVerifyingPayment(false);
+            window.history.replaceState({}, "", "/dashboard");
+          }
+          return;
+        }
+      } catch {}
+      if (!cancelled) setTimeout(poll, 2000);
+    };
+
+    poll();
+    return () => { cancelled = true; };
+  }, [paymentVerified, setUser]);
 
   const todayQuote = "Action is the foundational key to all success.";
 
@@ -142,6 +154,8 @@ export default function DashboardPage() {
         </div>
       )}
 
+
+
       {user.subscriptionStatus === "FREE" && !paymentVerified && !verifyingPayment && (
         <div className="mb-8 p-4 bg-[#ffb800]/5 border border-[#ffb800]/20 rounded-xl flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -150,27 +164,20 @@ export default function DashboardPage() {
               Already paid?{" "}
               <button
                 onClick={async () => {
-                  setActivating(true);
-                  setActivateError(null);
                   try {
-                    const updatedUser = await paymentsApi.activatePending();
-                    setUser(updatedUser);
-                  } catch (err) {
-                    setActivateError(err instanceof Error ? err.message : "No pending payment found");
-                  } finally {
-                    setActivating(false);
-                  }
+                    const sub = await paymentsApi.getSubscription();
+                    if (sub.subscriptionStatus !== "FREE") {
+                      const me = await authApi.getMe();
+                      setUser(me);
+                    }
+                  } catch {}
                 }}
-                disabled={activating}
-                className="text-[#ffb800] font-bold hover:underline bg-transparent border-none cursor-pointer disabled:opacity-50"
+                className="text-[#ffb800] font-bold hover:underline bg-transparent border-none cursor-pointer"
               >
-                {activating ? "Checking..." : "Activate your subscription"}
+                Check subscription status
               </button>
             </p>
           </div>
-          {activateError && (
-            <span className="text-[0.75rem] text-red-400 shrink-0">{activateError}</span>
-          )}
         </div>
       )}
 

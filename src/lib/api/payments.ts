@@ -1,5 +1,4 @@
 import { api } from "@/lib/axios";
-import type { User } from "@/lib/types";
 
 export interface CheckoutResponse {
   url: string;
@@ -10,6 +9,11 @@ export interface SubscriptionInfo {
   subscriptionStatus: string;
   subscriptionEnd: string | null;
   stripeCustomerId: string | null;
+  stripeSubscriptionId: string | null;
+}
+
+export interface PortalResponse {
+  url: string;
 }
 
 export interface PaymentHistory {
@@ -32,15 +36,12 @@ export const paymentsApi = {
   upgradeSubscription: (planType: "MONTHLY" | "YEARLY" | "LIFETIME") =>
     api.post<UpgradeResult>("/payments/upgrade", { planType }).then(r => r.data),
 
-  verifySession: (sessionId: string) =>
-    api.post<User>("/payments/verify-session", { sessionId }).then(r => r.data),
-
-  activatePending: () =>
-    api.post<User>("/payments/activate-pending").then(r => r.data),
-
   getSubscription: () =>
     api.get<SubscriptionInfo>("/payments/subscription").then(r => r.data),
 
   getHistory: () =>
     api.get<PaymentHistory[]>("/payments/history").then(r => r.data),
+
+  createPortalSession: () =>
+    api.post<PortalResponse>("/payments/portal").then(r => r.data),
 };

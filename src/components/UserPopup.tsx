@@ -2,8 +2,9 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, LogOut, X } from "lucide-react";
+import { Settings, LogOut, X, Crown } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { paymentsApi } from "@/lib/api/payments";
 
 const ALL_CATEGORIES = [
   "mindset", "clarity", "habit", "focus",
@@ -92,6 +93,22 @@ export default function UserPopup() {
 
             {!editing ? (
               <div className="p-3">
+                {user.subscriptionStatus !== "FREE" && (
+                  <div className="mb-2 px-3 py-2.5 bg-[#fbbf24]/5 border border-[#fbbf24]/15 rounded-lg flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Crown size={14} className="text-[#fbbf24] flex-shrink-0" />
+                      <span className="text-xs font-semibold text-[#fbbf24] truncate">
+                        {user.subscriptionStatus === "LIFETIME" ? "Lifetime" : user.subscriptionStatus === "YEARLY" ? "Yearly" : "Monthly"}
+                      </span>
+                    </div>
+                    <button
+                      onClick={async (e) => { e.stopPropagation(); try { const { url } = await paymentsApi.createPortalSession(); window.location.href = url; } catch {} }}
+                      className="text-[0.625rem] text-[#888] hover:text-white bg-transparent border border-white/10 hover:border-white/20 rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0"
+                    >
+                      Manage
+                    </button>
+                  </div>
+                )}
                 <button
                   onClick={() => { setEditing(true); setSelected(preferences); }}
                   className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { Play, Network, Headphones, BookOpen, Bookmark, Crown, Lock } from "lucide-react";
+import { Play, Network, Headphones, BookOpen, Bookmark, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ReactFlow, Handle, Position, ReactFlowProvider, useReactFlow } from "@xyflow/react";
@@ -118,13 +118,6 @@ export function ModuleCard({ module }: { module: ModuleData }) {
       onClick={handleClick}
       className="group relative flex flex-col bg-[#080808] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-[#0c0c0c] hover:border-white/10 hover:-translate-y-1 cursor-pointer"
     >
-      {module.isPremium && !module.isDailyFree && (
-        <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5 px-2.5 py-1 bg-[#ffb800]/10 border border-[#ffb800]/30 rounded-full">
-          <Crown size={11} className="text-[#ffb800]" />
-          <span className="text-[0.625rem] font-bold text-[#ffb800] uppercase tracking-wider">Premium</span>
-        </div>
-      )}
-
       {!isAccessible && (
         <div className="absolute inset-0 z-20 bg-[#080808]/60 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
           <Link href="/#pricing" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#ffb800] text-black rounded-xl font-bold text-[0.8125rem] no-underline hover:bg-[#ffb800]/90 transition-all">

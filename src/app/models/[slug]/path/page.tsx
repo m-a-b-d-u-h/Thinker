@@ -78,38 +78,20 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
   }, [module, completedNodes]);
 
   if (isLoading) {
-    return <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-10 md:pt-16 flex justify-center"><div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>;
+    return <div className="w-full h-dvh flex items-center justify-center bg-[#050505]"><div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>;
   }
 
   if (!module) notFound();
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-10 md:pt-16">
-      <div className="max-w-[900px] mx-auto">
-        <header className="mb-8">
-          <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000', marginBottom: '1rem' }}>{module.category}</span>
-          <h1 className="text-4xl font-bold text-white mt-4 mb-2">Implementation Path: {module.title}</h1>
-          <p className="text-lg text-[#666]">Visualize your progress through the knowledge graph</p>
-        </header>
-
-        <div className="h-[400px] md:h-[600px] bg-[#050505] rounded-3xl overflow-hidden border border-white/5">
-          <Flow nodes={styledNodes} edges={module.edges} />
-        </div>
-
-        <div className="mt-4 flex items-center gap-6">
-          <div className="flex items-center gap-2 text-[0.75rem] text-[#666]">
-            <div className="w-3 h-3 rounded-sm bg-[#1a3a1a] border border-green-500" />
-            Completed ({completedNodes.length})
-          </div>
-          <div className="flex items-center gap-2 text-[0.75rem] text-[#666]">
-            <div className="w-3 h-3 rounded-sm bg-[#111] border border-[#222]" />
-            Pending ({module.nodes.length - completedNodes.length})
-          </div>
-          <div className="flex-1" />
-          <div className="text-[0.75rem] text-[#444] font-semibold">
-            {Math.round((completedNodes.length / module.nodes.length) * 100)}% Complete
-          </div>
-        </div>
+    <div className="w-full h-dvh bg-[#050505] relative overflow-hidden">
+      <div className="absolute inset-0">
+        <Flow nodes={styledNodes} edges={module.edges} />
+      </div>
+      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-[#050505] via-[#050505]/80 to-transparent pt-2 pb-2 px-6 text-center">
+        <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000' }}>{module.category}</span>
+        <h1 className="text-3xl font-bold text-white mt-4 leading-tight">Implementation Path: {module.title}</h1>
+        <p className="text-base text-[#666] mt-2">Visualize your progress through the knowledge graph</p>
       </div>
     </div>
   );

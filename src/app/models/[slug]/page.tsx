@@ -2,12 +2,12 @@
 
 import { notFound } from "next/navigation";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { ReactFlow, Background } from "@xyflow/react";
-import "@xyflow/react/dist/style.css";
-import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X, Crown, Lock, Sparkles } from "lucide-react";
+
+import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X, Crown, Lock, Sparkles, Star } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { progressApi } from "@/lib/api/progress";
+import { reviewsApi } from "@/lib/api/reviews";
 import { useAuth } from "@/lib/auth-context";
 import { useModule, useRecommended, useProgress, useCreateHighlight } from "@/lib/query-hooks";
 
@@ -39,6 +39,26 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
   const [note, setNote] = useState("");
   const createHighlight = useCreateHighlight();
+
+  const [rating, setRating] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(false);
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+
+  const handleSubmitFeedback = async () => {
+    if (!rating || feedbackSubmitting) return;
+    setFeedbackSubmitting(true);
+    setFeedbackError(false);
+    try {
+      await reviewsApi.create({ moduleSlug: slug, rating, comment: feedback || undefined });
+      setFeedbackSubmitted(true);
+    } catch {
+      setFeedbackError(true);
+    } finally {
+      setFeedbackSubmitting(false);
+    }
+  };
 
   const synthRef = useRef<SpeechSynthesis | null>(null);
   if (typeof window !== 'undefined' && !synthRef.current) {
@@ -515,21 +535,52 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           </Link>
         </div>
 
-        {module.nodes && module.nodes.length > 0 && (
-          <div className="text-left">
-            <h3 className="text-lg font-bold text-white mb-4">Preview Knowledge Graph</h3>
-            <div className="h-[200px] bg-[#050505] rounded-2xl overflow-hidden border border-white/5">
-              <ReactFlow
-                nodes={module.nodes.map(n => ({ ...n, style: { ...n.style, opacity: 0.4 } }))}
-                edges={module.edges || []}
-                fitView
-                proOptions={{ hideAttribution: true }}
-              >
-                <Background color="#111" gap={20} size={0.5} />
-              </ReactFlow>
-            </div>
+        <div className="max-w-[65ch] mx-auto mt-12">
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 text-left">
+            {feedbackSubmitted ? (
+              <div className="text-center py-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
+                  <CheckCircle2 size={20} className="text-emerald-500" />
+                </div>
+                <p className="text-sm font-semibold text-white">Thank you for your feedback!</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-5">
+                  <Sparkles size={15} className="text-[#fbbf24]" />
+                  <span className="text-[0.6875rem] font-bold text-[#fbbf24] uppercase tracking-[0.1em]">Feedback</span>
+                </div>
+                <p className="text-[0.875rem] text-[#888] mb-5">How was your experience?</p>
+                <div className="flex gap-1.5 mb-6 justify-center">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button key={star} onClick={() => { setRating(star); setFeedbackError(false); }}
+                      className={`w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
+                        (rating ?? 0) >= star
+                          ? "bg-[#fbbf24] text-black shadow-lg shadow-[#fbbf24]/20 scale-110"
+                          : "bg-white/5 text-[#555] hover:bg-white/10 hover:text-white hover:scale-105"
+                      }`}
+                    >
+                      <Star size={22} fill={(rating ?? 0) >= star ? "currentColor" : "none"} />
+                    </button>
+                  ))}
+                </div>
+                {feedbackError && (
+                  <p className="text-[0.75rem] text-red-400 mb-3 text-center">Failed to submit. Please try again.</p>
+                )}
+                <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)}
+                  placeholder="Tell us more (optional)..."
+                  rows={3}
+                  className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-[0.875rem] text-white outline-none resize-none mb-3 placeholder:text-[#888]"
+                />
+                <button onClick={handleSubmitFeedback} disabled={!rating || feedbackSubmitting}
+                  className="w-full py-3 bg-white text-black rounded-xl font-bold text-[0.8125rem] cursor-pointer hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  {feedbackSubmitting ? "Submitting..." : "Submit Feedback"}
+                </button>
+              </>
+            )}
           </div>
-        )}
+        </div>
       </div>
     );
   }
@@ -767,6 +818,59 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           <CheckCircle2 size={16} />
           {isCompleted ? "Completed" : "Mark as Complete"}
         </button>
+      </div>
+
+      <div className="max-w-[65ch] mx-auto mb-12">
+        <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6">
+          {feedbackSubmitted ? (
+            <div className="text-center py-4">
+              <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
+                <CheckCircle2 size={20} className="text-emerald-500" />
+              </div>
+              <p className="text-sm font-semibold text-white">Thank you for your feedback!</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-2 mb-5">
+                <Sparkles size={15} className="text-[#fbbf24]" />
+                <span className="text-[0.6875rem] font-bold text-[#fbbf24] uppercase tracking-[0.1em]">
+                  Feedback
+                </span>
+              </div>
+              <p className="text-[0.875rem] text-[#888] mb-5">How was your experience?</p>
+              <div className="flex gap-1.5 mb-6 justify-center">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button key={star} onClick={() => { setRating(star); setFeedbackError(false); }}
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
+                      (rating ?? 0) >= star
+                        ? "bg-[#fbbf24] text-black shadow-lg shadow-[#fbbf24]/20 scale-110"
+                        : "bg-white/5 text-[#555] hover:bg-white/10 hover:text-white hover:scale-105"
+                    }`}
+                  >
+                    <Star size={22} fill={(rating ?? 0) >= star ? "currentColor" : "none"} />
+                  </button>
+                ))}
+              </div>
+              {feedbackError && (
+                <p className="text-[0.75rem] text-red-400 mb-3 text-center">Failed to submit. Please try again.</p>
+              )}
+              <textarea
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                placeholder="Tell us more (optional)..."
+                rows={3}
+                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-[0.875rem] text-white outline-none resize-none mb-3 placeholder:text-[#888]"
+              />
+              <button
+                onClick={handleSubmitFeedback}
+                disabled={!rating || feedbackSubmitting}
+                className="w-full py-3 bg-white text-black rounded-xl font-bold text-[0.8125rem] cursor-pointer hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                {feedbackSubmitting ? "Submitting..." : "Submit Feedback"}
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-[#050505cc] backdrop-blur-[30px] border-t border-[var(--border)] z-[1000] py-4 md:py-6 shadow-2xl shadow-black/50">

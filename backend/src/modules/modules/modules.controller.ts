@@ -23,7 +23,8 @@ export namespace ModulesController {
   export async function getBySlug(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const slug = req.params.slug as string;
-      const mod = await ModulesService.getBySlug(slug, req.user?.userId);
+      const admin = req.query.admin === "true";
+      const mod = await ModulesService.getBySlug(slug, req.user?.userId, admin);
       res.json(mod);
     } catch (err) {
       next(err);
@@ -63,6 +64,35 @@ export namespace ModulesController {
       const slug = req.params.slug as string;
       const recommendations = await ModulesService.getRecommended(slug);
       res.json(recommendations);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  export async function create(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const mod = await ModulesService.create(req.body);
+      res.status(201).json(mod);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  export async function update(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const slug = req.params.slug as string;
+      const mod = await ModulesService.update(slug, req.body);
+      res.json(mod);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  export async function remove(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const slug = req.params.slug as string;
+      await ModulesService.remove(slug);
+      res.json({ success: true });
     } catch (err) {
       next(err);
     }

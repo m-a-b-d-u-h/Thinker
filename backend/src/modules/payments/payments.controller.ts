@@ -4,29 +4,6 @@ import type { AuthRequest } from "../../types";
 import type { CreateCheckoutInput } from "./payments.schema";
 
 export namespace PaymentsController {
-  export async function verifySession(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const { sessionId } = req.body as { sessionId: string };
-      if (!sessionId) {
-        res.status(400).json({ error: "Missing sessionId" });
-        return;
-      }
-      const user = await PaymentsService.verifySession(req.user!.userId, sessionId);
-      res.json(user);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  export async function activatePending(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const user = await PaymentsService.activatePending(req.user!.userId);
-      res.json(user);
-    } catch (err) {
-      next(err);
-    }
-  }
-
   export async function upgradeSubscription(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const { planType } = req.body as { planType: "MONTHLY" | "YEARLY" | "LIFETIME" };
@@ -77,8 +54,18 @@ export namespace PaymentsController {
 
   export async function getHistory(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const history = await PaymentsService.getHistory(req.user!.userId);
+      const all = req.query.all === "true";
+      const history = await PaymentsService.getHistory(req.user!.userId, all);
       res.json(history);
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  export async function createPortalSession(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await PaymentsService.createPortalSession(req.user!.userId);
+      res.json(result);
     } catch (err) {
       next(err);
     }
