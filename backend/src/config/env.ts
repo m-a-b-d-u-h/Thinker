@@ -25,4 +25,8 @@ export const env = {
     clientId: process.env.GOOGLE_CLIENT_ID || "",
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
   },
+
+  gemini: {
+    apiKey: process.env.GEMINI_API_KEY || "",
+  },
 } as const;

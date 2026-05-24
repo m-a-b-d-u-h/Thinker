@@ -16,15 +16,15 @@ const CustomNode = ({ data }: { data: any }) => (
       ? 'bg-[#1a3a1a] border border-green-500 text-[#86efac]'
       : 'bg-[#0d0d0d]/90 text-white border border-[#333] backdrop-blur-sm'
   }`}>
-    <Handle type="target" position={Position.Top} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
+    <Handle type="target" position={Position.Top} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" isConnectable={false} />
     {data.label}
-    <Handle type="source" position={Position.Bottom} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
+    <Handle type="source" position={Position.Bottom} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" isConnectable={false} />
   </div>
 );
 
 const nodeTypes = { custom: CustomNode };
 
-const Flow = React.memo(({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
+const Flow = React.memo(({ nodes: initialNodes, edges }: { nodes: any[]; edges: any[] }) => {
   const reactFlowInstance = useRef<any>(null);
 
   const styledEdges = useMemo(() => edges.map(e => ({
@@ -41,13 +41,13 @@ const Flow = React.memo(({ nodes, edges }: { nodes: any[]; edges: any[] }) => {
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [nodes]);
+  }, [initialNodes]);
 
   return (
     <div className="w-full h-full">
       <ReactFlow
-        nodes={nodes}
-        edges={styledEdges}
+        defaultNodes={initialNodes}
+        defaultEdges={styledEdges}
         nodeTypes={nodeTypes}
         proOptions={{ hideAttribution: true }}
         onInit={(instance) => { reactFlowInstance.current = instance; }}

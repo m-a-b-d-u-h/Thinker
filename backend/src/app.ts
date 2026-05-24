@@ -17,6 +17,7 @@ import quizRoutes from "./modules/quiz/quiz.routes";
 import actionsRoutes from "./modules/actions/actions.routes";
 import paymentsRoutes from "./modules/payments/payments.routes";
 import reviewsRoutes from "./modules/reviews/reviews.routes";
+import aiRoutes from "./modules/ai/ai.routes";
 
 const app = express();
 
@@ -92,6 +93,7 @@ app.use("/api/quiz", quizRoutes);
 app.use("/api/actions", actionsRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/reviews", reviewsRoutes);
+app.use("/api/ai", aiRoutes);
 
 // 404 handler
 app.use((_req, res) => {

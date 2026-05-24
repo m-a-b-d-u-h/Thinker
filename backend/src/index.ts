@@ -1,11 +1,14 @@
 import app from "./app";
 import { env } from "./config/env";
 import { prisma } from "./lib/prisma";
+import { AiCron } from "./modules/ai/ai.cron";
 
 async function main() {
   try {
     await prisma.$connect();
     console.log("Database connected");
+
+    AiCron.restoreOnStartup();
 
     app.listen(env.port, () => {
       console.log(`Server running on http://localhost:${env.port}`);

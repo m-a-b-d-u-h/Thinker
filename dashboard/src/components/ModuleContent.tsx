@@ -68,7 +68,7 @@ export default function ModuleContent({
           return (
             <p
               key={idx}
-              className="text-xl text-[#666] italic mb-12 leading-relaxed"
+              className="text-xl text-[#aaa] mb-12 leading-relaxed"
             >
               {block.text}
             </p>
@@ -77,14 +77,14 @@ export default function ModuleContent({
           return (
             <h2
               key={idx}
-              className="text-3xl font-bold text-white mb-6 mt-12 pb-3 border-b border-[#1a1a1a]"
+              className="text-3xl font-bold text-white mb-6 mt-12 pb-3 border-b border-white/10"
             >
               {block.text}
             </h2>
           );
         if (block.type === "h3")
           return (
-            <h3 key={idx} className="text-xl text-[#999] mb-4 mt-8">
+            <h3 key={idx} className="text-xl font-semibold text-white/70 mb-4 mt-8">
               {block.text}
             </h3>
           );
@@ -92,13 +92,13 @@ export default function ModuleContent({
           return (
             <li
               key={idx}
-              className="text-lg text-[#888] mb-3 ml-6 list-disc"
+              className="text-lg text-white/70 mb-3 ml-6 list-disc marker:text-white/30"
             >
               {block.text}
             </li>
           );
         return (
-          <p key={idx} className="text-lg text-[#888] mb-6 leading-[1.8]">
+          <p key={idx} className="text-lg text-white/70 mb-6 leading-[1.8]">
             {block.text}
           </p>
         );
