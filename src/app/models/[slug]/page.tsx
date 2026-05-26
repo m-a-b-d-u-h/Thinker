@@ -3,16 +3,13 @@
 import { notFound } from "next/navigation";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 
-import { ArrowRight, RotateCcw, CheckCircle2, Highlighter, X, Crown, Lock, Sparkles, Star, Play } from "lucide-react";
-import { motion } from "framer-motion";
+import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X, Crown, Lock, Sparkles, Star } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { progressApi } from "@/lib/api/progress";
 import { reviewsApi } from "@/lib/api/reviews";
-import { favoritesApi } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/auth-context";
-import { useModule, useRecommended, useProgress, useCreateHighlight, useToggleFavorite } from "@/lib/query-hooks";
-import { useTheme, fontSizeMap, lineHeightMap, fontFamilyMap, marginMap } from "@/contexts/ThemeContext";
-import ModuleFloatingBar from "@/components/ModuleFloatingBar";
+import { useModule, useRecommended, useProgress, useCreateHighlight } from "@/lib/query-hooks";
 
 export default function ModulePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
@@ -42,21 +39,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const [selection, setSelection] = useState<{ text: string; x: number; y: number } | null>(null);
   const [note, setNote] = useState("");
   const createHighlight = useCreateHighlight();
-  const toggleFavorite = useToggleFavorite();
-
-  const { readingPrefs } = useTheme();
-
-  const fontSize = fontSizeMap[readingPrefs.fontSize];
-  const lineH = lineHeightMap[readingPrefs.lineHeight];
-  const fontFam = fontFamilyMap[readingPrefs.fontFamily];
-  const maxW = marginMap[readingPrefs.margin];
-
-  const isFavorited = module?.isFavorited ?? false;
-
-  const handleToggleFavorite = () => {
-    if (!user) return;
-    toggleFavorite.mutate({ slug, isFavorited });
-  };
 
   const [rating, setRating] = useState<number | null>(null);
   const [feedback, setFeedback] = useState("");
@@ -690,26 +672,16 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   };
 
   return (
-    <>
-    <div className="mx-auto px-4 pb-[220px] pt-8" style={{ maxWidth: "var(--content-max-width, 1100px)" }}>
+    <div className="max-w-[1100px] mx-auto px-4 pb-[180px] pt-8">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
-        <article
-          ref={articleRef}
-          className="mx-auto w-full"
-          style={{
-            maxWidth: maxW,
-            fontSize,
-            lineHeight: lineH,
-            fontFamily: fontFam,
-          }}
-        >
+        <article ref={articleRef} className="max-w-[65ch] mx-auto w-full">
           {contentBlocks.map((block, idx) => (
             <HighlightBlock key={idx} block={block} />
           ))}
         </article>
 
-        <div className="hidden lg:block sticky top-[100px] pl-6 border-l" style={{ borderColor: "var(--border)" }}>
-          <div className="text-[0.6875rem] font-semibold uppercase tracking-[0.1em] mb-6" style={{ color: "var(--muted-dark)" }}>Contents</div>
+        <div className="hidden lg:block sticky top-[100px] pl-6 border-l border-[#333]">
+          <div className="text-[0.6875rem] font-semibold text-[#444] uppercase tracking-[0.1em] mb-6">Contents</div>
           <nav className="flex flex-col gap-3">
             {contentBlocks
               .filter(b => b.type === 'h2' || b.type === 'h3')
@@ -901,27 +873,69 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
         </div>
       </div>
 
-      </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-[#050505cc] backdrop-blur-[30px] border-t border-[var(--border)] z-[1000] py-4 md:py-6 shadow-2xl shadow-black/50">
+        <div className="mx-auto w-full max-w-[1200px] px-3 md:px-6 flex flex-col gap-3 md:gap-5">
+          <div className="flex items-center gap-3 md:gap-5">
+            <span className="text-[0.75rem] text-[#555] min-w-[32px] md:min-w-[40px] tabular-nums">
+              {durationInfo.currentFormatted(progress)}
+            </span>
+            <div className="relative flex-grow h-1 bg-[#1a1a1a] rounded-sm">
+              <div className="absolute left-0 top-0 h-full bg-white rounded-sm" style={{ width: `${progress}%` }} />
+              <input
+                type="range" min="0" max="100" value={progress}
+                onChange={(e) => {
+                  const p = parseInt(e.target.value); setProgress(p);
+                }}
+                onMouseUp={(e) => { if (isPlaying) startSpeech(Math.floor((parseInt((e.target as HTMLInputElement).value) / 100) * unifiedCleanText.length), unifiedCleanText, volume, rate, selectedVoice); }}
+                className="absolute top-[-10px] left-0 w-full h-6 opacity-0 cursor-pointer z-5"
+              />
+              <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] pointer-events-none" style={{ left: `${progress}%` }} />
+            </div>
+            <span className="text-[0.75rem] text-[#555] min-w-[32px] md:min-w-[40px] tabular-nums">
+              {durationInfo.totalFormatted}
+            </span>
+          </div>
 
-      <ModuleFloatingBar
-        isPlaying={isPlaying}
-        onTogglePlay={toggleSpeech}
-        progress={progress}
-        durationInfo={durationInfo}
-        voices={voices}
-        selectedVoice={selectedVoice}
-        onVoiceChange={updateVoice}
-        showVoiceList={showVoiceList}
-        onToggleVoiceList={() => setShowVoiceList(!showVoiceList)}
-        rate={rate}
-        onRateChange={updateRate}
-        volume={volume}
-        onVolumeChange={updateVolume}
-        showSettings={showSettings}
-        onToggleSettings={() => setShowSettings(!showSettings)}
-        isFavorited={isFavorited}
-        onToggleFavorite={handleToggleFavorite}
-      />
+          <div className="flex items-center justify-between">
+            <div className="flex gap-2 md:gap-6 items-center flex-1">
+              <div className="relative">
+                <button onClick={() => setShowVoiceList(!showVoiceList)} className="bg-transparent border-none text-[#888] flex items-center gap-1 md:gap-2 cursor-pointer text-[0.75rem] md:text-[0.875rem]">
+                  <Volume2 size={16} className="md:block" />
+                  <span className="hidden md:inline">{selectedVoice ? voices.find(v => v.name === selectedVoice)?.displayName || "Voice" : "Voice"}</span>
+                  <ChevronUp size={12} className={`md:block transition-transform duration-300 ${showVoiceList ? '' : 'rotate-180'}`} />
+                </button>
+                <AnimatePresence>
+                  {showVoiceList && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute bottom-[150%] left-0 w-[160px] md:w-[180px] max-h-[200px] md:max-h-[250px] overflow-y-auto bg-[#111] border border-[#222] rounded-xl p-2 shadow-2xl shadow-black/80 z-[1001]">
+                      {voices.map((voice: any) => (
+                        <button key={voice.name} onClick={() => { setShowVoiceList(false); updateVoice(voice.name); }} className={`w-full px-2 md:px-3 py-2 text-left text-[0.75rem] md:text-[0.8125rem] rounded-lg cursor-pointer ${selectedVoice === voice.name ? 'text-white bg-[#1a1a1a]' : 'text-[#666] hover:bg-[#1a1a1a]'}`}>{voice.displayName}</button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+              <div className="flex items-center gap-1 md:gap-2 text-[#444]">
+                <FastForward size={14} className="md:block" />
+                <select value={rate} onChange={(e) => updateRate(parseFloat(e.target.value))} className="bg-transparent border-none text-[#888] text-[0.75rem] md:text-[0.8125rem] cursor-pointer outline-none">
+                  <option value="0.8">0.8x</option><option value="1">1.0x</option><option value="1.2">1.2x</option><option value="1.5">1.5x</option>
+                </select>
+              </div>
+            </div>
+            <div className="flex gap-3 md:gap-6 items-center flex-1 justify-center">
+              <button onClick={toggleSpeech} className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white text-black flex items-center justify-center border-none cursor-pointer shadow-lg shadow-white/20">
+                {isPlaying ? <Square size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
+              </button>
+            </div>
+            <div className="flex gap-2 md:gap-6 items-center flex-1 justify-end">
+              <div className="hidden md:flex items-center gap-3">
+                <Volume2 size={18} className="text-[#444]" />
+                <input type="range" min="0" max="1" step="0.1" value={volume} onChange={(e) => updateVolume(parseFloat(e.target.value))} className="w-[80px] md:w-[100px] h-0.5 accent-white cursor-pointer" />
+              </div>
+              <button className="text-[#444] bg-transparent border-none cursor-pointer" onClick={() => setShowSettings(!showSettings)}><Settings2 size={18} className="md:text-[20px]" /></button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {selection && (
         <div
@@ -955,6 +969,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           </button>
         </div>
       )}
-    </>
+    </div>
   );
 }

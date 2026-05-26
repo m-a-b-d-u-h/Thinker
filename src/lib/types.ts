@@ -52,7 +52,6 @@ export interface Module {
   questions?: Question[];
   _count?: { questions: number };
   locked?: boolean;
-  isFavorited?: boolean;
 }
 
 export interface ModuleListItem {
