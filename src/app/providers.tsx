@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
 import { useAuthStore } from "@/lib/store/auth";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   const validateToken = useAuthStore((s) => s.validateToken);
@@ -15,7 +16,7 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
         <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     );
@@ -40,19 +41,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthInitializer>
-        {children}
-      </AuthInitializer>
-      <Toaster
-        position="bottom-center"
-        toastOptions={{
-          style: {
-            background: "#111",
-            color: "#fff",
-            border: "1px solid rgba(255,255,255,0.1)",
-          },
-        }}
-      />
+      <ThemeProvider>
+        <AuthInitializer>
+          {children}
+        </AuthInitializer>
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            style: {
+              background: "var(--bg-elevated)",
+              color: "var(--text)",
+              border: "1px solid var(--border)",
+            },
+          }}
+        />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
