@@ -128,12 +128,17 @@ function parseResponse(raw: string) {
     return (e === -1 ? raw.slice(from) : raw.slice(from, e)).trim();
   };
 
-  const title = getSection("###TITLE###", "###DESC###");
+  let title = getSection("###TITLE###", "###DESC###");
   const description = getSection("###DESC###", "###CONTENT###");
   const content = getSection("###CONTENT###", "###NODES###");
   const nodesRaw = getSection("###NODES###", "###EDGES###");
   const edgesRaw = getSection("###EDGES###", "###QUESTIONS###");
   const questionsRaw = getSection("###QUESTIONS###", "");
+
+  if (!title) {
+    const firstLine = raw.split("\n").find((l) => l.trim().length > 0 && !l.startsWith("#"));
+    if (firstLine) title = firstLine.trim();
+  }
 
   let nodes: any[] = [];
   let edges: any[] = [];
@@ -191,8 +196,9 @@ ALREADY COVERED TOPICS (DO NOT repeat these titles): ${existingTitles.join(", ")
 
 Generate a fresh, unique topic within "${category}" that is NOT in the list above. Title must be between 2 and 7 words.
 
-Use EXACTLY this format with the given section markers. Put each section on its own lines:
+CRITICAL — You MUST follow this exact format STRICTLY. Every single marker (###TITLE###, ###DESC###, ###CONTENT###, ###NODES###, ###EDGES###, ###QUESTIONS###) MUST appear exactly as shown. Do not add, remove, or modify any marker. Do not add extra text before ###TITLE### or after ###QUESTIONS###.
 
+=== START OF FORMAT ===
 ###TITLE###
 [Short punchy title, 2-7 words]
 
@@ -203,10 +209,13 @@ Use EXACTLY this format with the given section markers. Put each section on its 
 [Full markdown content, 5000-10000 characters. Use ## for sections, ### for subsections, - for bullet points. NO greetings, NO welcome, DO NOT repeat the title. Dive straight in. Every concept MUST have a real-life example.]
 
 ###NODES###
-[Valid JSON array of 3-7 nodes: [{"id":"topic-1","label":"Word","positionX":100,"positionY":0}]]
-Structure: 1 START node → several PROCESS nodes (can branch) → 1 END node.
+[Valid JSON array of 3-7 nodes: [{"id":"topic-1","label":"Word","type":"start|process|end","positionX":0,"positionY":0}]]
+Structure: EXACTLY 1 node with type "start" → 1-5 nodes with type "process" (can branch) → EXACTLY 1 node with type "end".
+Spacing rules:
+- START node: positionX = 0, positionY = 0
+- PROCESS nodes: positionX increases by 200-300 per depth level, positionY varies by 150-200 for branching nodes at same depth
+- END node: positionX = last process X + 200-300, positionY = same as START Y (0)
 Each label: 1-2 simple words only, no jargon.
-positionX increases as the flow progresses. Branching nodes can be at same X but different Y.
 
 ###EDGES###
 [Valid JSON array connecting the flow]
@@ -216,16 +225,19 @@ Each edge label: 1-3 simple words.
 
 ###QUESTIONS###
 [Valid JSON array of 3-5 questions: [{"question":"...","options":["A","B","C","D"],"correctAnswer":0,"explanation":"..."}]]
+=== END OF FORMAT ===
+
+WARNING: Your output is parsed by a machine. If you omit ANY marker (###TITLE###, ###DESC###, ###CONTENT###, ###NODES###, ###EDGES###, ###QUESTIONS###), the entire response will be REJECTED and your work will be wasted. The title line must be non-empty, between 2-7 words, and placed directly after ###TITLE### on the very next line.
 
 REQUIREMENTS:
 - Content: 5000-10000 characters, NO title repeat, NO greetings
 - Title: 2-7 words, unique (not in ALREADY COVERED TOPICS)
-- 3-7 nodes: 1 START → several PROCESS (can branch) → 1 END
+- 3-7 nodes: exactly 1 type "start" → 1-5 type "process" (can branch) → exactly 1 type "end"
 - Each node label: 1-2 simple words only (e.g. "Overthinking" not "The Spiral of Overthinking"), avoid 3+ words
 - Edges: START connects to first processes, processes can branch, ALL paths lead to END
 - No cycles, no dead ends. Every node must connect to END somehow
 - Edge labels: 1-3 simple words per connection
-- positionX increases with flow depth, branch nodes share similar X with different Y
+- Node spacing: X gap = 200-300 between depth levels, Y gap = 150-200 for branching nodes
 - 3-5 questions, correctAnswer is 0-based index
 - Tone: direct, premium, persuasive, easy to digest yet high-value
 - Every concept MUST include a concrete real-life example

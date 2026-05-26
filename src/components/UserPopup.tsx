@@ -2,9 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, LogOut, X, Crown } from "lucide-react";
+import { Settings, LogOut, X, Crown, PencilLine } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { paymentsApi } from "@/lib/api/payments";
+import { progressApi } from "@/lib/api/progress";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const ALL_CATEGORIES = [
   "mindset", "clarity", "habit", "focus",
@@ -16,12 +19,42 @@ const ALL_CATEGORIES = [
 ];
 
 export default function UserPopup() {
-  const { user, logout, preferences, setPreferences } = useAuth();
+  const { user, logout, preferences, setPreferences, setUser } = useAuth();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [savingName, setSavingName] = useState(false);
   const [selected, setSelected] = useState<string[]>(preferences);
   const [saving, setSaving] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
+
+  const { data: stats } = useQuery({
+    queryKey: ["popup-stats"],
+    queryFn: () => progressApi.getStats(),
+    enabled: !!user,
+    staleTime: 30 * 1000,
+  });
+
+  const handleRename = async () => {
+    const trimmed = nameInput.trim();
+    if (!trimmed || trimmed === user?.name) {
+      setRenaming(false);
+      return;
+    }
+    setSavingName(true);
+    try {
+      const { authApi } = await import("@/lib/api/auth");
+      const updated = await authApi.updateProfile({ name: trimmed });
+      setUser(updated);
+      setRenaming(false);
+      toast.success("Name updated");
+    } catch {
+      toast.error("Failed to update name");
+    } finally {
+      setSavingName(false);
+    }
+  };
 
   useEffect(() => {
     setSelected(preferences);
@@ -60,13 +93,16 @@ export default function UserPopup() {
 
   if (!user) return null;
 
+  const name = user.name || user.email || "";
+  const shortName = name.length > 15 ? name.slice(0, 15) + "..." : name;
+
   return (
     <div className="relative" ref={popupRef}>
       <button
-        onClick={() => { setOpen(!open); setEditing(false); }}
+        onClick={() => { setOpen(!open); setEditing(false); setRenaming(false); }}
         className="flex items-center gap-2 px-3 py-1.5 rounded border border-white/8 text-gray-400 text-sm font-medium transition-colors hover:text-white hover:border-white/15 hover:bg-white/3 cursor-pointer"
       >
-        <span>{user.name || user.email}</span>
+        <span>{shortName}</span>
       </button>
 
       <AnimatePresence>
@@ -79,17 +115,54 @@ export default function UserPopup() {
             className="absolute right-0 top-full mt-2 w-80 bg-[#0c0c0c] border border-white/10 rounded-xl shadow-2xl shadow-black/60 overflow-hidden z-50"
           >
             <div className="p-4 border-b border-white/5">
-              <div className="flex items-center gap-3">
-                <div className="min-w-0">
-                  <div className="text-sm font-bold text-white truncate">
-                    {user.name || "User"}
-                  </div>
+              <div className="min-w-0">
+                  {renaming ? (
+                    <form
+                      onSubmit={(e) => { e.preventDefault(); handleRename(); }}
+                      className="flex items-center gap-1"
+                    >
+                      <input
+                        autoFocus
+                        value={nameInput}
+                        onChange={(e) => setNameInput(e.target.value)}
+                        className="flex-1 bg-white/10 border border-white/20 rounded px-2 py-1 text-sm text-white outline-none"
+                        placeholder="Your name"
+                      />
+                      <button
+                        type="submit"
+                        disabled={savingName}
+                        className="text-xs font-bold text-black bg-white px-2 py-1 rounded hover:opacity-80 transition-opacity cursor-pointer disabled:opacity-30"
+                      >
+                        {savingName ? "..." : "Save"}
+                      </button>
+                    </form>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-bold text-white truncate">
+                        {user.name || "User"}
+                      </div>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setRenaming(true); setNameInput(user.name || ""); }}
+                        className="text-gray-500 hover:text-white transition-colors cursor-pointer shrink-0"
+                      >
+                        <PencilLine size={13} />
+                      </button>
+                    </div>
+                  )}
                   <div className="text-xs text-gray-500 truncate">
                     {user.email}
                   </div>
+                  {stats && (
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[10px] font-bold text-[#a78bfa]">{stats.rank}</span>
+                      <span className="text-[8px] text-gray-600">•</span>
+                      <span className="text-[10px] text-gray-400">Level {stats.rankLevel}</span>
+                      <span className="text-[8px] text-gray-600">•</span>
+                      <span className="text-[10px] text-gray-500">{stats.totalXp?.toLocaleString() || 0} XP</span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
 
             {!editing ? (
               <div className="p-3">

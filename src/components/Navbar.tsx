@@ -23,8 +23,8 @@ export default function Navbar() {
     { name: "Explore", href: "/models", icon: Compass },
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Favorites", href: "/favorites", icon: Library },
-    { name: "Highlight", href: "/highlight", icon: Highlighter },
-    { name: "Reflection", href: "/reflection", icon: BookOpen },
+    { name: "Highlights", href: "/highlights", icon: Highlighter },
+    { name: "Reflections", href: "/reflections", icon: BookOpen },
     { name: "Actions", href: "/actions", icon: Target },
   ];
 
