@@ -8,6 +8,7 @@ import { env } from "./config/env";
 import { errorHandler } from "./middleware/error-handler";
 
 import authRoutes from "./modules/auth/auth.routes";
+import categoriesRoutes from "./modules/categories/categories.routes";
 import modulesRoutes from "./modules/modules/modules.routes";
 import progressRoutes from "./modules/progress/progress.routes";
 import reflectionsRoutes from "./modules/reflections/reflections.routes";
@@ -84,6 +85,7 @@ app.get("/api/health", (_req, res) => {
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/categories", categoriesRoutes);
 app.use("/api/modules", modulesRoutes);
 app.use("/api/progress", progressRoutes);
 app.use("/api/reflections", reflectionsRoutes);

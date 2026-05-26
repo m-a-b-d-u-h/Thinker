@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Users,
   BookOpen,
+  Tag,
   CreditCard,
   MessageSquare,
   Zap,
@@ -17,6 +18,7 @@ const links = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/users", label: "Users", icon: Users },
   { href: "/dashboard/modules", label: "Modules", icon: BookOpen },
+  { href: "/dashboard/categories", label: "Categories", icon: Tag },
   { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
   { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/dashboard/auto-generate", label: "Auto Generate", icon: Zap },
@@ -37,7 +39,10 @@ export default function Sidebar() {
 
       <nav className="flex-1 p-4 space-y-1">
         {links.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(href + "/");
+          const isOverview = href === "/dashboard";
+          const active = isOverview
+            ? pathname === href
+            : (pathname === href || pathname.startsWith(href + "/"));
           return (
             <Link
               key={href}

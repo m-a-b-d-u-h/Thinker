@@ -1,21 +1,15 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
-import api from "@/lib/api";
 import DataTable from "@/components/DataTable";
+import { useModules } from "@/hooks/useAdmin";
 
 export default function ModulesPage() {
   const router = useRouter();
 
-  const { data: modules, isLoading } = useQuery({
-    queryKey: ["admin", "modules"],
-    queryFn: async () => {
-      const { data } = await api.get("/modules?limit=100&admin=true");
-      return data.data || [];
-    },
-  });
+  const { data, isLoading } = useModules();
+  const modules = data?.modules || [];
 
   const columns = [
     {
@@ -45,26 +39,35 @@ export default function ModulesPage() {
       ),
     },
     {
+      key: "isDraft",
+      label: "Status",
+      sortable: true,
+      render: (m: any) => (
+        m.isDraft ? (
+          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400">
+            Draft
+          </span>
+        ) : (
+          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400">
+            Published
+          </span>
+        )
+      ),
+    },
+    {
       key: "isPremium",
       label: "Access",
       sortable: true,
       render: (m: any) => (
-        <div className="flex items-center gap-2">
-          {m.isDraft && (
-            <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400">
-              Draft
-            </span>
-          )}
-          <span
-            className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-              m.isPremium
-                ? "bg-[#ffb8001a] text-[#ffb800]"
-                : "bg-[#34d3991a] text-[#34d399]"
-            }`}
-          >
-            {m.isPremium ? "Premium" : "Free"}
-          </span>
-        </div>
+        <span
+          className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+            m.isPremium
+              ? "bg-[#ffb8001a] text-[#ffb800]"
+              : "bg-[#34d3991a] text-[#34d399]"
+          }`}
+        >
+          {m.isPremium ? "Premium" : "Free"}
+        </span>
       ),
     },
   ];

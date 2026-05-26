@@ -2,7 +2,8 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, LogOut, X, Crown, PencilLine } from "lucide-react";
+import { Settings, LogOut, X, Crown, PencilLine, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth-context";
 import { paymentsApi } from "@/lib/api/payments";
 import { progressApi } from "@/lib/api/progress";
@@ -93,6 +94,7 @@ export default function UserPopup() {
 
   if (!user) return null;
 
+  const { theme, setTheme } = useTheme();
   const name = user.name || user.email || "";
   const shortName = name.length > 15 ? name.slice(0, 15) + "..." : name;
 
@@ -188,6 +190,13 @@ export default function UserPopup() {
                 >
                   <Settings size={15} />
                   <span>Category Preferences</span>
+                </button>
+                <button
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-muted hover:text-fg hover:bg-bg-elevated transition-colors cursor-pointer"
+                >
+                  {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
+                  <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
                 </button>
                 <button
                   onClick={() => { logout(); setOpen(false); }}

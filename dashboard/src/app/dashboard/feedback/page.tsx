@@ -1,8 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Star, MessageSquare, User } from "lucide-react";
+import { Star, User } from "lucide-react";
 import api from "@/lib/api";
+import DataTable from "@/components/DataTable";
 
 function Stars({ rating }: { rating: number }) {
   return (
@@ -37,6 +38,69 @@ export default function FeedbackPage() {
   (reviews as any[] || []).forEach((r: any) => {
     if (r.rating >= 1 && r.rating <= 5) ratingDist[5 - r.rating]++;
   });
+
+  const columns = [
+    {
+      key: "user",
+      label: "User",
+      sortable: true,
+      render: (r: any) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+            <User size={14} className="text-white/30" />
+          </div>
+          <div>
+            <div className="text-white font-medium text-sm">{r.user?.name || "—"}</div>
+            <div className="text-[#555] text-xs">{r.user?.email || "—"}</div>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "module",
+      label: "Module",
+      sortable: true,
+      render: (r: any) => (
+        <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-white/5 text-white/40">
+          {r.module?.title || "No module"}
+        </span>
+      ),
+    },
+    {
+      key: "rating",
+      label: "Rating",
+      sortable: true,
+      render: (r: any) => <Stars rating={r.rating} />,
+    },
+    {
+      key: "comment",
+      label: "Comment",
+      sortable: false,
+      render: (r: any) => (
+        <span className="text-[#888] text-sm">
+          {r.comment || "—"}
+        </span>
+      ),
+    },
+    {
+      key: "createdAt",
+      label: "Date",
+      sortable: true,
+      render: (r: any) => (
+        <span className="text-[#555] text-sm">
+          {r.createdAt ? new Date(r.createdAt).toLocaleDateString() : "-"}
+        </span>
+      ),
+    },
+  ];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -77,54 +141,12 @@ export default function FeedbackPage() {
         </div>
       </div>
 
-      {/* List */}
-      {isLoading ? (
-        <div className="flex items-center justify-center h-40">
-          <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-        </div>
-      ) : reviews?.length === 0 ? (
-        <div className="text-center py-16 text-white/20 text-sm">No feedback yet</div>
-      ) : (
-        <div className="space-y-3">
-          {(reviews as any[]).map((r: any) => (
-            <div
-              key={r.id}
-              className="bg-gradient-to-br from-white/[0.07] to-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-5"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0">
-                    <User size={15} className="text-white/30" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-white">{r.user?.name || "—"}</div>
-                    <div className="text-xs text-white/30 truncate">{r.user?.email}</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {r.module && (
-                    <span className="text-[10px] font-medium text-white/30 bg-white/[0.04] px-2 py-1 rounded-lg truncate max-w-[140px]">
-                      {r.module.title}
-                    </span>
-                  )}
-                  <Stars rating={r.rating} />
-                </div>
-              </div>
-              {r.comment && (
-                <div className="mt-3 flex items-start gap-2">
-                  <MessageSquare size={13} className="text-white/20 mt-0.5 shrink-0" />
-                  <p className="text-sm text-white/60 leading-relaxed">{r.comment}</p>
-                </div>
-              )}
-              <div className="mt-2 text-[10px] text-white/20">
-                {new Date(r.createdAt).toLocaleDateString("en-US", {
-                  month: "short", day: "numeric", year: "numeric",
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Table */}
+      <DataTable
+        columns={columns}
+        data={reviews || []}
+        searchKeys={["comment", "user.name", "user.email", "module.title"]}
+      />
     </div>
   );
 }

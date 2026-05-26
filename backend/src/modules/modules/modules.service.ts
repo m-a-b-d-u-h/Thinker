@@ -60,7 +60,8 @@ export namespace ModulesService {
     admin?: boolean;
   }) {
     const page = Math.max(1, query.page || 1);
-    const limit = Math.min(50, Math.max(1, query.limit || 12));
+    const maxLimit = query.admin ? 1000 : 50;
+    const limit = Math.min(maxLimit, Math.max(1, query.limit || 12));
     const skip = (page - 1) * limit;
 
     const where: Prisma.ModuleWhereInput = {};
@@ -107,6 +108,7 @@ export namespace ModulesService {
           description: m.description,
           category: m.category,
           isPremium: m.isPremium,
+          isDraft: m.isDraft,
           createdAt: m.createdAt,
           updatedAt: m.updatedAt,
           nodes: m.nodes.map(transformNode),

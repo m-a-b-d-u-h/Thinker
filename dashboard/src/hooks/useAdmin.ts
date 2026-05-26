@@ -29,13 +29,33 @@ export function useUsers() {
   });
 }
 
-export function useModules() {
+export function useModules(limit: number = 10) {
   return useQuery({
-    queryKey: ["admin", "modules"],
+    queryKey: ["admin", "modules", limit],
     queryFn: async () => {
-      const { data } = await api.get("/modules?limit=100&admin=true");
-      return data.data || [];
+      const { data } = await api.get(`/modules?limit=${limit}&admin=true`);
+      return {
+        modules: data.data || [],
+        total: data.pagination?.total ?? (data.data?.length || 0),
+      };
     },
+    staleTime: 0,
+    refetchOnMount: true,
+  });
+}
+
+export function useAllModules() {
+  return useQuery({
+    queryKey: ["admin", "modules", "all"],
+    queryFn: async () => {
+      const { data } = await api.get("/modules?limit=1000&admin=true");
+      return {
+        modules: data.data || [],
+        total: data.pagination?.total ?? (data.data?.length || 0),
+      };
+    },
+    staleTime: 0,
+    refetchOnMount: true,
   });
 }
 
@@ -47,6 +67,8 @@ export function useModule(slug: string) {
       return data;
     },
     enabled: !!slug,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 }
 
@@ -88,5 +110,58 @@ export function useQuizStats() {
       const { data } = await api.get("/modules?limit=100&admin=true");
       return data.data || [];
     },
+  });
+}
+
+export function useCategories() {
+  return useQuery({
+    queryKey: ["admin", "categories"],
+    queryFn: async () => {
+      const { data } = await api.get("/categories/admin/list");
+      return data.data || [];
+    },
+  });
+}
+
+export function useCategory(id: string) {
+  return useQuery({
+    queryKey: ["admin", "category", id],
+    queryFn: async () => {
+      const { data } = await api.get(`/categories/${id}`);
+      return data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useCreateCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (data: { name: string; slug: string; description?: string; sortOrder?: number }) => {
+      const { data: result } = await api.post("/categories", data);
+      return result;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "categories"] }),
+  });
+}
+
+export function useUpdateCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: { name?: string; slug?: string; description?: string; sortOrder?: number } }) => {
+      const { data: result } = await api.patch(`/categories/${id}`, data);
+      return result;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "categories"] }),
+  });
+}
+
+export function useDeleteCategory() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await api.delete(`/categories/${id}`);
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "categories"] }),
   });
 }

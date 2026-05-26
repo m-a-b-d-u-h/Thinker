@@ -17,19 +17,16 @@ import {
 import Link from "next/link";
 import api from "@/lib/api";
 import StatCard from "@/components/StatCard";
+import { useAllModules } from "@/hooks/useAdmin";
 
 const fmt = (n: number) => n.toLocaleString("en-US");
 const currency = (c: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(c / 100);
 
 export default function DashboardPage() {
-  const { data: modules } = useQuery({
-    queryKey: ["admin", "modules"],
-    queryFn: async () => {
-      const { data } = await api.get("/modules?limit=100&admin=true");
-      return data.data || [];
-    },
-  });
+  const { data: modulesData } = useAllModules();
+  const modules = modulesData?.modules || [];
+  const totalModules = modulesData?.total ?? modules.length;
 
   const { data: payments } = useQuery({
     queryKey: ["admin", "payments"],
@@ -102,7 +99,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="Total Modules"
-          value={fmt(modules?.length || 0)}
+          value={fmt(totalModules)}
           icon={BookOpen}
           color="#a78bfa"
           accent="#a78bfa"
@@ -232,14 +229,14 @@ export default function DashboardPage() {
                         fontSize: "13px",
                       }}
                     />
-                    <Bar dataKey="count" radius={[0, 6, 6, 0]}>
-                      {moduleCatData.map((_: any, i: number) => (
-                        <Cell
-                          key={i}
-                          fill={`hsl(${250 + i * 25}, 70%, ${65 - i * 3}%)`}
-                        />
-                      ))}
-                    </Bar>
+                     <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+                        {moduleCatData.map((_: any, i: number) => (
+                          <Cell
+                            key={i}
+                            fill={i === 0 ? "#f59e0b" : `rgba(255, 255, 255, ${Math.max(0.08, 0.18 - i * 0.03)})`}
+                          />
+                        ))}
+                      </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               )}
