@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "../../lib/prisma";
 import { NotFoundError } from "../../lib/errors";
 import { transformNode, transformEdge } from "../../lib/transform";
+import { Cache } from "../../lib/cache";
 
 export namespace ModulesService {
   const moduleInclude = {
@@ -16,6 +17,28 @@ export namespace ModulesService {
     edges: { orderBy: { id: "asc" } },
     _count: { select: { questions: true } },
   } satisfies Prisma.ModuleInclude;
+
+  function listCacheParams(query: {
+    page?: number; limit?: number; category?: string;
+    categories?: string; search?: string; userId?: string; admin?: boolean;
+  }): Record<string, unknown> {
+    return {
+      page: query.page ?? 1,
+      limit: query.limit ?? 12,
+      category: query.category ?? "",
+      categories: query.categories ?? "",
+      search: query.search ?? "",
+      admin: query.admin ?? false,
+    };
+  }
+
+  async function invalidateModuleCaches(): Promise<void> {
+    await Promise.all([
+      Cache.delByPattern(`${Cache.PREFIXES.MODULES_LIST}:*`),
+      Cache.del(Cache.PREFIXES.MODULES_CATEGORIES),
+      Cache.del(Cache.PREFIXES.CATEGORIES_LIST),
+    ]);
+  }
 
   /** Deterministic daily free module slug based on current date */
   export async function getDailyFreeSlug(): Promise<string | null> {
@@ -64,6 +87,17 @@ export namespace ModulesService {
     const limit = Math.min(maxLimit, Math.max(1, query.limit || 12));
     const skip = (page - 1) * limit;
 
+    const shouldCache = !query.search && !query.category && !query.categories && !query.userId && !query.admin;
+
+    if (shouldCache) {
+      const params = listCacheParams(query);
+      const cacheKey = Cache.key(Cache.PREFIXES.MODULES_LIST, params);
+      const cached = await Cache.get<{
+        data: any[]; pagination: { page: number; limit: number; total: number; totalPages: number };
+      }>(cacheKey);
+      if (cached) return cached;
+    }
+
     const where: Prisma.ModuleWhereInput = {};
     if (!query.admin) where.isDraft = false;
 
@@ -98,7 +132,7 @@ export namespace ModulesService {
 
     const dailyFreeSlug = await getDailyFreeSlug();
 
-    return {
+    const result = {
       data: modules.map((m: any) => {
         const words = (m.content || "").split(/\s+/).filter(Boolean).length;
         return {
@@ -129,6 +163,14 @@ export namespace ModulesService {
         totalPages: Math.ceil(total / limit),
       },
     };
+
+    if (shouldCache) {
+      const params = listCacheParams(query);
+      const cacheKey = Cache.key(Cache.PREFIXES.MODULES_LIST, params);
+      await Cache.set(cacheKey, result);
+    }
+
+    return result;
   }
 
   export async function getDailyFree() {
@@ -206,13 +248,22 @@ export namespace ModulesService {
   }
 
   export async function getCategories() {
+    const cacheKey = Cache.key(Cache.PREFIXES.MODULES_CATEGORIES);
+
+    const cached = await Cache.get<{ name: string; count: number }[]>(cacheKey);
+    if (cached) return cached;
+
     const catCounts = await prisma.module.groupBy({
       by: ["category"],
       where: { isDraft: false },
       _count: { category: true },
       orderBy: { category: "asc" },
     });
-    return catCounts.map((c) => ({ name: c.category, count: c._count.category }));
+
+    const result = catCounts.map((c) => ({ name: c.category, count: c._count.category }));
+
+    await Cache.set(cacheKey, result);
+    return result;
   }
 
   export async function getRecommended(slug: string, limit: number = 3) {
@@ -257,6 +308,8 @@ export namespace ModulesService {
   }) {
     const existing = await prisma.module.findUnique({ where: { slug: data.slug } });
     if (existing) throw new Error("A module with this slug already exists");
+
+    await invalidateModuleCaches();
 
     return prisma.module.create({
       data: {
@@ -361,6 +414,8 @@ export namespace ModulesService {
       }
     }
 
+    await invalidateModuleCaches();
+
     return prisma.module.update({
       where: { id: existing.id },
       data: updateData,
@@ -373,5 +428,7 @@ export namespace ModulesService {
     if (!mod) throw new NotFoundError("Module");
 
     await prisma.module.delete({ where: { id: mod.id } });
+
+    await invalidateModuleCaches();
   }
 }

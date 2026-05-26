@@ -1,11 +1,20 @@
 import { prisma } from "../../lib/prisma";
 import { NotFoundError, ConflictError } from "../../lib/errors";
+import { Cache } from "../../lib/cache";
 
 function slugify(name: string): string {
   return name
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
+}
+
+async function invalidateCategoryCaches(): Promise<void> {
+  await Promise.all([
+    Cache.del(Cache.PREFIXES.CATEGORIES_LIST),
+    Cache.delByPattern(`${Cache.PREFIXES.MODULES_LIST}:*`),
+    Cache.del(Cache.PREFIXES.MODULES_CATEGORIES),
+  ]);
 }
 
 export namespace CategoriesService {
@@ -60,13 +69,22 @@ export namespace CategoriesService {
   }
 
   export async function listAll() {
+    const cacheKey = Cache.key(Cache.PREFIXES.CATEGORIES_LIST);
+
+    const cached = await Cache.get<{
+      id: string; name: string; slug: string; description: string | null;
+      sortOrder: number; createdAt: Date; updatedAt: Date;
+      _count: { modules: number };
+    }[]>(cacheKey);
+    if (cached) return cached;
+
     const catCounts = await prisma.module.groupBy({
       by: ["category"],
       _count: { category: true },
       orderBy: { category: "asc" },
     });
 
-    return catCounts
+    const result = catCounts
       .filter((c) => c.category && c.category.trim().length > 0)
       .map((c) => ({
         id: slugify(c.category),
@@ -78,6 +96,9 @@ export namespace CategoriesService {
         updatedAt: new Date(0),
         _count: { modules: c._count.category },
       }));
+
+    await Cache.set(cacheKey, result);
+    return result;
   }
 
   export async function getById(id: string) {
@@ -121,6 +142,8 @@ export namespace CategoriesService {
     });
 
     if (existing) throw new ConflictError("Category with this name already exists");
+
+    await invalidateCategoryCaches();
 
     return {
       id: slugify(data.name),
@@ -170,6 +193,8 @@ export namespace CategoriesService {
       });
     }
 
+    await invalidateCategoryCaches();
+
     const modules = await prisma.module.findMany({
       where: { category: data.name },
       select: { id: true, title: true, slug: true },
@@ -203,5 +228,7 @@ export namespace CategoriesService {
       where: { category: matched.category },
       data: { category: "" },
     });
+
+    await invalidateCategoryCaches();
   }
 }

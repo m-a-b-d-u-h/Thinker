@@ -28,7 +28,8 @@ export default function Navbar() {
     { name: "Actions", href: "/actions", icon: Target },
   ];
 
-  const isModelPage = pathname.startsWith("/models/");
+  const pathSegments = pathname.split("/").filter(Boolean);
+  const isModelDetailPage = pathname.startsWith("/models/") && pathSegments.length === 2;
 
   return (
     <>
@@ -69,7 +70,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {!isModelPage && (
+      {!isModelDetailPage && (
         <nav className="fixed bottom-0 inset-x-0 z-50 bg-bg border-t border-border-subtle md:hidden">
         <div className="flex items-center justify-around h-14">
           {links.map((link) => {

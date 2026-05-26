@@ -5,10 +5,11 @@ import {
   BookOpen,
   Users,
   CreditCard,
-  TrendingUp,
   ArrowUpRight,
   DollarSign,
   Sparkles,
+  Star,
+  User,
 } from "lucide-react";
 import {
   PieChart, Pie, Cell, ResponsiveContainer,
@@ -22,6 +23,20 @@ import { useAllModules } from "@/hooks/useAdmin";
 const fmt = (n: number) => n.toLocaleString("en-US");
 const currency = (c: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(c / 100);
+
+function Stars({ rating }: { rating: number }) {
+  return (
+    <div className="flex gap-0.5">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          size={12}
+          className={i <= rating ? "text-amber-400 fill-amber-400" : "text-white/10"}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { data: modulesData } = useAllModules();
@@ -80,6 +95,20 @@ export default function DashboardPage() {
     : [];
 
   const recentPayments = (payments as any[])?.slice(0, 8) || [];
+
+  const { data: feedback } = useQuery({
+    queryKey: ["admin", "feedback"],
+    queryFn: async () => {
+      const { data } = await api.get("/reviews?all=true");
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
+  const recentFeedback = (feedback as any[])
+    ?.sort((a: any, b: any) =>
+      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
+    .slice(0, 5) || [];
 
   return (
     <div className="space-y-8">
@@ -328,34 +357,59 @@ export default function DashboardPage() {
         </div>
 
         <div className="relative bg-gradient-to-br from-white/[0.07] to-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-sky-500/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
+          <div className="absolute top-0 right-0 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/3 translate-x-1/3 pointer-events-none" />
           <div className="relative">
-            <h3 className="text-sm font-bold text-white mb-5">Quick Stats</h3>
-            <div className="space-y-4">
-              <div className="bg-white/[0.03] rounded-xl p-4">
-                <div className="flex items-center gap-2 text-xs text-white/30 mb-2">
-                  <TrendingUp size={13} />
-                  <span>Total Sessions</span>
-                </div>
-                <div className="text-xl font-extrabold text-white tabular-nums">{fmt(totalSessions)}</div>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-sm font-bold text-white">Recent Feedback</h3>
+                <p className="text-xs text-white/30 mt-0.5">Last {recentFeedback.length} reviews</p>
               </div>
-              <div className="bg-white/[0.03] rounded-xl p-4">
-                <div className="flex items-center gap-2 text-xs text-white/30 mb-2">
-                  <DollarSign size={13} />
-                  <span>This Month</span>
-                </div>
-                <div className="text-xl font-extrabold text-white tabular-nums">{currency(monthRevenue)}</div>
-              </div>
-              <div className="bg-white/[0.03] rounded-xl p-4">
-                <div className="flex items-center gap-2 text-xs text-white/30 mb-2">
-                  <Users size={13} />
-                  <span>Premium Rate</span>
-                </div>
-                <div className="text-xl font-extrabold text-white tabular-nums">
-                  {totalUsers > 0 ? ((premiumUsers.length / totalUsers) * 100).toFixed(1) : "0.0"}%
-                </div>
-              </div>
+              <Link
+                href="/dashboard/feedback"
+                className="flex items-center gap-1 text-xs font-semibold text-white/40 hover:text-white transition-colors"
+              >
+                View all <ArrowUpRight size={13} />
+              </Link>
             </div>
+
+            {recentFeedback.length === 0 ? (
+              <div className="py-12 text-center text-white/20 text-sm">
+                No feedback yet
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentFeedback.map((f: any, i: number) => (
+                  <div key={f.id || i} className="bg-white/[0.03] rounded-xl p-4 hover:bg-white/[0.05] transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
+                        <User size={14} className="text-white/30" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <span className="text-sm font-medium text-white truncate">
+                            {f.user?.name || "—"}
+                          </span>
+                          <Stars rating={f.rating || 0} />
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs text-white/40 truncate">
+                            {f.module?.title || "No module"}
+                          </span>
+                          <span className="text-[10px] text-white/25 shrink-0 tabular-nums">
+                            {f.createdAt ? new Date(f.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "-"}
+                          </span>
+                        </div>
+                        {f.comment && (
+                          <p className="text-xs text-white/35 mt-2 line-clamp-2">
+                            {f.comment}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

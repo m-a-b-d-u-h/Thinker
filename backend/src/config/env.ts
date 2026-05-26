@@ -29,4 +29,8 @@ export const env = {
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || "",
   },
+
+  redis: {
+    url: process.env.REDIS_URL || "",
+  },
 } as const;

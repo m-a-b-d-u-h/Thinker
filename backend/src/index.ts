@@ -1,12 +1,15 @@
 import app from "./app";
 import { env } from "./config/env";
 import { prisma } from "./lib/prisma";
+import { connectRedis, disconnectRedis } from "./lib/redis";
 import { AiCron } from "./modules/ai/ai.cron";
 
 async function main() {
   try {
     await prisma.$connect();
     console.log("Database connected");
+
+    await connectRedis();
 
     AiCron.restoreOnStartup();
 
@@ -26,11 +29,13 @@ main();
 process.on("SIGINT", async () => {
   console.log("Shutting down gracefully...");
   await prisma.$disconnect();
+  await disconnectRedis();
   process.exit(0);
 });
 
 process.on("SIGTERM", async () => {
   console.log("Shutting down gracefully...");
   await prisma.$disconnect();
+  await disconnectRedis();
   process.exit(0);
 });
