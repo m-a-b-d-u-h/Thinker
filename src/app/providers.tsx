@@ -3,7 +3,9 @@
 import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "next-themes";
 import { useAuthStore } from "@/lib/store/auth";
+import { ReadingProvider } from "@/contexts/ReadingContext";
 
 function AuthInitializer({ children }: { children: React.ReactNode }) {
   const validateToken = useAuthStore((s) => s.validateToken);
@@ -15,8 +17,8 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
-        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center bg-bg">
+        <div className="w-6 h-6 border-2 border-border rounded-full border-t-fg animate-spin" />
       </div>
     );
   }
@@ -40,9 +42,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthInitializer>
-        {children}
-      </AuthInitializer>
+      <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
+        <ReadingProvider>
+          <AuthInitializer>
+            {children}
+          </AuthInitializer>
+        </ReadingProvider>
+      </ThemeProvider>
       <Toaster
         position="bottom-center"
         toastOptions={{

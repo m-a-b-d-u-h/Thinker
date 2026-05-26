@@ -3,13 +3,17 @@
 import { notFound } from "next/navigation";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 
-import { Play, Square, ChevronUp, Volume2, FastForward, Settings2, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X, Crown, Lock, Sparkles, Star } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Play, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X, Crown, Lock, Sparkles, Star } from "lucide-react";
+import { motion } from "framer-motion";
 import Link from "next/link";
 import { progressApi } from "@/lib/api/progress";
 import { reviewsApi } from "@/lib/api/reviews";
 import { useAuth } from "@/lib/auth-context";
 import { useModule, useRecommended, useProgress, useCreateHighlight } from "@/lib/query-hooks";
+import ModuleFloatingBar from "@/components/ModuleFloatingBar";
+import TableOfContents from "@/components/TableOfContents";
+import { useReading, fontSizeMap, lineHeightMap, fontFamilyMap, marginMap } from "@/contexts/ReadingContext";
+import { favoritesApi } from "@/lib/api/favorites";
 
 export default function ModulePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
@@ -45,6 +49,11 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [feedbackError, setFeedbackError] = useState(false);
   const [feedbackSubmitting, setFeedbackSubmitting] = useState(false);
+  const [isFavorited, setIsFavorited] = useState(false);
+
+  const { readingPrefs, tocOpen, setTocOpen } = useReading();
+
+  const { fontSize, fontFamily, lineHeight, margin } = readingPrefs;
 
   const handleSubmitFeedback = async () => {
     if (!rating || feedbackSubmitting) return;
@@ -202,6 +211,11 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     }
     setShowResume(true);
   }, [module, user, savedProgress]);
+
+  useEffect(() => {
+    if (!module) return;
+    favoritesApi.check(slug).then((res) => setIsFavorited(res.isFavorited)).catch(() => {});
+  }, [module, slug]);
 
   useEffect(() => {
     if (!module) return;
@@ -474,6 +488,18 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     else { startSpeech(Math.floor((progress / 100) * unifiedCleanText.length), unifiedCleanText, volume, rate, selectedVoice); }
   };
 
+  const toggleFavorite = async () => {
+    try {
+      if (isFavorited) {
+        await favoritesApi.remove(slug);
+        setIsFavorited(false);
+      } else {
+        await favoritesApi.add(slug);
+        setIsFavorited(true);
+      }
+    } catch {}
+  };
+
   const handleMarkComplete = async () => {
     const newCompleted = !isCompleted;
     setIsCompleted(newCompleted);
@@ -498,7 +524,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-border border-t-fg rounded-full animate-spin" />
       </div>
     );
   }
@@ -508,56 +534,56 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   if (module.locked) {
     return (
       <div className="mx-auto w-full max-w-[600px] px-6 py-20 text-center">
-        <div className="w-20 h-20 rounded-3xl bg-[#ffb800]/10 border border-[#ffb800]/20 flex items-center justify-center mx-auto mb-8">
-          <Lock size={36} className="text-[#ffb800]" />
+        <div className="w-20 h-20 rounded-3xl bg-premium/10 border border-premium/20 flex items-center justify-center mx-auto mb-8">
+          <Lock size={36} className="text-premium" />
         </div>
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-[#ffb800]/10 border border-[#ffb800]/30 rounded-full text-[0.75rem] font-bold text-[#ffb800] uppercase tracking-wider mb-6">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 bg-premium/10 border border-premium/30 rounded-full text-[0.75rem] font-bold text-premium uppercase tracking-wider mb-6">
           <Crown size={14} />
           Premium Content
         </div>
-        <h1 className="text-4xl font-black text-white mb-4 tracking-[-0.03em]">{module.title}</h1>
-        <p className="text-lg text-[#666] mb-8 leading-relaxed">{module.description}</p>
+        <h1 className="text-4xl font-black text-fg mb-4 tracking-[-0.03em]">{module.title}</h1>
+        <p className="text-lg text-muted-light mb-8 leading-relaxed">{module.description}</p>
 
-        <div className="bg-[#080808] border border-white/5 rounded-2xl p-8 mb-8 text-left">
-          <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-            <Sparkles size={18} className="text-[#ffb800]" />
+        <div className="bg-bg-card border border-border-subtle rounded-2xl p-8 mb-8 text-left">
+          <h3 className="text-xl font-bold text-fg mb-4 flex items-center gap-2">
+            <Sparkles size={18} className="text-premium" />
             Upgrade to Access
           </h3>
-          <ul className="flex flex-col gap-3 text-[0.875rem] text-[#888] mb-6">
-            <li className="flex items-start gap-3"><Crown size={16} className="text-[#ffb800] flex-shrink-0 mt-0.5" /> Full content with detailed explanations</li>
-            <li className="flex items-start gap-3"><Crown size={16} className="text-[#ffb800] flex-shrink-0 mt-0.5" /> TTS audio narration for hands-free learning</li>
-            <li className="flex items-start gap-3"><Crown size={16} className="text-[#ffb800] flex-shrink-0 mt-0.5" /> Interactive knowledge graph & implementation path</li>
-            <li className="flex items-start gap-3"><Crown size={16} className="text-[#ffb800] flex-shrink-0 mt-0.5" /> Quiz, reflection & action planning tools</li>
+          <ul className="flex flex-col gap-3 text-[0.875rem] text-muted mb-6">
+            <li className="flex items-start gap-3"><Crown size={16} className="text-premium flex-shrink-0 mt-0.5" /> Full content with detailed explanations</li>
+            <li className="flex items-start gap-3"><Crown size={16} className="text-premium flex-shrink-0 mt-0.5" /> TTS audio narration for hands-free learning</li>
+            <li className="flex items-start gap-3"><Crown size={16} className="text-premium flex-shrink-0 mt-0.5" /> Interactive knowledge graph & implementation path</li>
+            <li className="flex items-start gap-3"><Crown size={16} className="text-premium flex-shrink-0 mt-0.5" /> Quiz, reflection & action planning tools</li>
           </ul>
-          <Link href="/#pricing" className="inline-flex items-center justify-center gap-2 w-full px-6 py-4 bg-white text-black rounded-xl font-bold text-[0.9375rem] no-underline hover:bg-white/90 transition-all">
+          <Link href="/#pricing" className="inline-flex items-center justify-center gap-2 w-full px-6 py-4 bg-fg text-bg rounded-xl font-bold text-[0.9375rem] no-underline hover:opacity-90 transition-all">
             <Crown size={18} />
             View Subscription Plans
           </Link>
         </div>
 
         <div className="max-w-[65ch] mx-auto mt-12">
-          <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 text-left">
+          <div className="bg-bg border border-border rounded-2xl p-6 text-left">
             {feedbackSubmitted ? (
               <div className="text-center py-4">
                 <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
                   <CheckCircle2 size={20} className="text-emerald-500" />
                 </div>
-                <p className="text-sm font-semibold text-white">Thank you for your feedback!</p>
+                <p className="text-sm font-semibold text-fg">Thank you for your feedback!</p>
               </div>
             ) : (
               <>
                 <div className="flex items-center gap-2 mb-5">
-                  <Sparkles size={15} className="text-[#fbbf24]" />
-                  <span className="text-[0.6875rem] font-bold text-[#fbbf24] uppercase tracking-[0.1em]">Feedback</span>
+                  <Sparkles size={15} className="text-premium" />
+                  <span className="text-[0.6875rem] font-bold text-premium uppercase tracking-[0.1em]">Feedback</span>
                 </div>
-                <p className="text-[0.875rem] text-[#888] mb-5">How was your experience?</p>
+                <p className="text-[0.875rem] text-muted mb-5">How was your experience?</p>
                 <div className="flex gap-1.5 mb-6 justify-center">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button key={star} onClick={() => { setRating(star); setFeedbackError(false); }}
                       className={`w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
                         (rating ?? 0) >= star
-                          ? "bg-[#fbbf24] text-black shadow-lg shadow-[#fbbf24]/20 scale-110"
-                          : "bg-white/5 text-[#555] hover:bg-white/10 hover:text-white hover:scale-105"
+                          ? "bg-premium text-black shadow-lg shadow-premium/20 scale-110"
+                          : "bg-bg-elevated text-muted-dark hover:bg-bg-card hover:text-fg hover:scale-105"
                       }`}
                     >
                       <Star size={22} fill={(rating ?? 0) >= star ? "currentColor" : "none"} />
@@ -570,10 +596,10 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
                 <textarea value={feedback} onChange={(e) => setFeedback(e.target.value)}
                   placeholder="Tell us more (optional)..."
                   rows={3}
-                  className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-[0.875rem] text-white outline-none resize-none mb-3 placeholder:text-[#888]"
+                  className="w-full bg-bg-input border border-border rounded-xl px-4 py-3 text-[0.875rem] text-fg outline-none resize-none mb-3 placeholder:text-muted"
                 />
                 <button onClick={handleSubmitFeedback} disabled={!rating || feedbackSubmitting}
-                  className="w-full py-3 bg-white text-black rounded-xl font-bold text-[0.8125rem] cursor-pointer hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-full py-3 bg-fg text-bg rounded-xl font-bold text-[0.8125rem] cursor-pointer hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   {feedbackSubmitting ? "Submitting..." : "Submit Feedback"}
                 </button>
@@ -634,7 +660,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
 
     if (block.type === 'li') {
       return (
-        <li key={block.start} className="text-[1.0625rem] text-[#888] mb-3 ml-6 list-disc">
+        <li key={block.start} className="text-muted mb-3 ml-6 list-disc">
           {renderBlockContent(block)}
         </li>
       );
@@ -642,7 +668,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
 
     if (block.type === 'h1') {
       return (
-        <h1 key={block.start} className="text-5xl font-black text-white mb-4 tracking-[-0.03em] leading-[1.1]">
+        <h1 key={block.start} className="font-black text-fg mb-4 tracking-[-0.03em] leading-[1.1]" style={{ fontSize: '2em', fontFamily: fontFamilyMap[fontFamily] }}>
           {renderBlockContent(block)}
         </h1>
       );
@@ -650,7 +676,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
 
     if (block.type === 'h2') {
       return (
-        <h2 key={block.start} id={headingId} className="text-3xl font-bold text-white mb-6 mt-12 pb-3 border-b border-[#1a1a1a] scroll-mt-[100px]">
+        <h2 key={block.start} id={headingId} className="font-bold text-fg mb-6 mt-12 pb-3 border-b border-border scroll-mt-[100px]" style={{ fontSize: '1.5em', fontFamily: fontFamilyMap[fontFamily] }}>
           {renderBlockContent(block)}
         </h2>
       );
@@ -658,14 +684,14 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
 
     if (block.type === 'h3') {
       return (
-        <h3 key={block.start} id={headingId} className="text-xl text-[#999] mb-4 mt-8 scroll-mt-[100px]">
+        <h3 key={block.start} id={headingId} className="text-muted-light mb-4 mt-8 scroll-mt-[100px]" style={{ fontSize: '1.25em', fontFamily: fontFamilyMap[fontFamily] }}>
           {renderBlockContent(block)}
         </h3>
       );
     }
 
     return (
-      <p key={block.start} className={`${block.isDesc ? 'text-xl text-[#666] italic mb-12 leading-relaxed' : 'text-lg text-[#888] mb-6 leading-[1.8]'}`}>
+      <p key={block.start} className={`${block.isDesc ? 'text-muted-light italic mb-12' : 'text-muted mb-6'}`}>
         {renderBlockContent(block)}
       </p>
     );
@@ -674,14 +700,23 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   return (
     <div className="max-w-[1100px] mx-auto px-4 pb-[180px] pt-8">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
-        <article ref={articleRef} className="max-w-[65ch] mx-auto w-full">
+        <article
+          ref={articleRef}
+          className="mx-auto w-full"
+          style={{
+            letterSpacing: marginMap[margin],
+            fontSize: fontSizeMap[fontSize],
+            lineHeight: lineHeightMap[lineHeight],
+            fontFamily: fontFamilyMap[fontFamily],
+          }}
+        >
           {contentBlocks.map((block, idx) => (
             <HighlightBlock key={idx} block={block} />
           ))}
         </article>
 
-        <div className="hidden lg:block sticky top-[100px] pl-6 border-l border-[#333]">
-          <div className="text-[0.6875rem] font-semibold text-[#444] uppercase tracking-[0.1em] mb-6">Contents</div>
+        <div className="hidden lg:block sticky top-[100px] pl-6 border-l border-border-light">
+          <div className="text-[0.6875rem] font-semibold text-muted-dark uppercase tracking-[0.1em] mb-6">Contents</div>
           <nav className="flex flex-col gap-3">
             {contentBlocks
               .filter(b => b.type === 'h2' || b.type === 'h3')
@@ -689,7 +724,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
                 <a
                   key={idx}
                   href={`#${getBlockText(block).toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}`}
-                  className={`no-underline ${block.type === 'h3' ? 'text-[0.8125rem] pl-4' : 'text-[0.875rem]'} ${block.type === 'h3' ? 'font-normal' : 'font-medium'} text-[#666] hover:text-[#ccc] transition-colors`}
+                  className={`no-underline ${block.type === 'h3' ? 'text-[0.8125rem] pl-4' : 'text-[0.875rem]'} ${block.type === 'h3' ? 'font-normal' : 'font-medium'} text-muted-light hover:text-fg transition-colors`}
                 >
                   {getBlockText(block)}
                 </a>
@@ -700,28 +735,28 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
 
       {recommendations.length > 0 && (
         <section className="max-w-[65ch] mx-auto mt-20 mb-8">
-          <h2 className="text-2xl font-black text-white mb-1 tracking-[-0.03em]">
+          <h2 className="text-2xl font-black text-fg mb-1 tracking-[-0.03em]">
             What&apos;s Next
           </h2>
-          <p className="text-[0.875rem] text-[#666] mb-8">
-            More in <span className="text-[#888] font-semibold">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
+          <p className="text-[0.875rem] text-muted-light mb-8">
+            More in <span className="text-muted font-semibold">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
           </p>
           <div className="flex flex-col gap-4">
             {recommendations.map((rec) => (
               <Link
                 key={rec.id}
                 href={`/models/${rec.slug}`}
-                className="group flex items-start gap-5 bg-[#080808] border border-white/5 rounded-2xl p-5 no-underline transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-0.5"
+                className="group flex items-start gap-5 bg-bg-card border border-border-subtle rounded-2xl p-5 no-underline transition-all duration-300 hover:bg-bg hover:border-border hover:-translate-y-0.5"
               >
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-white mb-1.5 group-hover:text-white/90 transition-colors">
+                  <h3 className="text-base font-bold text-fg mb-1.5 group-hover:text-fg transition-colors">
                     {rec.title}
                   </h3>
-                  <p className="text-[0.8125rem] text-[#666] leading-relaxed line-clamp-2">
+                  <p className="text-[0.8125rem] text-muted-light leading-relaxed line-clamp-2">
                     {rec.description}
                   </p>
                 </div>
-                <div className="shrink-0 flex items-center gap-2 text-[0.75rem] font-semibold text-[#555] group-hover:text-white transition-colors mt-1">
+                <div className="shrink-0 flex items-center gap-2 text-[0.75rem] font-semibold text-muted-dark group-hover:text-fg transition-colors mt-1">
                   <span>Explore</span>
                   <ArrowRight size={14} />
                 </div>
@@ -735,44 +770,44 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-[65ch] mx-auto mb-8 bg-[#0a0a0a] border border-white/10 rounded-2xl p-6"
+          className="max-w-[65ch] mx-auto mb-8 bg-bg border border-border rounded-2xl p-6"
         >
           <div className="flex items-center gap-3 mb-4">
-            <RotateCcw size={16} className="text-[#fbbf24]" />
-            <span className="text-[0.6875rem] font-bold text-[#fbbf24] uppercase tracking-[0.1em]">
+            <RotateCcw size={16} className="text-premium" />
+            <span className="text-[0.6875rem] font-bold text-premium uppercase tracking-[0.1em]">
               Resume
             </span>
           </div>
 
           <div className="grid grid-cols-2 gap-4 mb-5">
             {savedListeningProgress !== null && (
-              <div className="bg-[#080808] border border-white/5 rounded-xl p-4">
+              <div className="bg-bg-card border border-border-subtle rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Play size={14} className="text-[#888]" />
-                  <span className="text-[0.6875rem] font-semibold text-[#888] uppercase tracking-[0.05em]">
+                  <Play size={14} className="text-muted" />
+                  <span className="text-[0.6875rem] font-semibold text-muted uppercase tracking-[0.05em]">
                     Listening
                   </span>
                 </div>
-                <p className="text-2xl font-black text-white mb-1">
+                <p className="text-2xl font-black text-fg mb-1">
                   {Math.round(savedListeningProgress)}%
                 </p>
-                <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
-                  <div className="h-full bg-white rounded-full" style={{ width: `${savedListeningProgress}%` }} />
+                <div className="h-1 bg-bg-elevated rounded-full overflow-hidden">
+                  <div className="h-full bg-fg rounded-full" style={{ width: `${savedListeningProgress}%` }} />
                 </div>
               </div>
             )}
             {savedReadingProgress !== null && (
-              <div className="bg-[#080808] border border-white/5 rounded-xl p-4">
+              <div className="bg-bg-card border border-border-subtle rounded-xl p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[0.6875rem] font-semibold text-[#888] uppercase tracking-[0.05em]">
+                  <span className="text-[0.6875rem] font-semibold text-muted uppercase tracking-[0.05em]">
                     Reading
                   </span>
                 </div>
-                <p className="text-2xl font-black text-white mb-1">
+                <p className="text-2xl font-black text-fg mb-1">
                   {Math.round(savedReadingProgress)}%
                 </p>
-                <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
-                  <div className="h-full bg-white rounded-full" style={{ width: `${savedReadingProgress}%` }} />
+                <div className="h-1 bg-bg-elevated rounded-full overflow-hidden">
+                  <div className="h-full bg-fg rounded-full" style={{ width: `${savedReadingProgress}%` }} />
                 </div>
               </div>
             )}
@@ -782,7 +817,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
             {savedListeningProgress !== null && (
               <button
                 onClick={handleResumeListening}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-black rounded-lg font-bold text-[0.8125rem] hover:bg-white/90 transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-fg text-bg rounded-lg font-bold text-[0.8125rem] hover:opacity-90 transition-all"
               >
                 <Play size={14} fill="currentColor" />
                 Continue Listening
@@ -791,14 +826,14 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
             {savedReadingProgress !== null && (
               <button
                 onClick={handleResumeReading}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#111] border border-white/10 text-white rounded-lg font-bold text-[0.8125rem] hover:bg-[#1a1a1a] transition-all"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-bg-elevated border border-border text-fg rounded-lg font-bold text-[0.8125rem] hover:bg-bg-card transition-all"
               >
                 Continue Reading
               </button>
             )}
             <button
               onClick={handleStartOver}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-transparent border border-white/10 text-[#666] rounded-lg font-semibold text-[0.8125rem] hover:border-white/20 hover:text-white transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-transparent border border-border text-muted-light rounded-lg font-semibold text-[0.8125rem] hover:border-border-light hover:text-fg transition-all"
             >
               Start Over
             </button>
@@ -812,7 +847,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           className={`w-full flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-bold text-[0.8125rem] transition-all ${
             isCompleted
               ? "bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20"
-              : "bg-[#080808] border border-white/10 text-[#888] hover:border-white/20 hover:text-white"
+              : "bg-bg-card border border-border text-muted hover:border-border-light hover:text-fg"
           }`}
         >
           <CheckCircle2 size={16} />
@@ -821,30 +856,30 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       </div>
 
       <div className="max-w-[65ch] mx-auto mb-12">
-        <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6">
+        <div className="bg-bg border border-border rounded-2xl p-6">
           {feedbackSubmitted ? (
             <div className="text-center py-4">
               <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-3">
                 <CheckCircle2 size={20} className="text-emerald-500" />
               </div>
-              <p className="text-sm font-semibold text-white">Thank you for your feedback!</p>
+              <p className="text-sm font-semibold text-fg">Thank you for your feedback!</p>
             </div>
           ) : (
             <>
               <div className="flex items-center gap-2 mb-5">
-                <Sparkles size={15} className="text-[#fbbf24]" />
-                <span className="text-[0.6875rem] font-bold text-[#fbbf24] uppercase tracking-[0.1em]">
+                <Sparkles size={15} className="text-premium" />
+                <span className="text-[0.6875rem] font-bold text-premium uppercase tracking-[0.1em]">
                   Feedback
                 </span>
               </div>
-              <p className="text-[0.875rem] text-[#888] mb-5">How was your experience?</p>
+              <p className="text-[0.875rem] text-muted mb-5">How was your experience?</p>
               <div className="flex gap-1.5 mb-6 justify-center">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button key={star} onClick={() => { setRating(star); setFeedbackError(false); }}
                     className={`w-12 h-12 rounded-xl flex items-center justify-center cursor-pointer transition-all ${
                       (rating ?? 0) >= star
-                        ? "bg-[#fbbf24] text-black shadow-lg shadow-[#fbbf24]/20 scale-110"
-                        : "bg-white/5 text-[#555] hover:bg-white/10 hover:text-white hover:scale-105"
+                        ? "bg-premium text-black shadow-lg shadow-premium/20 scale-110"
+                        : "bg-bg-elevated text-muted-dark hover:bg-bg-card hover:text-fg hover:scale-105"
                     }`}
                   >
                     <Star size={22} fill={(rating ?? 0) >= star ? "currentColor" : "none"} />
@@ -859,12 +894,12 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="Tell us more (optional)..."
                 rows={3}
-                className="w-full bg-[#0a0a0a] border border-white/10 rounded-xl px-4 py-3 text-[0.875rem] text-white outline-none resize-none mb-3 placeholder:text-[#888]"
+                className="w-full bg-bg-input border border-border rounded-xl px-4 py-3 text-[0.875rem] text-fg outline-none resize-none mb-3 placeholder:text-muted"
               />
               <button
                 onClick={handleSubmitFeedback}
                 disabled={!rating || feedbackSubmitting}
-                className="w-full py-3 bg-white text-black rounded-xl font-bold text-[0.8125rem] cursor-pointer hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-full py-3 bg-fg text-bg rounded-xl font-bold text-[0.8125rem] cursor-pointer hover:opacity-90 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 {feedbackSubmitting ? "Submitting..." : "Submit Feedback"}
               </button>
@@ -873,97 +908,59 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-[#050505cc] backdrop-blur-[30px] border-t border-[var(--border)] z-[1000] py-4 md:py-6 shadow-2xl shadow-black/50">
-        <div className="mx-auto w-full max-w-[1200px] px-3 md:px-6 flex flex-col gap-3 md:gap-5">
-          <div className="flex items-center gap-3 md:gap-5">
-            <span className="text-[0.75rem] text-[#555] min-w-[32px] md:min-w-[40px] tabular-nums">
-              {durationInfo.currentFormatted(progress)}
-            </span>
-            <div className="relative flex-grow h-1 bg-[#1a1a1a] rounded-sm">
-              <div className="absolute left-0 top-0 h-full bg-white rounded-sm" style={{ width: `${progress}%` }} />
-              <input
-                type="range" min="0" max="100" value={progress}
-                onChange={(e) => {
-                  const p = parseInt(e.target.value); setProgress(p);
-                }}
-                onMouseUp={(e) => { if (isPlaying) startSpeech(Math.floor((parseInt((e.target as HTMLInputElement).value) / 100) * unifiedCleanText.length), unifiedCleanText, volume, rate, selectedVoice); }}
-                className="absolute top-[-10px] left-0 w-full h-6 opacity-0 cursor-pointer z-5"
-              />
-              <div className="absolute top-1/2 -translate-y-1/2 w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_10px_rgba(255,255,255,0.5)] pointer-events-none" style={{ left: `${progress}%` }} />
-            </div>
-            <span className="text-[0.75rem] text-[#555] min-w-[32px] md:min-w-[40px] tabular-nums">
-              {durationInfo.totalFormatted}
-            </span>
-          </div>
+      <ModuleFloatingBar
+        isPlaying={isPlaying}
+        onTogglePlay={toggleSpeech}
+        progress={progress}
+        durationInfo={durationInfo}
+        voices={voices}
+        selectedVoice={selectedVoice}
+        onVoiceChange={updateVoice}
+        showVoiceList={showVoiceList}
+        onToggleVoiceList={() => setShowVoiceList((v) => !v)}
+        rate={rate}
+        onRateChange={updateRate}
+        volume={volume}
+        onVolumeChange={updateVolume}
+        isFavorited={isFavorited}
+        onToggleFavorite={toggleFavorite}
+      />
 
-          <div className="flex items-center justify-between">
-            <div className="flex gap-2 md:gap-6 items-center flex-1">
-              <div className="relative">
-                <button onClick={() => setShowVoiceList(!showVoiceList)} className="bg-transparent border-none text-[#888] flex items-center gap-1 md:gap-2 cursor-pointer text-[0.75rem] md:text-[0.875rem]">
-                  <Volume2 size={16} className="md:block" />
-                  <span className="hidden md:inline">{selectedVoice ? voices.find(v => v.name === selectedVoice)?.displayName || "Voice" : "Voice"}</span>
-                  <ChevronUp size={12} className={`md:block transition-transform duration-300 ${showVoiceList ? '' : 'rotate-180'}`} />
-                </button>
-                <AnimatePresence>
-                  {showVoiceList && (
-                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute bottom-[150%] left-0 w-[160px] md:w-[180px] max-h-[200px] md:max-h-[250px] overflow-y-auto bg-[#111] border border-[#222] rounded-xl p-2 shadow-2xl shadow-black/80 z-[1001]">
-                      {voices.map((voice: any) => (
-                        <button key={voice.name} onClick={() => { setShowVoiceList(false); updateVoice(voice.name); }} className={`w-full px-2 md:px-3 py-2 text-left text-[0.75rem] md:text-[0.8125rem] rounded-lg cursor-pointer ${selectedVoice === voice.name ? 'text-white bg-[#1a1a1a]' : 'text-[#666] hover:bg-[#1a1a1a]'}`}>{voice.displayName}</button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-              <div className="flex items-center gap-1 md:gap-2 text-[#444]">
-                <FastForward size={14} className="md:block" />
-                <select value={rate} onChange={(e) => updateRate(parseFloat(e.target.value))} className="bg-transparent border-none text-[#888] text-[0.75rem] md:text-[0.8125rem] cursor-pointer outline-none">
-                  <option value="0.8">0.8x</option><option value="1">1.0x</option><option value="1.2">1.2x</option><option value="1.5">1.5x</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex gap-3 md:gap-6 items-center flex-1 justify-center">
-              <button onClick={toggleSpeech} className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-white text-black flex items-center justify-center border-none cursor-pointer shadow-lg shadow-white/20">
-                {isPlaying ? <Square size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
-              </button>
-            </div>
-            <div className="flex gap-2 md:gap-6 items-center flex-1 justify-end">
-              <div className="hidden md:flex items-center gap-3">
-                <Volume2 size={18} className="text-[#444]" />
-                <input type="range" min="0" max="1" step="0.1" value={volume} onChange={(e) => updateVolume(parseFloat(e.target.value))} className="w-[80px] md:w-[100px] h-0.5 accent-white cursor-pointer" />
-              </div>
-              <button className="text-[#444] bg-transparent border-none cursor-pointer" onClick={() => setShowSettings(!showSettings)}><Settings2 size={18} className="md:text-[20px]" /></button>
-            </div>
-          </div>
-        </div>
-      </div>
-
+      <TableOfContents
+        show={tocOpen}
+        onClose={() => setTocOpen(false)}
+        onNavigate={(id) => {
+          const el = document.getElementById(id);
+          if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }}
+      />
       {selection && (
         <div
           data-highlight-popup
-          className="fixed z-[2000] bg-[#111] border border-white/10 rounded-2xl p-4 shadow-2xl shadow-black/60 min-w-[260px] md:min-w-[300px]"
+          className="fixed z-[2000] bg-bg-elevated border border-border rounded-2xl p-4 shadow-2xl shadow-black/60 min-w-[260px] md:min-w-[300px]"
           style={{ left: Math.max(16, Math.min(selection.x - 150, window.innerWidth - 300)), top: Math.max(16, selection.y - 180) }}
         >
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2 text-[#fbbf24]">
+            <div className="flex items-center gap-2 text-premium">
               <Highlighter size={14} />
               <span className="text-[0.6875rem] font-bold uppercase tracking-[0.08em]">Highlight</span>
             </div>
-            <button onClick={() => { setSelection(null); setNote(""); }} className="text-[#555] hover:text-white transition-colors cursor-pointer bg-transparent border-none p-1">
+            <button onClick={() => { setSelection(null); setNote(""); }} className="text-muted-dark hover:text-fg transition-colors cursor-pointer bg-transparent border-none p-1">
               <X size={14} />
             </button>
           </div>
-          <p className="text-[0.8125rem] text-[#888] mb-3 line-clamp-2 leading-relaxed">"{selection.text}"</p>
+          <p className="text-[0.8125rem] text-muted mb-3 line-clamp-2 leading-relaxed">"{selection.text}"</p>
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Add a note (optional)"
             rows={2}
-            className="w-full bg-[#050505] border border-[#222] rounded-xl px-3 py-2 text-[0.8125rem] text-white outline-none resize-none mb-3 placeholder:text-[#444]"
+            className="w-full bg-bg-input border border-border rounded-xl px-3 py-2 text-[0.8125rem] text-fg outline-none resize-none mb-3 placeholder:text-muted-dark"
           />
           <button
             onClick={handleSaveHighlight}
             disabled={createHighlight.isPending}
-            className="w-full py-2.5 bg-white text-black rounded-xl font-bold text-[0.75rem] cursor-pointer hover:opacity-90 transition-all disabled:opacity-50"
+            className="w-full py-2.5 bg-fg text-bg rounded-xl font-bold text-[0.75rem] cursor-pointer hover:opacity-90 transition-all disabled:opacity-50"
           >
             {createHighlight.isPending ? "Saving..." : "Save Highlight"}
           </button>

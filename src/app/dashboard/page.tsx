@@ -132,10 +132,10 @@ export default function DashboardPage() {
     <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-10 md:py-16">
       <header className="mb-10">
         <div className="mb-2">
-          <span className="text-[0.875rem] text-[#444] uppercase tracking-[0.1em]">{greeting}</span>
+          <span className="text-[0.875rem] text-muted-dark uppercase tracking-[0.1em]">{greeting}</span>
         </div>
         <h1 className="text-4xl font-black tracking-[-0.02em] mb-2">Ready to Think,</h1>
-        <p className="text-lg text-[#666]">{todayQuote}</p>
+        <p className="text-lg text-muted-light">{todayQuote}</p>
       </header>
 
       {paymentVerified && (
@@ -148,19 +148,19 @@ export default function DashboardPage() {
       )}
 
       {verifyingPayment && (
-        <div className="mb-8 p-4 bg-[#fbbf24]/10 border border-[#fbbf24]/20 rounded-xl flex items-center gap-3">
-          <div className="w-4 h-4 border-2 border-[#fbbf24]/30 border-t-[#fbbf24] rounded-full animate-spin" />
-          <p className="text-[0.875rem] text-[#fbbf24]">Activating your subscription...</p>
+        <div className="mb-8 p-4 bg-premium/10 border border-premium/20 rounded-xl flex items-center gap-3">
+          <div className="w-4 h-4 border-2 border-premium/30 border-t-premium rounded-full animate-spin" />
+          <p className="text-[0.875rem] text-premium">Activating your subscription...</p>
         </div>
       )}
 
 
 
       {user.subscriptionStatus === "FREE" && !paymentVerified && !verifyingPayment && (
-        <div className="mb-8 p-4 bg-[#ffb800]/5 border border-[#ffb800]/20 rounded-xl flex items-center justify-between gap-3">
+        <div className="mb-8 p-4 bg-premium/5 border border-premium/20 rounded-xl flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <Crown size={18} className="text-[#ffb800] flex-shrink-0" />
-            <p className="text-[0.875rem] text-[#ccc]">
+            <Crown size={18} className="text-premium flex-shrink-0" />
+            <p className="text-[0.875rem] text-muted">
               Already paid?{" "}
               <button
                 onClick={async () => {
@@ -172,7 +172,7 @@ export default function DashboardPage() {
                     }
                   } catch {}
                 }}
-                className="text-[#ffb800] font-bold hover:underline bg-transparent border-none cursor-pointer"
+                className="text-premium font-bold hover:underline bg-transparent border-none cursor-pointer"
               >
                 Check subscription status
               </button>
@@ -182,61 +182,61 @@ export default function DashboardPage() {
       )}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-[#888] mb-3">
+        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-muted mb-3">
             <Headphones size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Listened</span>
           </div>
-          <p className="text-2xl font-black text-white">{stats?.listeningMinutes || 0}<span className="text-[0.875rem] font-normal text-[#555] ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.listenXp || 0} XP</span></p>
-          <p className="text-[0.6875rem] text-[#555] mt-1">Total audio time</p>
+          <p className="text-2xl font-black text-fg">{stats?.listeningMinutes || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.listenXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Total audio time</p>
         </div>
-        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-[#888] mb-3">
+        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-muted mb-3">
             <BookOpen size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Read</span>
           </div>
-          <p className="text-2xl font-black text-white">{stats?.readingMinutes || 0}<span className="text-[0.875rem] font-normal text-[#555] ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.readXp || 0} XP</span></p>
-          <p className="text-[0.6875rem] text-[#555] mt-1">Total reading time</p>
+          <p className="text-2xl font-black text-fg">{stats?.readingMinutes || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.readXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Total reading time</p>
         </div>
-        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-[#888] mb-3">
+        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-muted mb-3">
             <CheckCircle2 size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Completed</span>
           </div>
-          <p className="text-2xl font-black text-white">{stats?.completedModules || 0}<span className="text-[0.875rem] font-normal text-[#555] ml-1">/ {stats?.totalModules || 0}</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.completedXp || 0} XP</span></p>
-          <p className="text-[0.6875rem] text-[#555] mt-1">Modules finished</p>
+          <p className="text-2xl font-black text-fg">{stats?.completedModules || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">/ {stats?.totalModules || 0}</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.completedXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Modules finished</p>
         </div>
-        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-[#888] mb-3">
+        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-muted mb-3">
             <Sparkles size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Reflections</span>
           </div>
-          <p className="text-2xl font-black text-white">{reflections.length}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.reflectionXp || 0} XP</span></p>
-          <p className="text-[0.6875rem] text-[#555] mt-1">Total reflections</p>
+          <p className="text-2xl font-black text-fg">{reflections.length}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.reflectionXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Total reflections</p>
         </div>
-        <div className="bg-[#0d0d0d] rounded-2xl p-5 border border-white/5 flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-[#888] mb-3">
+        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-muted mb-3">
             <Sparkles size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Highlights</span>
           </div>
-          <p className="text-2xl font-black text-white">{stats?.highlights || 0}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.highlightXp || 0} XP</span></p>
-          <p className="text-[0.6875rem] text-[#555] mt-1">Total highlights</p>
+          <p className="text-2xl font-black text-fg">{stats?.highlights || 0}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.highlightXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Total highlights</p>
         </div>
       </div>
 
       <div className="mb-8">
-        <div className="bg-[#0a0a0a] rounded-xl border border-white/5 overflow-hidden relative px-6 py-3 flex items-center justify-between">
+        <div className="bg-bg rounded-xl border border-border-subtle overflow-hidden relative px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 relative z-10 shrink-0">
             <Flame size={14} className="text-[#f97316]" />
-            <span className="text-[0.75rem] font-bold text-[#888]">{streak} day streak</span>
+            <span className="text-[0.75rem] font-bold text-muted">{streak} day streak</span>
           </div>
           <div className="flex-1 mx-6 relative z-10">
-            <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-bg-elevated rounded-full overflow-hidden">
               <div className="h-full bg-gradient-to-r from-[#f97316] to-[#fb923c] rounded-full transition-all" style={{ width: `${Math.min((streak / 30) * 100, 100)}%` }} />
             </div>
           </div>
           <div className="relative z-10 shrink-0">
-            <span className="text-[0.6875rem] text-[#444] font-bold">30 day goal</span>
+            <span className="text-[0.6875rem] text-muted-dark font-bold">30 day goal</span>
           </div>
           <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-[#f97316]/5 to-transparent rounded-full translate-x-1/4 -translate-y-1/4" />
         </div>
@@ -244,16 +244,16 @@ export default function DashboardPage() {
 
       {showStreakPopup && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-white/10 rounded-2xl p-8 max-w-sm w-full mx-4 text-center">
+          <div className="bg-bg-card border border-border rounded-2xl p-8 max-w-sm w-full mx-4 text-center">
             <Flame size={48} className="text-[#f97316] mx-auto mb-4" />
-            <h2 className="text-xl font-black text-white mb-2">Streak Broken!</h2>
-            <p className="text-[0.875rem] text-[#666] mb-6">
-              You missed a day and lost your <span className="text-white font-bold">{streak}-day</span> streak.
+            <h2 className="text-xl font-black text-fg mb-2">Streak Broken!</h2>
+            <p className="text-[0.875rem] text-muted-light mb-6">
+              You missed a day and lost your <span className="text-fg font-bold">{streak}-day</span> streak.
               <br />Start again today to build a new streak!
             </p>
             <button
               onClick={handleStreakPopupOk}
-              className="bg-white text-black px-8 py-3 rounded-xl font-bold text-[0.875rem] hover:bg-white/90 transition-colors"
+              className="bg-fg text-bg px-8 py-3 rounded-xl font-bold text-[0.875rem] hover:opacity-90 transition-colors"
             >
               OK, I&apos;ll Start Again
             </button>
@@ -264,30 +264,30 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
         <div className="flex flex-col gap-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
+            <div className="bg-bg-card rounded-2xl p-6 border border-border-subtle">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">Current Rank</h3>
-                <span className="text-[0.75rem] text-[#666]">{stats?.totalXp?.toLocaleString() || 0} XP</span>
+                <h3 className="text-[0.875rem] text-muted-dark uppercase font-bold tracking-[0.05em]">Current Rank</h3>
+                <span className="text-[0.75rem] text-muted-light">{stats?.totalXp?.toLocaleString() || 0} XP</span>
               </div>
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#8b5cf6] to-[#3b82f6] flex items-center justify-center text-lg font-bold">{stats?.rank?.charAt(0) || "B"}</div>
                 <div>
-                  <div className="font-semibold text-lg">{stats?.rank || "Beginner"}</div>
-                  <div className="text-[0.75rem] text-[#666]">Level {stats?.rankLevel || 1}</div>
+                  <div className="font-semibold text-lg text-fg">{stats?.rank || "Beginner"}</div>
+                  <div className="text-[0.75rem] text-muted-light">Level {stats?.rankLevel || 1}</div>
                 </div>
               </div>
-              <div className="w-full h-2 bg-[#1a1a1a] rounded-full overflow-hidden">
+              <div className="w-full h-2 bg-bg-elevated rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#3b82f6] rounded-full" style={{ width: `${stats ? ((stats.totalXp - stats.prevLevelXp) / (stats.nextLevelXp - stats.prevLevelXp)) * 100 : 0}%` }} />
               </div>
-              <div className="flex justify-between mt-2 text-[0.6875rem] text-[#666]">
+              <div className="flex justify-between mt-2 text-[0.6875rem] text-muted-light">
                 <span>{stats?.prevLevelXp?.toLocaleString() || 0} XP</span>
                 <span>Next: {stats?.nextRank || "—"} ({stats?.nextLevelXp?.toLocaleString() || 0} XP)</span>
               </div>
             </div>
 
-            <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
+            <div className="bg-bg-card rounded-2xl p-6 border border-border-subtle">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">Weekly Insights</h3>
+                <h3 className="text-[0.875rem] text-muted-dark uppercase font-bold tracking-[0.05em]">Weekly Insights</h3>
                 <Flame size={16} className="text-[#f97316]" />
               </div>
               <div className="flex items-center justify-between gap-1.5 mb-5">
@@ -304,16 +304,16 @@ export default function DashboardPage() {
                   });
                   return (
                     <div key={day} className="flex flex-col items-center gap-2">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${hasReflection ? 'bg-[#f97316] text-black' : 'bg-[#1a1a1a]'}`}>
-                        <div className={`w-2 h-2 rounded-full ${hasReflection ? 'bg-black' : 'bg-[#333]'}`} />
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${hasReflection ? 'bg-[#f97316] text-black' : 'bg-bg-elevated'}`}>
+                        <div className={`w-2 h-2 rounded-full ${hasReflection ? 'bg-black' : 'bg-muted-dark'}`} />
                       </div>
-                      <span className="text-[0.625rem] text-[#444] font-bold">{day.charAt(0)}</span>
+                      <span className="text-[0.625rem] text-muted-dark font-bold">{day.charAt(0)}</span>
                     </div>
                   );
                 })}
               </div>
-              <div className="text-[0.75rem] text-[#666]">
-                <span className="text-xl font-bold text-white">
+              <div className="text-[0.75rem] text-muted-light">
+                <span className="text-xl font-bold text-fg">
                   {reflections.filter((r: any) => {
                     const now = new Date();
                     const rDate = new Date(r.timestamp);
@@ -327,30 +327,30 @@ export default function DashboardPage() {
           </div>
 
           <div>
-            <h3 className="text-[0.875rem] text-[#444] uppercase font-bold mb-4 tracking-[0.05em]">Recent Activity</h3>
+            <h3 className="text-[0.875rem] text-muted-dark uppercase font-bold mb-4 tracking-[0.05em]">Recent Activity</h3>
             <div className="flex flex-col gap-2">
               {recentModules.length > 0 ? recentModules.map((r) => (
-                <Link key={r.slug} href={`/models/${r.slug}`} className="group bg-[#0d0d0d] rounded-xl px-6 py-4 border border-white/5 no-underline flex items-center gap-4 hover:bg-[#111] hover:border-white/10 transition-all">
+                <Link key={r.slug} href={`/models/${r.slug}`} className="group bg-bg-card rounded-xl px-6 py-4 border border-border-subtle no-underline flex items-center gap-4 hover:bg-bg hover:border-border transition-all">
                   <div className="flex flex-col items-center gap-0.5 min-w-[36px]">
-                    {r.listened > 0 && <span className="text-[0.5625rem] text-[#555] font-bold">{Math.round(r.listened)}%</span>}
+                    {r.listened > 0 && <span className="text-[0.5625rem] text-muted-dark font-bold">{Math.round(r.listened)}%</span>}
                     <div className="flex gap-1">
-                      {r.listened > 0 && <div className={`w-2 h-4 rounded-sm ${r.listened >= 100 ? 'bg-green-500/60' : 'bg-white/30'}`} style={{ opacity: r.listened / 100 }} />}
-                      {r.read > 0 && <div className={`w-2 h-4 rounded-sm ${r.read >= 100 ? 'bg-green-500/60' : 'bg-white/30'}`} style={{ opacity: r.read / 100 }} />}
+                      {r.listened > 0 && <div className={`w-2 h-4 rounded-sm ${r.listened >= 100 ? 'bg-green-500/60' : 'bg-fg/30'}`} style={{ opacity: r.listened / 100 }} />}
+                      {r.read > 0 && <div className={`w-2 h-4 rounded-sm ${r.read >= 100 ? 'bg-green-500/60' : 'bg-fg/30'}`} style={{ opacity: r.read / 100 }} />}
                     </div>
-                    <span className="text-[0.5rem] text-[#444] mt-0.5">
+                    <span className="text-[0.5rem] text-muted-dark mt-0.5">
                       {r.listened > 0 && r.read > 0 ? "L+R" : r.listened > 0 ? "Listen" : "Read"}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-[0.9375rem] truncate">{r.title}</div>
-                    <div className="text-[0.75rem] text-[#555]">{timeAgo(new Date(r.lastReadAt).getTime())}</div>
+                    <div className="font-semibold text-[0.9375rem] text-fg truncate">{r.title}</div>
+                    <div className="text-[0.75rem] text-muted-dark">{timeAgo(new Date(r.lastReadAt).getTime())}</div>
                   </div>
-                  <Play size={14} className="text-[#333] group-hover:text-white transition-colors shrink-0" />
+                  <Play size={14} className="text-muted-dark group-hover:text-fg transition-colors shrink-0" />
                 </Link>
               )) : (
-                <div className="bg-[#0d0d0d] rounded-xl px-6 py-8 border border-white/5 text-center">
-                  <p className="text-[0.875rem] text-[#555]">No activity yet. Start learning to see your history here.</p>
-                  <Link href="/models" className="inline-flex items-center gap-1.5 mt-3 text-[0.8125rem] text-[#888] hover:text-white transition-colors">
+                <div className="bg-bg-card rounded-xl px-6 py-8 border border-border-subtle text-center">
+                  <p className="text-[0.875rem] text-muted-dark">No activity yet. Start learning to see your history here.</p>
+                  <Link href="/models" className="inline-flex items-center gap-1.5 mt-3 text-[0.8125rem] text-muted hover:text-fg transition-colors">
                     <Sparkles size={14} /> Explore modules <ArrowRight size={12} />
                   </Link>
                 </div>
@@ -360,8 +360,8 @@ export default function DashboardPage() {
         </div>
 
         <div className="flex flex-col gap-8">
-          <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
-            <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em] mb-6">Library Breakdown</h3>
+          <div className="bg-bg-card rounded-2xl p-6 border border-border-subtle">
+            <h3 className="text-[0.875rem] text-muted-dark uppercase font-bold tracking-[0.05em] mb-6">Library Breakdown</h3>
             {completedCategoryData.length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height={220}>
@@ -374,7 +374,7 @@ export default function DashboardPage() {
                     <Tooltip content={({ active, payload }) => {
                       if (active && payload && payload.length) {
                         const data = payload[0].payload;
-                        return <div className="bg-[#111] border border-white/10 rounded-xl px-4 py-2.5 shadow-xl pointer-events-none"><p className="text-[0.75rem] font-bold text-white capitalize">{data.name}</p><p className="text-[0.6875rem] text-[#888]">{data.value} models</p></div>;
+                        return <div className="bg-bg-elevated border border-border rounded-xl px-4 py-2.5 shadow-xl pointer-events-none"><p className="text-[0.75rem] font-bold text-fg capitalize">{data.name}</p><p className="text-[0.6875rem] text-muted">{data.value} models</p></div>;
                       }
                       return null;
                     }} cursor={false} />
@@ -382,7 +382,7 @@ export default function DashboardPage() {
                 </ResponsiveContainer>
                 <div className="grid grid-cols-2 gap-1.5 mt-2">
                   {completedCategoryData.slice(0, 8).map((cat) => (
-                    <div key={cat.name} className="flex items-center gap-2 text-[0.6875rem] text-[#555]">
+                    <div key={cat.name} className="flex items-center gap-2 text-[0.6875rem] text-muted-dark">
                       <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: categoryColors[cat.name] || '#555' }} />
                       <span className="capitalize truncate">{cat.name}</span>
                     </div>
@@ -390,31 +390,31 @@ export default function DashboardPage() {
                 </div>
               </>
             ) : (
-              <p className="text-[0.875rem] text-[#555] text-center py-8">Complete modules to see your library breakdown</p>
+              <p className="text-[0.875rem] text-muted-dark text-center py-8">Complete modules to see your library breakdown</p>
             )}
           </div>
 
-          <div className="bg-[#0d0d0d] rounded-2xl p-6 border border-white/5">
+          <div className="bg-bg-card rounded-2xl p-6 border border-border-subtle">
             <div className="flex items-center gap-2 mb-5">
-              <Sparkles size={14} className="text-[#fbbf24]" />
-              <h3 className="text-[0.875rem] text-[#444] uppercase font-bold tracking-[0.05em]">Latest</h3>
+              <Sparkles size={14} className="text-premium" />
+              <h3 className="text-[0.875rem] text-muted-dark uppercase font-bold tracking-[0.05em]">Latest</h3>
             </div>
             <div className="flex flex-col gap-3">
               {[...allModules].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3).map((m: any, i: number) => {
                 const colors = ['#a78bfa', '#60a5fa', '#34d399'];
                 return (
-                  <Link key={m.slug} href={`/models/${m.slug}`} className="group flex items-center gap-3 no-underline hover:bg-[#111] rounded-xl px-3 py-2.5 transition-all -mx-3">
+                  <Link key={m.slug} href={`/models/${m.slug}`} className="group flex items-center gap-3 no-underline hover:bg-bg-elevated rounded-xl px-3 py-2.5 transition-all -mx-3">
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center text-[0.75rem] font-bold shrink-0" style={{ background: `${colors[i]}15`, color: colors[i] }}>{i + 1}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-[0.8125rem] font-semibold truncate">{m.title}</div>
-                      <div className="text-[0.6875rem] text-[#555] truncate">{m.category}</div>
+                      <div className="text-[0.8125rem] font-semibold text-fg truncate">{m.title}</div>
+                      <div className="text-[0.6875rem] text-muted-dark truncate">{m.category}</div>
                     </div>
-                    <ArrowRight size={12} className="text-[#333] group-hover:text-white transition-colors shrink-0" />
+                    <ArrowRight size={12} className="text-muted-dark group-hover:text-fg transition-colors shrink-0" />
                   </Link>
                 );
               })}
             </div>
-            <Link href="/models" className="block text-center mt-4 text-[0.75rem] text-[#555] hover:text-white transition-colors">View all modules →</Link>
+            <Link href="/models" className="block text-center mt-4 text-[0.75rem] text-muted-dark hover:text-fg transition-colors">View all modules →</Link>
           </div>
         </div>
       </div>

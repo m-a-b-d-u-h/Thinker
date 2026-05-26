@@ -52,17 +52,17 @@ export default function PreferencesPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#030303] flex items-center justify-center p-8">
+    <div className="min-h-screen bg-bg flex items-center justify-center p-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-[600px]"
         >
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-black text-white mb-3">
+            <h1 className="text-3xl font-black text-fg mb-3">
               What interests you?
             </h1>
-            <p className="text-[#666] text-sm">
+            <p className="text-muted text-sm">
               Pick the topics you want to explore. We&apos;ll personalize your feed.
             </p>
           </div>
@@ -79,8 +79,8 @@ export default function PreferencesPage() {
                   onClick={() => toggleCategory(cat)}
                   className={`px-4 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer ${
                     active
-                      ? "bg-white text-black shadow-lg shadow-white/10"
-                      : "bg-white/5 border border-white/5 text-[#555] hover:border-white/15 hover:text-white"
+                      ? "bg-fg text-bg shadow-lg shadow-fg/10"
+                      : "bg-bg-elevated border border-border-subtle text-muted hover:border-border hover:text-fg"
                   }`}
                 >
                   {cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, " ")}
@@ -93,11 +93,11 @@ export default function PreferencesPage() {
             <button
               onClick={handleSave}
               disabled={saving || selected.length === 0}
-              className="px-8 py-3.5 bg-white text-black rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-8 py-3.5 bg-fg text-bg rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {saving ? "Saving..." : `Save & Start (${selected.length})`}
             </button>
-            <p className="mt-3 text-xs text-[#444]">
+            <p className="mt-3 text-xs text-muted-dark">
               Select at least one category to continue
             </p>
           </div>

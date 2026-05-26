@@ -31,9 +31,9 @@ export default function FavoritesPage() {
   if (!user) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-10 md:py-16 text-center">
-        <Bookmark size={32} className="mx-auto text-[#222] mb-4" />
+        <Bookmark size={32} className="mx-auto text-muted-dark mb-4" />
         <h1 className="text-3xl font-black mb-4">Sign in to view your favorites</h1>
-        <Link href="/login" className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-lg font-semibold">
+        <Link href="/login" className="inline-flex items-center gap-2 bg-fg text-bg px-6 py-3 rounded-lg font-semibold">
           Sign In
         </Link>
       </div>
@@ -43,7 +43,7 @@ export default function FavoritesPage() {
   if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-10 md:py-16 flex justify-center">
-        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-border border-t-fg rounded-full animate-spin" />
       </div>
     );
   }
@@ -52,7 +52,7 @@ export default function FavoritesPage() {
     <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-10 md:py-16">
       <header className="mb-12">
         <div className="flex items-center gap-4 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center text-white">
+          <div className="w-10 h-10 rounded-xl bg-bg-elevated flex items-center justify-center text-fg">
             <Bookmark size={20} />
           </div>
         </div>
@@ -62,13 +62,13 @@ export default function FavoritesPage() {
 
       <div className="flex items-center justify-between mb-8">
         <div className="relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#444]" />
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-dark" />
           <input
             type="text"
             placeholder="Search favorites..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full max-w-[400px] py-3 pl-12 pr-4 bg-[#080808] border border-white/5 rounded-xl text-white text-[0.875rem] outline-none focus:border-white/15 transition-colors"
+            className="w-full max-w-[400px] py-3 pl-12 pr-4 bg-bg-input border border-border rounded-xl text-fg text-[0.875rem] outline-none focus:border-border-light transition-colors placeholder:text-muted-dark"
           />
         </div>
       </div>
@@ -91,8 +91,8 @@ export default function FavoritesPage() {
         </>
       ) : (
         <div className="text-center py-20">
-          <Bookmark size={32} className="mx-auto text-[#222] mb-4" />
-          <p className="text-[#444] text-[0.875rem]">No favorites yet</p>
+          <Bookmark size={32} className="mx-auto text-muted-dark mb-4" />
+          <p className="text-muted-dark text-[0.875rem]">No favorites yet</p>
           <Link href="/models" className="text-[#f97316] text-[0.8125rem] hover:underline mt-2 inline-block">
             Browse models →
           </Link>

@@ -67,7 +67,7 @@ export default function PaymentSuccessPage() {
             <RefreshCw size={36} className="text-yellow-500 animate-spin" />
           </div>
           <h1 className="text-3xl font-black mb-3 tracking-[-0.03em]">Processing Payment</h1>
-          <p className="text-[#888] text-[0.9375rem]">Waiting for payment confirmation&hellip;</p>
+          <p className="text-muted-dark text-[0.9375rem]">Waiting for payment confirmation&hellip;</p>
         </>
       )}
 
@@ -77,20 +77,20 @@ export default function PaymentSuccessPage() {
             <CheckCircle size={36} className="text-emerald-500" />
           </div>
           <h1 className="text-3xl font-black mb-3 tracking-[-0.03em]">Payment Successful!</h1>
-          <p className="text-[#666] text-[0.9375rem] mb-8 leading-relaxed max-w-[380px]">
+          <p className="text-muted text-[0.9375rem] mb-8 leading-relaxed max-w-[380px]">
             Your subscription is now active. You have full access to all modules and premium features.
           </p>
           <div className="flex flex-col gap-3 w-full max-w-[300px]">
-            <Link href="/models" className="inline-flex items-center justify-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-bold text-[0.875rem] hover:bg-white/90 transition-all no-underline">
+            <Link href="/models" className="inline-flex items-center justify-center gap-2 bg-fg text-bg px-6 py-3 rounded-xl font-bold text-[0.875rem] hover:bg-fg/90 transition-all no-underline">
               <Sparkles size={16} />
               Start Exploring
             </Link>
-            <Link href="/dashboard" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-[0.8125rem] text-[#666] hover:text-white border border-white/10 hover:border-white/20 transition-all no-underline">
+            <Link href="/dashboard" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-[0.8125rem] text-muted hover:text-fg border border-border-subtle hover:border-border transition-all no-underline">
               Go to Dashboard
               <ArrowRight size={14} />
             </Link>
           </div>
-          <p className="mt-8 text-[0.75rem] text-[#444]">Redirecting in {countdown}s&hellip;</p>
+          <p className="mt-8 text-[0.75rem] text-muted-dark">Redirecting in {countdown}s&hellip;</p>
         </>
       )}
 
@@ -100,10 +100,10 @@ export default function PaymentSuccessPage() {
             <XCircle size={36} className="text-red-500" />
           </div>
           <h1 className="text-3xl font-black mb-3 tracking-[-0.03em]">Still Processing</h1>
-          <p className="text-[#888] text-[0.9375rem] mb-2">
+          <p className="text-muted-dark text-[0.9375rem] mb-2">
             Activation is taking longer than expected.
           </p>
-          <p className="text-[#666] text-[0.8125rem] mb-8">
+          <p className="text-muted text-[0.8125rem] mb-8">
             Don&apos;t worry — your subscription will be activated once the payment is confirmed.
             Check your dashboard in a few minutes.
           </p>
@@ -113,12 +113,12 @@ export default function PaymentSuccessPage() {
                 retriesRef.current = 0;
                 setStatus("polling");
               }}
-              className="inline-flex items-center justify-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-bold text-[0.875rem] hover:bg-white/90 transition-all"
+              className="inline-flex items-center justify-center gap-2 bg-fg text-bg px-6 py-3 rounded-xl font-bold text-[0.875rem] hover:bg-fg/90 transition-all"
             >
               <RefreshCw size={16} />
               Check Again
             </button>
-            <Link href="/dashboard" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-[0.8125rem] text-[#666] hover:text-white border border-white/10 hover:border-white/20 transition-all no-underline">
+            <Link href="/dashboard" className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-[0.8125rem] text-muted hover:text-fg border border-border-subtle hover:border-border transition-all no-underline">
               Go to Dashboard
               <ArrowRight size={14} />
             </Link>

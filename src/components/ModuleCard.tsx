@@ -27,10 +27,10 @@ interface ModuleData {
 }
 
 const CustomNode = ({ data }: any) => (
-  <div className="bg-[#0d0d0d]/90 text-white border border-[#333] rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap backdrop-blur-sm">
-    <Handle type="target" position={Position.Top} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
+  <div className="bg-bg-card/90 text-fg border border-border-light rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap backdrop-blur-sm">
+    <Handle type="target" position={Position.Top} className="!bg-muted-dark !border-0 !w-1.5 !h-1.5" />
     {data.label}
-    <Handle type="source" position={Position.Bottom} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
+    <Handle type="source" position={Position.Bottom} className="!bg-muted-dark !border-0 !w-1.5 !h-1.5" />
   </div>
 );
 
@@ -68,7 +68,7 @@ const MiniPreview = React.memo(({ nodes, edges }: { nodes: any[]; edges: any[] }
   const styledEdges = useMemo(() => edges.map(e => ({
     ...e,
     animated: true,
-    style: { stroke: 'rgba(255,255,255,0.45)', strokeWidth: 2.5 }
+    style: { stroke: 'var(--color-border)', strokeWidth: 2.5 }
   })), [edges]);
 
   return (
@@ -116,11 +116,11 @@ export function ModuleCard({ module }: { module: ModuleData }) {
   return (
     <div
       onClick={handleClick}
-      className="group relative flex flex-col bg-[#080808] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300 hover:bg-[#0c0c0c] hover:border-white/10 hover:-translate-y-1 cursor-pointer"
+      className="group relative flex flex-col bg-bg-card border border-border-subtle rounded-2xl overflow-hidden transition-all duration-300 hover:bg-bg hover:border-border hover:-translate-y-1 cursor-pointer"
     >
       {!isAccessible && (
-        <div className="absolute inset-0 z-20 bg-[#080808]/60 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <Link href="/#pricing" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#ffb800] text-black rounded-xl font-bold text-[0.8125rem] no-underline hover:bg-[#ffb800]/90 transition-all">
+        <div className="absolute inset-0 z-20 bg-bg-card/60 backdrop-blur-[2px] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <Link href="/#pricing" className="inline-flex items-center gap-2 px-5 py-2.5 bg-premium text-black rounded-xl font-bold text-[0.8125rem] no-underline hover:bg-premium/90 transition-all">
             <Lock size={14} />
             Subscribe to Access
           </Link>
@@ -131,29 +131,29 @@ export function ModuleCard({ module }: { module: ModuleData }) {
         {module.nodes && module.nodes.length > 0 ? (
           <MiniPreview nodes={module.nodes} edges={module.edges || []} />
         ) : (
-          <div className="w-full h-full bg-[#080808]" />
+          <div className="w-full h-full bg-bg-card" />
         )}
       </div>
 
-      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-[#080808] via-[#080808]/80 to-transparent z-10" />
+      <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-bg-card via-bg-card/80 to-transparent z-10" />
 
       <div className="relative z-20 p-4 md:p-8 pb-2 md:pb-3">
         <div className="flex items-start justify-between gap-2 md:gap-3">
-          <h2 className="text-base md:text-lg font-black text-white leading-[1.25] line-clamp-2 flex-1">{module.title}</h2>
-          <span className="shrink-0 px-2 md:px-3 py-1 rounded-full text-[0.5625rem] md:text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10 mt-1">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
+          <h2 className="text-base md:text-lg font-black text-fg leading-[1.25] line-clamp-2 flex-1">{module.title}</h2>
+          <span className="shrink-0 px-2 md:px-3 py-1 rounded-full text-[0.5625rem] md:text-[0.625rem] font-semibold bg-bg-elevated text-muted border border-border mt-1">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
         </div>
-        <p className="text-[0.6875rem] md:text-[0.75rem] text-[#777] leading-relaxed mt-1 line-clamp-2">{module.description}</p>
+        <p className="text-[0.6875rem] md:text-[0.75rem] text-muted leading-relaxed mt-1 line-clamp-2">{module.description}</p>
       </div>
 
       <div className="flex-1 relative z-10 min-h-[140px] md:min-h-[180px]" />
 
-      <div className="absolute inset-x-0 bottom-0 h-24 md:h-32 bg-gradient-to-t from-[#080808] via-[#080808]/90 to-transparent z-10" />
+      <div className="absolute inset-x-0 bottom-0 h-24 md:h-32 bg-gradient-to-t from-bg-card via-bg-card/90 to-transparent z-10" />
 
       <div className="relative z-20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 px-4 md:px-8 pb-4 md:pb-6 pt-6 md:pt-8">
         <div className="hidden sm:flex items-center gap-1.5 md:gap-2">
           <div
             onClick={handleStartClick}
-            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white text-black text-[0.625rem] md:text-[0.6875rem] font-bold no-underline cursor-pointer hover:bg-white/90 transition-all"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-fg text-bg text-[0.625rem] md:text-[0.6875rem] font-bold no-underline cursor-pointer hover:bg-fg/90 transition-all"
           >
             {isAccessible ? (
               <><Play size={11} fill="currentColor" /><span>Start Learning</span></>
@@ -166,7 +166,7 @@ export function ModuleCard({ module }: { module: ModuleData }) {
               e.stopPropagation();
               router.push(`/models/${module.slug}/path`);
             }}
-            className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 text-white/60 text-[0.625rem] md:text-[0.6875rem] font-semibold hover:bg-white/10 hover:text-white/80 transition-all"
+            className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-bg-elevated text-muted text-[0.625rem] md:text-[0.6875rem] font-semibold hover:bg-bg-card hover:text-fg transition-all"
           >
             <Network size={11} />
             <span>Path</span>
@@ -174,12 +174,12 @@ export function ModuleCard({ module }: { module: ModuleData }) {
         </div>
         <div className="flex items-center gap-2 md:gap-3 ml-auto">
           {(durations.listenMin > 0 || durations.readMin > 0) && (
-            <span className="text-[0.625rem] md:text-[0.6875rem] text-[#666] flex items-center gap-1.5 md:gap-2">
+            <span className="text-[0.625rem] md:text-[0.6875rem] text-muted-light flex items-center gap-1.5 md:gap-2">
               <span className="flex items-center gap-1">
                 <Headphones size={11} />
                 <span className="hidden xl:inline">Listen </span><span>{durations.listenMin}m</span>
               </span>
-              <span className="text-[#444]">·</span>
+              <span className="text-muted-dark">·</span>
               <span className="flex items-center gap-1">
                 <BookOpen size={11} />
                 <span className="hidden xl:inline">Read </span><span>{durations.readMin}m</span>
@@ -188,7 +188,7 @@ export function ModuleCard({ module }: { module: ModuleData }) {
           )}
           <button
             onClick={toggleFavorite}
-            className="p-2 rounded-full text-[#888] hover:text-[#fbbf24] hover:bg-white/10 transition-all"
+            className="p-2 rounded-full text-muted hover:text-premium hover:bg-bg-elevated transition-all"
           >
             <Bookmark size={14} fill={isFavorited ? "#fbbf24" : "none"} stroke={isFavorited ? "#fbbf24" : "currentColor"} />
           </button>

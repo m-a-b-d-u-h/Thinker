@@ -32,12 +32,15 @@ export default function Pagination({ page, totalPages, onPageChange }: Paginatio
 
   if (totalPages <= 1) return null;
 
+  const btnBase = "w-10 h-10 rounded-lg bg-bg-card border border-border-subtle text-muted flex items-center justify-center transition-all duration-200 cursor-pointer hover:border-border-light";
+  const btnDisabled = "opacity-30 cursor-not-allowed";
+
   return (
     <div className="flex justify-center gap-2 mt-12">
       <button
         onClick={() => onPageChange(Math.max(1, page - 1))}
         disabled={page === 1}
-        className={`w-10 h-10 rounded-lg bg-[#080808] border border-white/5 text-[#888] flex items-center justify-center transition-all duration-200 ${page === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:border-white/15 cursor-pointer'}`}
+        className={`${btnBase} ${page === 1 ? btnDisabled : ""}`}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -52,21 +55,21 @@ export default function Pagination({ page, totalPages, onPageChange }: Paginatio
             <button
               key={p}
               onClick={() => onPageChange(p)}
-              className={`min-w-10 h-10 rounded-lg font-bold text-[0.875rem] transition-all duration-200 ${page === p ? 'bg-white text-black' : 'bg-[#080808] border border-white/5 text-[#888] hover:border-white/15'}`}
+              className={`min-w-10 h-10 rounded-lg font-bold text-[0.875rem] transition-all duration-200 ${page === p ? "bg-fg text-bg" : "bg-bg-card border border-border-subtle text-muted hover:border-border-light"}`}
             >
               {p}
             </button>
           ))
         : getPageNumbers(page, totalPages).map((p, i) =>
             p === "..." ? (
-              <span key={`e${i}`} className="w-10 h-10 flex items-center justify-center text-[#666] text-[0.875rem]">
+              <span key={`e${i}`} className="w-10 h-10 flex items-center justify-center text-muted-dark text-sm">
                 ...
               </span>
             ) : (
               <button
                 key={p}
                 onClick={() => onPageChange(p)}
-                className={`min-w-10 h-10 rounded-lg font-bold text-[0.875rem] transition-all duration-200 ${page === p ? 'bg-white text-black' : 'bg-[#080808] border border-white/5 text-[#888] hover:border-white/15'}`}
+                className={`min-w-10 h-10 rounded-lg font-bold text-[0.875rem] transition-all duration-200 ${page === p ? "bg-fg text-bg" : "bg-bg-card border border-border-subtle text-muted hover:border-border-light"}`}
               >
                 {p}
               </button>
@@ -76,7 +79,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Paginatio
       <button
         onClick={() => onPageChange(Math.min(totalPages, page + 1))}
         disabled={page === totalPages}
-        className={`w-10 h-10 rounded-lg bg-[#080808] border border-white/5 text-[#888] flex items-center justify-center transition-all duration-200 ${page === totalPages ? 'opacity-30 cursor-not-allowed' : 'hover:border-white/15 cursor-pointer'}`}
+        className={`${btnBase} ${page === totalPages ? btnDisabled : ""}`}
       >
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <path d="M6 12L10 8L6 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>

@@ -74,7 +74,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
   if (loading) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-10 md:pt-16 flex justify-center">
-        <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-border border-t-fg rounded-full animate-spin" />
       </div>
     );
   }
@@ -82,8 +82,8 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
   if (!module || questions.length === 0) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-10 md:pt-16 text-center">
-        <p className="text-[0.875rem] text-[#555]">Module or quiz questions not available.</p>
-        <Link href="/models" className="inline-flex items-center gap-1.5 mt-4 text-[0.8125rem] text-[#888] hover:text-white transition-colors">
+        <p className="text-[0.875rem] text-muted">Module or quiz questions not available.</p>
+        <Link href="/models" className="inline-flex items-center gap-1.5 mt-4 text-[0.8125rem] text-muted hover:text-fg transition-colors">
           Back to library
         </Link>
       </div>
@@ -95,14 +95,14 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
       <div className="max-w-[700px] mx-auto">
         <header className="mb-12">
           <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000', marginBottom: '1rem' }}>{module.category}</span>
-          <h1 className="text-4xl font-bold text-white mt-4 mb-2">{module.title}</h1>
-          <p className="text-lg text-[#666]">Test your understanding of this module</p>
+          <h1 className="text-4xl font-bold text-fg mt-4 mb-2">{module.title}</h1>
+          <p className="text-lg text-muted">Test your understanding of this module</p>
         </header>
 
         {!finished ? (
           <div>
             <div className="mb-6">
-              <span className="text-[0.875rem] text-[#444]">Question {currentQuestion + 1} of {questions.length}</span>
+              <span className="text-[0.875rem] text-muted-dark">Question {currentQuestion + 1} of {questions.length}</span>
             </div>
 
             <AnimatePresence mode="wait">
@@ -112,7 +112,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
               >
-                <h2 className="text-2xl font-bold text-white mb-8 leading-snug">
+                <h2 className="text-2xl font-bold text-fg mb-8 leading-snug">
                   {questions[currentQuestion]?.question}
                 </h2>
 
@@ -133,10 +133,10 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
                               ? 'bg-green-500/10 border-green-500/30 text-green-400'
                               : isWrongSelected
                                 ? 'bg-red-500/10 border-red-500/30 text-red-400'
-                                : 'bg-[#080808] border-white/5 text-[#888]'
+                                : 'bg-bg-card border-border-subtle text-muted'
                             : selectedAnswer === idx
-                              ? 'bg-white/10 border-white/30 text-white'
-                              : 'bg-[#080808] border-white/5 text-[#888] hover:border-white/20 hover:text-white'
+                              ? 'bg-bg-elevated border-border text-fg'
+                              : 'bg-bg-card border-border-subtle text-muted hover:border-border hover:text-fg'
                         } ${!showResult ? 'cursor-pointer' : ''}`}
                       >
                         <div className="flex items-center justify-between">
@@ -155,22 +155,22 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
               <button
                 onClick={handleNext}
                 disabled={selectedAnswer === null}
-                className="w-full py-4 bg-white text-black rounded-xl font-bold text-[0.9375rem] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:bg-white/90 transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 bg-fg text-bg rounded-xl font-bold text-[0.9375rem] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-all flex items-center justify-center gap-2"
               >
                 Submit Answer
               </button>
             ) : (
               <div>
-                <div className="mb-6 p-4 rounded-xl bg-[#0a0a0a] border border-white/5">
+                <div className="mb-6 p-4 rounded-xl bg-bg-card border border-border-subtle">
                   {module.questions?.[currentQuestion]?.explanation && (
-                    <p className="text-[0.9375rem] text-[#888] leading-relaxed">
+                    <p className="text-[0.9375rem] text-muted leading-relaxed">
                       {module.questions[currentQuestion].explanation}
                     </p>
                   )}
                 </div>
                 <button
                   onClick={handleContinue}
-                  className="w-full py-4 bg-white text-black rounded-xl font-bold text-[0.9375rem] cursor-pointer hover:bg-white/90 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-fg text-bg rounded-xl font-bold text-[0.9375rem] cursor-pointer hover:opacity-90 transition-all flex items-center justify-center gap-2"
                 >
                   {currentQuestion < questions.length - 1 ? (
                     <>Next Question <ArrowRight size={18} /></>
@@ -183,13 +183,13 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
           </div>
         ) : (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
-            <div className="w-24 h-24 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-6">
+            <div className="w-24 h-24 rounded-full bg-bg-elevated flex items-center justify-center mx-auto mb-6">
               <span className="text-4xl font-black">{percentage}%</span>
             </div>
-            <h2 className="text-3xl font-bold text-white mb-2">
+            <h2 className="text-3xl font-bold text-fg mb-2">
               {percentage >= 80 ? "Great job!" : percentage >= 50 ? "Good effort!" : "Keep practicing!"}
             </h2>
-            <p className="text-lg text-[#666] mb-8">
+            <p className="text-lg text-muted mb-8">
               You got {result?.score ?? score} out of {result?.total ?? questions.length} correct
             </p>
 
@@ -197,10 +197,10 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
               <div className="text-left mb-8 space-y-3">
                 {result.answers.map((a: any, idx: number) => (
                   <div key={idx} className={`p-4 rounded-xl border ${a.correct ? 'bg-green-500/5 border-green-500/20' : 'bg-red-500/5 border-red-500/20'}`}>
-                    <p className="text-[0.875rem] text-white/80 mb-1">
+                    <p className="text-[0.875rem] text-fg/80 mb-1">
                       <span className="font-bold">{a.correct ? "✓" : "✗"}</span> Question {idx + 1}
                     </p>
-                    {a.explanation && <p className="text-[0.8125rem] text-[#888]">{a.explanation}</p>}
+                    {a.explanation && <p className="text-[0.8125rem] text-muted">{a.explanation}</p>}
                   </div>
                 ))}
               </div>
@@ -208,7 +208,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
 
             <button
               onClick={handleRestart}
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-xl font-bold cursor-pointer hover:bg-white/90 transition-all"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-fg text-bg rounded-xl font-bold cursor-pointer hover:opacity-90 transition-all"
             >
               <RefreshCw size={18} />
               Retry Quiz

@@ -30,11 +30,11 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="w-full h-16 bg-[#020202] border-b border-white/3 fixed inset-x-0 z-50 flex items-center justify-between px-4 md:px-8 backdrop-blur">
+      <nav className="w-full h-16 bg-bg border-b border-border-subtle fixed inset-x-0 z-50 flex items-center justify-between px-4 md:px-8 backdrop-blur">
         <Link href="/" className="flex items-center gap-2 no-underline">
           <img src="/1section.svg" alt="1SECTION" className="h-8 w-auto" />
           {user && user.subscriptionStatus && user.subscriptionStatus !== "FREE" && (
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#fbbf24]/10 border border-[#fbbf24]/20 text-[0.625rem] font-bold text-[#fbbf24]">
+            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-premium/10 border border-premium/20 text-[0.625rem] font-bold text-premium">
               Pro
             </div>
           )}
@@ -46,7 +46,7 @@ export default function Navbar() {
             const isActive = pathname === link.href;
             return (
               <Link key={link.name} href={link.href} className="no-underline">
-                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isActive ? 'text-white bg-white/5' : 'text-gray-400 hover:text-white'}`}>
+                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${isActive ? 'text-fg bg-bg-elevated' : 'text-muted hover:text-fg'}`}>
                   <Icon size={15} />
                   <span>{link.name}</span>
                 </div>
@@ -59,7 +59,7 @@ export default function Navbar() {
           {user ? (
             <UserPopup />
           ) : (
-            <Link href="/login" className="flex items-center gap-2 px-3 py-1.5 rounded border border-white/8 text-gray-400 text-sm font-medium transition-colors hover:text-white hover:border-white/15 hover:bg-white/3">
+            <Link href="/login" className="flex items-center gap-2 px-3 py-1.5 rounded border border-border text-muted text-sm font-medium transition-colors hover:text-fg hover:border-border-light hover:bg-bg-elevated">
               <User size={16} />
               <span className="hidden sm:inline">Login</span>
             </Link>
@@ -67,14 +67,14 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <nav className="fixed bottom-0 inset-x-0 z-50 bg-[#020202] border-t border-white/5 md:hidden">
+      <nav className="fixed bottom-0 inset-x-0 z-50 bg-bg border-t border-border-subtle md:hidden">
         <div className="flex items-center justify-around h-14">
           {links.map((link) => {
             const Icon = link.icon;
             const isActive = pathname === link.href;
             return (
               <Link key={link.name} href={link.href} className="no-underline flex-1 flex justify-center">
-                <div className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-lg transition-colors ${isActive ? 'text-white' : 'text-gray-500'}`}>
+                <div className={`flex flex-col items-center gap-0.5 py-2 px-3 rounded-lg transition-colors ${isActive ? 'text-fg' : 'text-muted-dark'}`}>
                   <Icon size={20} />
                 </div>
               </Link>

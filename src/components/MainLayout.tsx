@@ -16,8 +16,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
 
-       <footer className="border-t border-white/5 mt-auto py-8 pb-14 md:pb-8">
-         <div className="mx-auto w-full max-w-[1200px] px-6 text-center text-[0.875rem] text-[#444]">
+       <footer className="border-t border-border-subtle mt-auto py-8 pb-14 md:pb-8">
+         <div className="mx-auto w-full max-w-[1200px] px-6 text-center text-[0.875rem] text-muted-dark">
            © {new Date().getFullYear()} 1SECTION Lab. All rights reserved.
          </div>
        </footer>

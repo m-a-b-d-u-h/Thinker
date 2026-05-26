@@ -100,7 +100,7 @@ export default function UserPopup() {
     <div className="relative" ref={popupRef}>
       <button
         onClick={() => { setOpen(!open); setEditing(false); setRenaming(false); }}
-        className="flex items-center gap-2 px-3 py-1.5 rounded border border-white/8 text-gray-400 text-sm font-medium transition-colors hover:text-white hover:border-white/15 hover:bg-white/3 cursor-pointer"
+        className="flex items-center gap-2 px-3 py-1.5 rounded border border-border text-muted text-sm font-medium transition-colors hover:text-fg hover:border-border-light hover:bg-bg-elevated cursor-pointer"
       >
         <span>{shortName}</span>
       </button>
@@ -112,9 +112,9 @@ export default function UserPopup() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-full mt-2 w-80 bg-[#0c0c0c] border border-white/10 rounded-xl shadow-2xl shadow-black/60 overflow-hidden z-50"
+            className="absolute right-0 top-full mt-2 w-80 bg-bg-card border border-border rounded-xl shadow-2xl shadow-black/60 overflow-hidden z-50"
           >
-            <div className="p-4 border-b border-white/5">
+            <div className="p-4 border-b border-border-subtle">
               <div className="min-w-0">
                   {renaming ? (
                     <form
@@ -125,40 +125,40 @@ export default function UserPopup() {
                         autoFocus
                         value={nameInput}
                         onChange={(e) => setNameInput(e.target.value)}
-                        className="flex-1 bg-white/10 border border-white/20 rounded px-2 py-1 text-sm text-white outline-none"
+                        className="flex-1 bg-bg-input border border-border rounded px-2 py-1 text-sm text-fg outline-none"
                         placeholder="Your name"
                       />
                       <button
                         type="submit"
                         disabled={savingName}
-                        className="text-xs font-bold text-black bg-white px-2 py-1 rounded hover:opacity-80 transition-opacity cursor-pointer disabled:opacity-30"
+                        className="text-xs font-bold text-bg bg-fg px-2 py-1 rounded hover:opacity-80 transition-opacity cursor-pointer disabled:opacity-30"
                       >
                         {savingName ? "..." : "Save"}
                       </button>
                     </form>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <div className="text-sm font-bold text-white truncate">
+                      <div className="text-sm font-bold text-fg truncate">
                         {user.name || "User"}
                       </div>
                       <button
                         onClick={(e) => { e.stopPropagation(); setRenaming(true); setNameInput(user.name || ""); }}
-                        className="text-gray-500 hover:text-white transition-colors cursor-pointer shrink-0"
+                        className="text-muted-dark hover:text-fg transition-colors cursor-pointer shrink-0"
                       >
                         <PencilLine size={13} />
                       </button>
                     </div>
                   )}
-                  <div className="text-xs text-gray-500 truncate">
+                  <div className="text-xs text-muted-dark truncate">
                     {user.email}
                   </div>
                   {stats && (
                     <div className="flex items-center gap-1.5 mt-1">
                       <span className="text-[10px] font-bold text-[#a78bfa]">{stats.rank}</span>
-                      <span className="text-[8px] text-gray-600">•</span>
-                      <span className="text-[10px] text-gray-400">Level {stats.rankLevel}</span>
-                      <span className="text-[8px] text-gray-600">•</span>
-                      <span className="text-[10px] text-gray-500">{stats.totalXp?.toLocaleString() || 0} XP</span>
+                      <span className="text-[8px] text-muted-dark">•</span>
+                      <span className="text-[10px] text-muted">Level {stats.rankLevel}</span>
+                      <span className="text-[8px] text-muted-dark">•</span>
+                      <span className="text-[10px] text-muted-dark">{stats.totalXp?.toLocaleString() || 0} XP</span>
                     </div>
                   )}
                 </div>
@@ -167,16 +167,16 @@ export default function UserPopup() {
             {!editing ? (
               <div className="p-3">
                 {user.subscriptionStatus !== "FREE" && (
-                  <div className="mb-2 px-3 py-2.5 bg-[#fbbf24]/5 border border-[#fbbf24]/15 rounded-lg flex items-center justify-between gap-2">
+                  <div className="mb-2 px-3 py-2.5 bg-premium/5 border border-premium/15 rounded-lg flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <Crown size={14} className="text-[#fbbf24] flex-shrink-0" />
-                      <span className="text-xs font-semibold text-[#fbbf24] truncate">
+                      <Crown size={14} className="text-premium flex-shrink-0" />
+                      <span className="text-xs font-semibold text-premium truncate">
                         {user.subscriptionStatus === "LIFETIME" ? "Lifetime" : user.subscriptionStatus === "YEARLY" ? "Yearly" : "Monthly"}
                       </span>
                     </div>
                     <button
                       onClick={async (e) => { e.stopPropagation(); try { const { url } = await paymentsApi.createPortalSession(); window.location.href = url; } catch {} }}
-                      className="text-[0.625rem] text-[#888] hover:text-white bg-transparent border border-white/10 hover:border-white/20 rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0"
+                      className="text-[0.625rem] text-muted hover:text-fg bg-transparent border border-border hover:border-border-light rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0"
                     >
                       Manage
                     </button>
@@ -184,14 +184,14 @@ export default function UserPopup() {
                 )}
                 <button
                   onClick={() => { setEditing(true); setSelected(preferences); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-white hover:bg-white/5 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-muted hover:text-fg hover:bg-bg-elevated transition-colors cursor-pointer"
                 >
                   <Settings size={15} />
                   <span>Category Preferences</span>
                 </button>
                 <button
                   onClick={() => { logout(); setOpen(false); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-gray-400 hover:text-red-400 hover:bg-red-500/5 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-muted hover:text-red-400 hover:bg-red-500/5 transition-colors cursor-pointer"
                 >
                   <LogOut size={15} />
                   <span>Log out</span>
@@ -200,10 +200,10 @@ export default function UserPopup() {
             ) : (
               <div className="p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-bold text-white">Choose your topics</h3>
+                  <h3 className="text-sm font-bold text-fg">Choose your topics</h3>
                   <button
                     onClick={() => setEditing(false)}
-                    className="text-gray-500 hover:text-white transition-colors cursor-pointer"
+                    className="text-muted-dark hover:text-fg transition-colors cursor-pointer"
                   >
                     <X size={16} />
                   </button>
@@ -217,8 +217,8 @@ export default function UserPopup() {
                         onClick={() => toggleCategory(cat)}
                         className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                           active
-                            ? "bg-white text-black"
-                            : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                            ? "bg-fg text-bg"
+                            : "bg-bg-elevated text-muted hover:text-fg hover:bg-bg-card"
                         }`}
                       >
                         {cat.charAt(0).toUpperCase() + cat.slice(1).replace(/-/g, " ")}
@@ -229,7 +229,7 @@ export default function UserPopup() {
                 <button
                   onClick={handleSave}
                   disabled={saving || selected.length === 0}
-                  className="w-full py-2.5 bg-white text-black rounded-lg text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="w-full py-2.5 bg-fg text-bg rounded-lg text-sm font-bold hover:opacity-90 transition-opacity cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   {saving ? "Saving..." : "Save Preferences"}
                 </button>

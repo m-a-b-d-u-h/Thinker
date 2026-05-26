@@ -200,7 +200,7 @@ export default function ProductsPage() {
 
       <header className="mb-16 max-w-[800px]">
         <h1 className="text-6xl font-black mb-4 tracking-[-0.04em] leading-none">
-          Master Your <span className="text-[#444]">Thinking Library</span>
+          Master Your <span className="text-muted-dark">Thinking Library</span>
         </h1>
         <p className="text-muted text-lg leading-relaxed">
           Visual mental models and immersive audio narration for deep learning.
@@ -210,11 +210,11 @@ export default function ProductsPage() {
       {historyModules.length > 0 && (
         <section className="mb-16">
           <div className="mb-6">
-            <div className="flex items-center gap-2 text-[#888] mb-2">
+            <div className="flex items-center gap-2 text-muted mb-2">
               <Clock size={14} />
               <span className="text-[0.75rem] font-bold uppercase tracking-[0.05em]">Continue Learning</span>
             </div>
-            <h2 className="text-3xl font-black tracking-[-0.04em]">Your Learning <span className="text-[#444]">History</span></h2>
+            <h2 className="text-3xl font-black tracking-[-0.04em]">Your Learning <span className="text-muted-dark">History</span></h2>
           </div>
 
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-5">
@@ -225,44 +225,44 @@ export default function ProductsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
               >
-                <Link href={`/models/${module.slug}`} className="group flex flex-col bg-[#080808] border border-white/5 rounded-2xl p-6 no-underline transition-all duration-300 hover:bg-[#0a0a0a] hover:border-white/10 hover:-translate-y-1">
+                <Link href={`/models/${module.slug}`} className="group flex flex-col bg-bg-card border border-border-subtle rounded-2xl p-6 no-underline transition-all duration-300 hover:bg-bg hover:border-border hover:-translate-y-1">
                   <div className="flex items-center gap-2 mb-4">
-                    <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
+                    <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-bg-elevated text-muted border border-border">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
                   </div>
-                  <h3 className="text-lg font-bold mb-2 text-white">{module.title}</h3>
-                  <p className="text-[0.875rem] text-[#666] leading-relaxed mb-4">{module.description}</p>
+                  <h3 className="text-lg font-bold mb-2 text-fg">{module.title}</h3>
+                  <p className="text-[0.875rem] text-muted-light leading-relaxed mb-4">{module.description}</p>
                   {module.progress && (
                     <div className="mb-4 space-y-2.5">
                       {module.progress.listeningProgress > 0 && (
                         <div>
-                          <div className="flex items-center justify-between text-[0.625rem] text-[#555] mb-1">
+                          <div className="flex items-center justify-between text-[0.625rem] text-muted-dark mb-1">
                             <span className="flex items-center gap-1"><Play size={10} /> Listening</span>
                             <span>{Math.round(module.progress.listeningProgress)}%</span>
                           </div>
-                          <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
-                            <div className="h-full bg-white rounded-full" style={{ width: `${module.progress.listeningProgress}%` }} />
+                          <div className="h-1 bg-bg-elevated rounded-full overflow-hidden">
+                            <div className="h-full bg-fg rounded-full" style={{ width: `${module.progress.listeningProgress}%` }} />
                           </div>
                         </div>
                       )}
                       {module.progress.readingProgress > 0 && (
                         <div>
-                          <div className="flex items-center justify-between text-[0.625rem] text-[#555] mb-1">
+                          <div className="flex items-center justify-between text-[0.625rem] text-muted-dark mb-1">
                             <span>Reading</span>
                             <span>{Math.round(module.progress.readingProgress)}%</span>
                           </div>
-                          <div className="h-1 bg-[#1a1a1a] rounded-full overflow-hidden">
-                            <div className="h-full bg-white/60 rounded-full" style={{ width: `${module.progress.readingProgress}%` }} />
+                          <div className="h-1 bg-bg-elevated rounded-full overflow-hidden">
+                            <div className="h-full bg-fg/60 rounded-full" style={{ width: `${module.progress.readingProgress}%` }} />
                           </div>
                         </div>
                       )}
                     </div>
                   )}
-                  <div className="flex items-center justify-between border-t border-white/5 pt-4 mt-auto">
-                    <div className="flex items-center gap-2 text-[0.75rem] font-semibold text-[#888] group-hover:text-white transition-colors">
+                  <div className="flex items-center justify-between border-t border-border-subtle pt-4 mt-auto">
+                    <div className="flex items-center gap-2 text-[0.75rem] font-semibold text-muted group-hover:text-fg transition-colors">
                       <Play size={12} fill="currentColor" />
                       {module.progress ? "Continue" : "Start"}
                     </div>
-                    <span className="text-[0.75rem] text-[#444]">
+                    <span className="text-[0.75rem] text-muted-dark">
                       {module.progress ? "Last read recently" : "New"}
                     </span>
                   </div>
@@ -275,14 +275,14 @@ export default function ProductsPage() {
 
       <div className="mb-12">
         <div className="mb-5">
-          <p className="text-[0.6875rem] font-bold text-[#444] uppercase tracking-[0.1em] mb-3">Categories</p>
+          <p className="text-[0.6875rem] font-bold text-muted-dark uppercase tracking-[0.1em] mb-3">Categories</p>
 
           <div className="flex items-center gap-2 flex-wrap">
             {categories.map(cat => (
               <button
                 key={cat}
                 onClick={() => { setSelectedCategory(selectedCategory === cat ? null : cat); setCurrentPage(1); }}
-                className={`px-4 py-2.5 rounded-full text-[0.75rem] font-semibold transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-white text-black shadow-lg shadow-white/10' : 'bg-[#080808] border border-white/5 text-[#555] hover:border-white/15 hover:text-white'}`}
+                className={`px-4 py-2.5 rounded-full text-[0.75rem] font-semibold transition-all whitespace-nowrap ${selectedCategory === cat ? 'bg-fg text-bg shadow-lg shadow-fg/10' : 'bg-bg-card border border-border-subtle text-muted-dark hover:border-border-light hover:text-fg'}`}
               >
                 {cat.charAt(0).toUpperCase() + cat.slice(1).replace('-', ' ')}
               </button>
@@ -298,13 +298,13 @@ export default function ProductsPage() {
           )}
         </div>
         <div className="relative">
-          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#444]" />
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-dark" />
           <input
             type="text"
             placeholder="Search frameworks..."
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-            className="w-full py-4 pl-11 pr-4 bg-[#080808] border border-white/5 rounded-xl text-white text-[0.875rem] outline-none focus:border-white/15 transition-colors"
+            className="w-full py-4 pl-11 pr-4 bg-bg-input border border-border rounded-xl text-fg text-[0.875rem] outline-none focus:border-border-light transition-colors placeholder:text-muted-dark"
           />
         </div>
       </div>
@@ -314,11 +314,11 @@ export default function ProductsPage() {
       )}
 
       {!isSubscribed && sortedModules.length > 0 && (
-        <div className="mb-8 p-4 bg-[#ffb800]/5 border border-[#ffb800]/20 rounded-xl flex items-center gap-3">
-          <Crown size={18} className="text-[#ffb800] flex-shrink-0" />
-          <p className="text-[0.875rem] text-[#ccc]">
+        <div className="mb-8 p-4 bg-premium/5 border border-premium/20 rounded-xl flex items-center gap-3">
+          <Crown size={18} className="text-premium flex-shrink-0" />
+          <p className="text-[0.875rem] text-muted">
             Unlock all modules with a subscription.{" "}
-            <Link href="/#pricing" className="text-[#ffb800] font-bold no-underline hover:underline">
+            <Link href="/#pricing" className="text-premium font-bold no-underline hover:underline">
               View Plans
             </Link>
           </p>
@@ -327,7 +327,7 @@ export default function ProductsPage() {
 
       {loading ? (
         <div className="flex justify-center py-20">
-          <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+          <div className="w-6 h-6 border-2 border-border border-t-fg rounded-full animate-spin" />
         </div>
       ) : (
         <>
