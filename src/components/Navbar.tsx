@@ -32,8 +32,7 @@ export default function Navbar() {
     <>
       <nav className="w-full h-16 bg-[#020202] border-b border-white/3 fixed inset-x-0 z-50 flex items-center justify-between px-4 md:px-8 backdrop-blur">
         <Link href="/" className="flex items-center gap-2 no-underline">
-          <img src="/1section.png" alt="1SECTION" className="h-6 w-auto" />
-          <span className="text-[1rem] font-bold text-white tracking-[-0.02em]">1section</span>
+          <img src="/1section.svg" alt="1SECTION" className="h-8 w-auto" />
           {user && user.subscriptionStatus && user.subscriptionStatus !== "FREE" && (
             <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#fbbf24]/10 border border-[#fbbf24]/20 text-[0.625rem] font-bold text-[#fbbf24]">
               Pro

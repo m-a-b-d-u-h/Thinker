@@ -5,7 +5,7 @@ import { transformNode, transformEdge } from "../../lib/transform";
 export namespace FavoritesService {
   export async function list(userId: string) {
     const favorites = await prisma.favorite.findMany({
-      where: { userId },
+      where: { userId, module: { isDraft: false } },
       orderBy: { createdAt: "desc" },
       include: {
         module: {

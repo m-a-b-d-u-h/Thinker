@@ -7,9 +7,9 @@ export const metadata: Metadata = {
   title: "1section",
   description: "A thinking library of mental models, audio lessons, and knowledge graphs.",
   icons: {
-    icon: "/1section.png",
-    apple: "/1section.png",
-    shortcut: "/1section.png",
+    icon: "/1section_logo.svg",
+    apple: "/1section_logo.svg",
+    shortcut: "/1section_logo.svg",
   },
 };
 
@@ -23,7 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/1section.png" type="image/png" />
+        <link rel="icon" href="/1section_logo.svg" type="image/svg+xml" />
       </head>
       <body>
         <Providers>

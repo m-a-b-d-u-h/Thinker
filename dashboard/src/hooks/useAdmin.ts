@@ -7,7 +7,7 @@ export function useDashboardStats() {
     queryFn: async () => {
       const [usersRes, modulesRes, paymentsRes] = await Promise.all([
         api.get("/auth/me"),
-        api.get("/modules?limit=100"),
+        api.get("/modules?limit=100&admin=true"),
         api.get("/payments/history"),
       ]);
       return {
@@ -33,7 +33,7 @@ export function useModules() {
   return useQuery({
     queryKey: ["admin", "modules"],
     queryFn: async () => {
-      const { data } = await api.get("/modules?limit=100");
+      const { data } = await api.get("/modules?limit=100&admin=true");
       return data.data || [];
     },
   });
@@ -43,7 +43,7 @@ export function useModule(slug: string) {
   return useQuery({
     queryKey: ["admin", "module", slug],
     queryFn: async () => {
-      const { data } = await api.get(`/modules/${slug}`);
+      const { data } = await api.get(`/modules/${slug}?admin=true`);
       return data;
     },
     enabled: !!slug,
@@ -85,7 +85,7 @@ export function useQuizStats() {
   return useQuery({
     queryKey: ["admin", "quiz"],
     queryFn: async () => {
-      const { data } = await api.get("/modules?limit=100");
+      const { data } = await api.get("/modules?limit=100&admin=true");
       return data.data || [];
     },
   });

@@ -34,6 +34,7 @@ export interface ModuleFormData {
   category: string;
   content: string;
   isPremium: boolean;
+  isDraft: boolean;
   nodes: NodeForm[];
   edges: EdgeForm[];
   questions: QuestionForm[];
@@ -100,6 +101,16 @@ export default function ModuleForm({
           </div>
           <div className="space-y-1.5 flex items-end pb-2.5">
             <label className="flex items-center gap-3 cursor-pointer">
+              <span className="text-xs font-medium text-white/40">Draft</span>
+              <button
+                type="button"
+                onClick={() => updateField("isDraft", !form.isDraft)}
+                className={`relative w-10 h-5 rounded-full transition-colors ${form.isDraft ? "bg-amber-500" : "bg-white/10"}`}
+              >
+                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.isDraft ? "translate-x-5" : "translate-x-0.5"}`} />
+              </button>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer ml-4">
               <span className="text-xs font-medium text-white/40">Premium</span>
               <button
                 type="button"

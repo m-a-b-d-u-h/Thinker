@@ -19,7 +19,7 @@ export namespace ModulesService {
 
   /** Deterministic daily free module slug based on current date */
   export async function getDailyFreeSlug(): Promise<string | null> {
-    const count = await prisma.module.count();
+    const count = await prisma.module.count({ where: { isDraft: false } });
     if (count === 0) return null;
 
     const today = new Date();
@@ -28,6 +28,7 @@ export namespace ModulesService {
     const index = hash % count;
 
     const module = await prisma.module.findMany({
+      where: { isDraft: false },
       take: 1,
       skip: index,
       select: { slug: true },
@@ -56,12 +57,14 @@ export namespace ModulesService {
     categories?: string;
     search?: string;
     userId?: string;
+    admin?: boolean;
   }) {
     const page = Math.max(1, query.page || 1);
     const limit = Math.min(50, Math.max(1, query.limit || 12));
     const skip = (page - 1) * limit;
 
     const where: Prisma.ModuleWhereInput = {};
+    if (!query.admin) where.isDraft = false;
 
     if (query.categories) {
       const cats = query.categories.split(",").map((c) => c.trim()).filter(Boolean);
@@ -160,6 +163,9 @@ export namespace ModulesService {
 
     if (!module) throw new NotFoundError("Module");
 
+    // Block draft modules for non-admin users
+    if (module.isDraft && !admin) throw new NotFoundError("Module");
+
     const isSubscribed = await hasActiveSubscription(userId);
 
     // Free access for admin, daily free module, subscribed users, or free modules
@@ -200,6 +206,7 @@ export namespace ModulesService {
   export async function getCategories() {
     const catCounts = await prisma.module.groupBy({
       by: ["category"],
+      where: { isDraft: false },
       _count: { category: true },
       orderBy: { category: "asc" },
     });
@@ -214,6 +221,7 @@ export namespace ModulesService {
       where: {
         category: mod.category,
         slug: { not: slug },
+        isDraft: false,
       },
       take: limit,
       orderBy: { createdAt: "desc" },
@@ -240,6 +248,7 @@ export namespace ModulesService {
     category: string;
     content: string;
     isPremium?: boolean;
+    isDraft?: boolean;
     nodes?: { id: string; positionX: number; positionY: number; label: string; type?: string; style?: any }[];
     edges?: { id: string; source: string; target: string; label?: string; animated?: boolean }[];
     questions?: { question: string; options: string[]; correctAnswer: number; explanation?: string }[];
@@ -254,7 +263,8 @@ export namespace ModulesService {
         description: data.description,
         category: data.category,
         content: data.content,
-        isPremium: data.isPremium ?? false,
+        isPremium: data.isPremium ?? true,
+        isDraft: data.isDraft ?? true,
         nodes: data.nodes?.length
           ? { create: data.nodes.map((n) => ({ id: n.id, positionX: n.positionX, positionY: n.positionY, label: n.label, type: n.type ?? "custom", style: n.style })) }
           : undefined,
@@ -278,6 +288,7 @@ export namespace ModulesService {
       category?: string;
       content?: string;
       isPremium?: boolean;
+      isDraft?: boolean;
       nodes?: { id: string; positionX: number; positionY: number; label: string; type?: string; style?: any }[];
       edges?: { id: string; source: string; target: string; label?: string; animated?: boolean }[];
       questions?: { question: string; options: string[]; correctAnswer: number; explanation?: string }[];
@@ -293,6 +304,7 @@ export namespace ModulesService {
     if (data.category !== undefined) updateData.category = data.category;
     if (data.content !== undefined) updateData.content = data.content;
     if (data.isPremium !== undefined) updateData.isPremium = data.isPremium;
+    if (data.isDraft !== undefined) updateData.isDraft = data.isDraft;
     if (data.slug !== undefined) {
       const slugExists = await prisma.module.findUnique({ where: { slug: data.slug } });
       if (slugExists && slugExists.id !== existing.id) throw new Error("A module with this slug already exists");

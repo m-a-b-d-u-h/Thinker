@@ -42,7 +42,7 @@ export default function ModuleDetailPage() {
 
   const [form, setForm] = useState<ModuleFormData>({
     title: "", slug: "", description: "", category: "", content: "",
-    isPremium: false, nodes: [], edges: [], questions: [],
+    isPremium: true, isDraft: true, nodes: [], edges: [], questions: [],
   });
 
   const { data: mod, isLoading } = useQuery({
@@ -63,6 +63,7 @@ export default function ModuleDetailPage() {
         category: mod.category || "",
         content: mod.content || "",
         isPremium: mod.isPremium || false,
+        isDraft: mod.isDraft ?? false,
         nodes: (mod.nodes || []).map(toNodeForm),
         edges: (mod.edges || []).map((e: any) => ({
           id: e.id, source: e.source, target: e.target, label: e.label || "", animated: e.animated ?? true,
@@ -78,7 +79,7 @@ export default function ModuleDetailPage() {
     mutationFn: async (data: ModuleFormData) => {
       const { data: res } = await api.post("/modules", {
         title: data.title, slug: data.slug, description: data.description,
-        category: data.category, content: data.content, isPremium: data.isPremium,
+        category: data.category, content: data.content, isPremium: data.isPremium, isDraft: data.isDraft,
         nodes: data.nodes, edges: data.edges, questions: data.questions,
       });
       return res;
@@ -98,7 +99,7 @@ export default function ModuleDetailPage() {
     mutationFn: async (data: ModuleFormData) => {
       const { data: res } = await api.patch(`/modules/${slug}`, {
         title: data.title, slug: data.slug, description: data.description,
-        category: data.category, content: data.content, isPremium: data.isPremium,
+        category: data.category, content: data.content, isPremium: data.isPremium, isDraft: data.isDraft,
         nodes: data.nodes, edges: data.edges, questions: data.questions,
       });
       return res;
@@ -266,6 +267,11 @@ export default function ModuleDetailPage() {
             <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/5 text-white/50">
               {mod.category}
             </span>
+            {mod.isDraft && (
+              <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-400">
+                Draft
+              </span>
+            )}
             <span
               className={`text-xs font-bold px-2.5 py-1 rounded-full ${
                 mod.isPremium

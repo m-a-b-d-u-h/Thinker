@@ -5,7 +5,7 @@ import type { UpdateProgressInput } from "./progress.schema";
 export namespace ProgressService {
   export async function getAll(userId: string) {
     const progress = await prisma.userProgress.findMany({
-      where: { userId },
+      where: { userId, module: { isDraft: false } },
       orderBy: { lastReadAt: "desc" },
       include: {
         module: {
@@ -77,6 +77,7 @@ export namespace ProgressService {
     const progress = await prisma.userProgress.findMany({
       where: {
         userId,
+        module: { isDraft: false },
         OR: [{ listeningProgress: { gt: 0 } }, { readingProgress: { gt: 0 } }],
       },
       orderBy: { lastReadAt: "desc" },
@@ -113,7 +114,7 @@ export namespace ProgressService {
           module: { select: { content: true } },
         },
       }),
-      prisma.module.count(),
+      prisma.module.count({ where: { isDraft: false } }),
       prisma.completedGraphNode.count({ where: { userId } }),
       prisma.reflection.count({ where: { userId } }),
       prisma.highlight.count({ where: { userId } }),

@@ -163,11 +163,13 @@ export namespace AiService {
   export async function getCategoriesInfo() {
     const categories = await prisma.module.groupBy({
       by: ["category"],
+      where: { isDraft: false },
       _count: { category: true },
       orderBy: { category: "asc" },
     });
 
     const titles = await prisma.module.findMany({
+      where: { isDraft: false },
       select: { title: true, slug: true, category: true },
       orderBy: { createdAt: "desc" },
     });
@@ -270,7 +272,8 @@ REQUIREMENTS:
         description: parsed.description || "",
         category,
         content: parsed.content,
-        isPremium: false,
+        isPremium: true,
+        isDraft: true,
         nodes: (parsed.nodes || []).length > 0
           ? { create: (parsed.nodes as any[]).map((n: any) => ({
               id: `${n.id || "node"}-${idSuffix}`,

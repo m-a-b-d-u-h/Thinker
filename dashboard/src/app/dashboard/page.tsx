@@ -26,7 +26,7 @@ export default function DashboardPage() {
   const { data: modules } = useQuery({
     queryKey: ["admin", "modules"],
     queryFn: async () => {
-      const { data } = await api.get("/modules?limit=100");
+      const { data } = await api.get("/modules?limit=100&admin=true");
       return data.data || [];
     },
   });

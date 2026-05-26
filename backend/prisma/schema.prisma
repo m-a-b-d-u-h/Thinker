@@ -61,7 +61,8 @@ model Module {
   description String
   category    String
   content     String
-  isPremium   Boolean  @default(false)
+  isPremium   Boolean  @default(true)
+  isDraft     Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
