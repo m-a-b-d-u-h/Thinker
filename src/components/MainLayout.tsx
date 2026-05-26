@@ -12,7 +12,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <div className="flex min-h-screen flex-col">
       {!isLanding && <Navbar />}
       
-       <main className={`flex-1 w-full pb-14 md:pb-0 ${isLanding ? '' : 'mt-16'}`}>
+       <main className="flex-1 w-full pb-14 md:pb-0">
         {children}
       </main>
 

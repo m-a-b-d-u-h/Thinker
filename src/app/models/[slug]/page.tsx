@@ -698,7 +698,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   };
 
   return (
-    <div className="max-w-[1100px] mx-auto px-4 pb-[180px] pt-8">
+    <div className="max-w-[1100px] mx-auto px-4 pb-[180px] pt-10 md:pt-16">
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-8 items-start">
         <article
           ref={articleRef}
