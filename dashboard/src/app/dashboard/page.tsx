@@ -85,7 +85,7 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Dashboard</h1>
+           <h1 className="text-3xl max-sm:text-2xl font-black text-white tracking-tight">Dashboard</h1>
           <p className="text-sm text-white/40 mt-1">
             Real-time overview of your platform metrics.
           </p>
@@ -146,7 +146,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-          <div className="h-[240px] relative">
+           <div className="h-[240px] max-sm:h-[200px] relative">
             {totalUsers === 0 ? (
               <div className="h-full flex items-center justify-center text-white/20 text-sm">No data</div>
             ) : (
@@ -198,7 +198,7 @@ export default function DashboardPage() {
                 <p className="text-xs text-white/30 mt-0.5">{fmt(modules?.length || 0)} total modules</p>
               </div>
             </div>
-            <div className="h-[240px]">
+             <div className="h-[240px] max-sm:h-[200px]">
               {moduleCatData.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-white/20 text-sm">No data</div>
               ) : (

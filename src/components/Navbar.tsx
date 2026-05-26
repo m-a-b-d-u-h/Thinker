@@ -28,6 +28,8 @@ export default function Navbar() {
     { name: "Actions", href: "/actions", icon: Target },
   ];
 
+  const isModelPage = pathname.startsWith("/models/");
+
   return (
     <>
       <nav className="w-full h-16 bg-bg border-b border-border-subtle fixed inset-x-0 z-50 flex items-center justify-between px-4 md:px-8 backdrop-blur">
@@ -67,7 +69,8 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <nav className="fixed bottom-0 inset-x-0 z-50 bg-bg border-t border-border-subtle md:hidden">
+      {!isModelPage && (
+        <nav className="fixed bottom-0 inset-x-0 z-50 bg-bg border-t border-border-subtle md:hidden">
         <div className="flex items-center justify-around h-14">
           {links.map((link) => {
             const Icon = link.icon;
@@ -82,6 +85,7 @@ export default function Navbar() {
           })}
         </div>
       </nav>
+      )}
     </>
   );
 }

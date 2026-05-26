@@ -6,7 +6,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactFlow, Background, Handle, Position, useReactFlow, ReactFlowProvider } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import KnowledgeGraph from "@/components/KnowledgeGraph";
 import React from "react";
 import { CheckCircle2, Zap, Crown, ShieldCheck, Infinity, Library, Play, ArrowRight, Sparkles, Network, Clock, BookOpen, Star, Quote } from "lucide-react";
 import Marquee from "react-fast-marquee";
@@ -350,9 +349,10 @@ export default function Home() {
         </section>
 
         {/* Browse by Collection Section */}
-        <section className="py-16">
-          <header className="mb-8 text-center">
-            <h2 className="text-3xl font-black tracking-[-0.03em]">Browse by <span className="text-[#444]">Collection</span></h2>
+        <section className="py-24">
+          <header className="mb-16 text-center">
+            <h2 className="text-5xl font-black mb-4 tracking-[-0.04em]">Browse by <span className="text-[#444]">Categories</span></h2>
+            <p className="text-muted text-lg max-w-[600px] mx-auto">Explore mental models organized by topic and field.</p>
           </header>
 
           <div className="flex flex-wrap justify-center gap-2">
@@ -409,37 +409,6 @@ export default function Home() {
                 </p>
               </motion.div>
             ))}
-          </div>
-        </section>
-
-        {/* Knowledge Graph Section */}
-        <section className="py-24">
-            <div className="mx-auto max-w-[1200px] px-4 md:px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-8 lg:gap-12 items-center">
-              <div>
-                <h2 className="text-5xl font-black mb-6 leading-[1.1]">
-                  Your Knowledge, <br/><span className="text-[#444]">Visualized.</span>
-                </h2>
-                <p className="text-muted text-lg mb-8 leading-relaxed">
-                  Each mental model you learn appears as a node in your interactive knowledge graph. See how frameworks connect, overlap, and build on each other as you progress through the library.
-                </p>
-                <div className="flex gap-4">
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                    <div className="text-white font-bold text-xl">TTS</div>
-                    <div className="text-[#555] text-[0.75rem] uppercase">Audio Narration</div>
-                  </div>
-                  <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                    <div className="text-white font-bold text-xl">5</div>
-                    <div className="text-[#555] text-[0.75rem] uppercase">Learning Tools</div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="h-[600px] bg-[#050505] rounded-[32px] overflow-hidden relative border border-white/5 shadow-2xl shadow-black/50">
-                <KnowledgeGraph />
-                <div className="absolute inset-0 shadow-[inset_0_0_80px_rgba(0,0,0,0.9)] pointer-events-none" />
-              </div>
-            </div>
           </div>
         </section>
 

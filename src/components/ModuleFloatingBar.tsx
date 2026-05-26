@@ -1,11 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Play, Square, Moon, Sun, Menu, Heart, Volume2, FastForward } from "lucide-react";
+import { Play, Square, Moon, Sun, Menu, Heart, Volume2, FastForward, FileDown, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
-import { useReading } from "@/contexts/ReadingContext";
-import ReadingSettingsPopup from "@/components/ReadingSettingsPopup";
+import { useReading, fontSizes, fontFamilies, lineHeights, margins, fontFamilyMap, type ReadingPrefs } from "@/contexts/ReadingContext";
 
 interface Props {
   isPlaying: boolean;
@@ -45,16 +44,49 @@ export default function ModuleFloatingBar({
   const { theme, setTheme } = useTheme();
   const { tocOpen, setTocOpen } = useReading();
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
-  const [readingOpen, setReadingOpen] = useState(false);
+  const [showReading, setShowReading] = useState(false);
+  const { readingPrefs, setReadingPrefs } = useReading();
+  const defaults: ReadingPrefs = { fontSize: "md", fontFamily: "inter", lineHeight: "normal", margin: "normal" };
+  const updateReading = (partial: Partial<ReadingPrefs>) => setReadingPrefs({ ...readingPrefs, ...partial });
+  const handleDownloadPdf = () => {
+    const article = document.querySelector("article");
+    if (!article) return;
+    const pageTitle = document.querySelector("h1")?.textContent || document.title;
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    document.body.appendChild(iframe);
+    const doc = iframe.contentWindow?.document;
+    if (!doc) { document.body.removeChild(iframe); return; }
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>${pageTitle} - 1section.com</title>
+        <style>
+          @page { margin: 20mm; }
+          body { font-family: Georgia, 'Times New Roman', serif; max-width: 720px; margin: 0 auto; padding: 0; color: #111; line-height: 1.8; font-size: 14px; background: #fff !important; }
+          img { max-width: 100%; height: auto; }
+          h1 { font-size: 1.75em; margin-bottom: 0.5em; font-weight: 700; page-break-after: avoid; }
+          h2 { font-size: 1.35em; margin-top: 1.5em; font-weight: 600; page-break-after: avoid; }
+          h3 { font-size: 1.15em; margin-top: 1.25em; font-weight: 600; page-break-after: avoid; }
+          p, li { margin: 0.5em 0; font-size: 14px; page-break-inside: avoid; }
+          * { color: #111 !important; background: transparent !important; }
+        </style>
+      </head>
+      <body>${article.innerHTML}</body>
+      </html>
+    `);
+    doc.close();
+    setTimeout(() => {
+      iframe.contentWindow?.print();
+      setTimeout(() => { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); }, 1000);
+    }, 300);
+  };
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 z-[2000] flex justify-center pb-4 md:pb-6 px-4 pointer-events-none">
-        <motion.div
-          initial={{ y: 100, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="pointer-events-auto w-full max-w-xl rounded-2xl shadow-2xl border backdrop-blur-xl bg-bg-overlay border-border overflow-hidden"
-        >
+      <div className="fixed bottom-0 left-0 right-0 z-[2000] px-4 pointer-events-none" style={{ paddingBottom: "16px" }}>
+        <div className="pointer-events-auto w-full max-w-xl mx-auto rounded-2xl shadow-2xl border backdrop-blur-xl bg-bg-overlay border-border overflow-hidden">
           {/* Progress bar & timer (ABOVE buttons) */}
           <AnimatePresence>
             {isPlaying && (
@@ -91,10 +123,10 @@ export default function ModuleFloatingBar({
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div key={theme} initial={{ rotate: -90, scale: 0.5, opacity: 0 }} animate={{ rotate: 0, scale: 1, opacity: 1 }} exit={{ rotate: 90, scale: 0.5, opacity: 0 }} transition={{ duration: 0.3 }}>
                   {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
-                </motion.div>
+              </motion.div>
               </AnimatePresence>
             </button>
-            <button onClick={() => setReadingOpen(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all border-none cursor-pointer text-muted bg-bg-elevated border border-border">
+            <button onClick={() => setShowReading((v) => !v)} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all border-none cursor-pointer border ${showReading ? "text-fg bg-bg-elevated border-border-light" : "text-muted bg-bg-elevated border-border"}`}>
               <span className="text-xs font-bold">Aa</span>
             </button>
             <button onClick={() => setTocOpen(true)} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all border-none cursor-pointer text-muted bg-bg-elevated border border-border">
@@ -102,6 +134,9 @@ export default function ModuleFloatingBar({
             </button>
             <button onClick={onToggleFavorite} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all border-none cursor-pointer bg-bg-elevated border border-border ${isFavorited ? "text-red-500" : "text-muted"}`}>
               <Heart size={16} className={isFavorited ? "fill-red-500" : "fill-none"} />
+            </button>
+            <button onClick={handleDownloadPdf} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all border-none cursor-pointer text-muted bg-bg-elevated border border-border hover:text-fg hover:border-border-light">
+              <FileDown size={16} />
             </button>
           </div>
 
@@ -123,7 +158,7 @@ export default function ModuleFloatingBar({
                               {voice.displayName}
                             </button>
                           ))}
-                        </motion.div>
+              </motion.div>
                       )}
                     </AnimatePresence>
                   </div>
@@ -144,10 +179,86 @@ export default function ModuleFloatingBar({
               </motion.div>
             )}
           </AnimatePresence>
-        </motion.div>
-      </div>
 
-      <ReadingSettingsPopup show={readingOpen} onClose={() => setReadingOpen(false)} />
+          {/* Reading settings (inline, toggle via Aa) */}
+          <AnimatePresence>
+            {showReading && (
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-border-subtle">
+                <div className="px-4 py-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xs font-bold text-fg">Reading Settings</h3>
+                    <div className="flex items-center gap-1">
+                      <button onClick={() => setReadingPrefs(defaults)} className="p-1 rounded-lg text-muted-dark hover:text-fg hover:bg-bg-elevated transition-all cursor-pointer" title="Reset">
+                        <RotateCcw size={13} />
+                      </button>
+                      <button onClick={() => setShowReading(false)} className="p-1 rounded-lg text-muted-dark hover:text-fg hover:bg-bg-elevated transition-all cursor-pointer">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Font Size */}
+                  <div className="mb-3">
+                    <label className="text-[0.65rem] font-semibold mb-1.5 block text-muted">Font Size</label>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {fontSizes.map((f) => (
+                        <button key={f.key} onClick={() => updateReading({ fontSize: f.key })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                            readingPrefs.fontSize === f.key ? "bg-accent text-white" : "bg-bg-elevated text-fg border border-border"
+                          }`}
+                        >{f.label}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Font Family */}
+                  <div className="mb-3">
+                    <label className="text-[0.65rem] font-semibold mb-1.5 block text-muted">Font Family</label>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {fontFamilies.map((f) => (
+                        <button key={f.key} onClick={() => updateReading({ fontFamily: f.key })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                            readingPrefs.fontFamily === f.key ? "bg-accent text-white" : "bg-bg-elevated text-fg border border-border"
+                          }`}
+                          style={{ fontFamily: fontFamilyMap[f.key] }}
+                        >{f.label}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Line Height */}
+                  <div className="mb-3">
+                    <label className="text-[0.65rem] font-semibold mb-1.5 block text-muted">Line Height</label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {lineHeights.map((l) => (
+                        <button key={l.key} onClick={() => updateReading({ lineHeight: l.key })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                            readingPrefs.lineHeight === l.key ? "bg-accent text-white" : "bg-bg-elevated text-fg border border-border"
+                          }`}
+                        >{l.label}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Letter Spacing */}
+                  <div>
+                    <label className="text-[0.65rem] font-semibold mb-1.5 block text-muted">Letter Spacing</label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {margins.map((m) => (
+                        <button key={m.key} onClick={() => updateReading({ margin: m.key })}
+                          className={`py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                            readingPrefs.margin === m.key ? "bg-accent text-white" : "bg-bg-elevated text-fg border border-border"
+                          }`}
+                        >{m.label}</button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
     </>
   );
 }

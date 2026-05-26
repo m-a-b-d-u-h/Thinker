@@ -301,7 +301,7 @@ export default function ProductsPage() {
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-dark" />
           <input
             type="text"
-            placeholder="Search frameworks..."
+            placeholder="Search"
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
             className="w-full py-4 pl-11 pr-4 bg-bg-input border border-border rounded-xl text-fg text-[0.875rem] outline-none focus:border-border-light transition-colors placeholder:text-muted-dark"
