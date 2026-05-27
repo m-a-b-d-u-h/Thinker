@@ -25,10 +25,10 @@ const CustomNode = ({ data }: { data: any }) => (
       {data.label}
       <Handle type="source" position={Position.Bottom} className="!bg-muted-dark !border-0 !w-1.5 !h-1.5" isConnectable={false} />
     </div>
-    <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2.5 py-1.5 rounded-lg bg-bg-elevated border border-border shadow-lg shadow-black/40 transition-opacity duration-150 pointer-events-none ${
+    <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-bg-elevated/50 backdrop-blur-md border border-border shadow-lg shadow-black/40 transition-opacity duration-150 pointer-events-none w-[260px] sm:w-[360px] ${
       data.showTooltip ? 'opacity-100' : 'opacity-0'
     }`}>
-      <div className="text-[10px] text-muted max-w-[220px] sm:max-w-[280px] whitespace-normal">This is a short description about this module. Hardcoded for now.</div>
+      <div className="text-[10px] text-muted leading-relaxed">This is a short description about this module. Hardcoded for now. But it will be replaced with real data later.</div>
     </div>
   </div>
 );
