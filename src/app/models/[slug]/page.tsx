@@ -739,7 +739,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
             What&apos;s Next
           </h2>
           <p className="text-[0.875rem] text-muted-light mb-8">
-            More in <span className="text-muted font-semibold">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
+            More in <span className="text-muted font-semibold">{module.category ? module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ') : ''}</span>
           </p>
           <div className="flex flex-col gap-4">
             {recommendations.map((rec) => (

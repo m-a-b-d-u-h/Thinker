@@ -227,7 +227,7 @@ export default function ProductsPage() {
               >
                 <Link href={`/models/${module.slug}`} className="group flex flex-col bg-bg-card border border-border-subtle rounded-2xl p-6 no-underline transition-all duration-300 hover:bg-bg hover:border-border hover:-translate-y-1">
                   <div className="flex items-center gap-2 mb-4">
-                    <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-bg-elevated text-muted border border-border">{module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ')}</span>
+                    <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-bg-elevated text-muted border border-border">{module.category ? module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ') : ''}</span>
                   </div>
                   <h3 className="text-lg font-bold mb-2 text-fg">{module.title}</h3>
                   <p className="text-[0.875rem] text-muted-light leading-relaxed mb-4">{module.description}</p>

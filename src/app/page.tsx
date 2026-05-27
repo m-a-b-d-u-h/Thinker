@@ -365,7 +365,7 @@ export default function Home() {
                 transition={{ delay: idx * 0.03 }}
                 className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/5 text-sm text-[#888] cursor-pointer transition-all hover:bg-white/10 hover:text-white hover:border-white/10 no-underline"
               >
-                <span className="font-semibold">{collection.name.charAt(0).toUpperCase() + collection.name.slice(1).replace(/-/g, ' ')}</span>
+                <span className="font-semibold">{collection.name ? collection.name.charAt(0).toUpperCase() + collection.name.slice(1).replace(/-/g, ' ') : ''}</span>
                 <span className="text-[0.6875rem] text-[#555]">{collection.count}</span>
               </motion.span>
             ))}
