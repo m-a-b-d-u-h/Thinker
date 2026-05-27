@@ -30,8 +30,11 @@ const Flow = React.memo(({ nodes: initialNodes, edges }: { nodes: any[]; edges: 
   const styledEdges = useMemo(() => edges.map(e => ({
     ...e,
     animated: true,
-    style: { stroke: 'var(--color-border)', strokeWidth: 1.5 },
-    labelStyle: { fill: 'var(--color-muted-dark)', fontSize: 10, fontWeight: 600 },
+    style: { stroke: 'var(--color-border)', strokeWidth: 3 },
+    labelStyle: { fill: 'var(--color-muted)', fontSize: 9, fontWeight: 500 },
+    labelBgStyle: { fill: 'transparent' },
+    labelBgPadding: [0, 0],
+    labelBgBorderRadius: 0,
   })), [edges]);
 
   useEffect(() => {
@@ -89,8 +92,7 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
         <Flow nodes={styledNodes} edges={module.edges} />
       </div>
       <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-bg via-bg/80 to-transparent pt-2 pb-2 px-6 text-center">
-        <span className="badge" style={{ background: `var(--color-c-${module.category})`, color: '#000' }}>{module.category}</span>
-        <h1 className="text-3xl font-bold text-fg mt-4 leading-tight">Implementation Path: {module.title}</h1>
+        <h1 className="text-3xl font-bold text-fg mt-6 leading-tight">Implementation Path: {module.title}</h1>
         <p className="text-base text-muted mt-2">Visualize your progress through the knowledge graph</p>
       </div>
     </div>
