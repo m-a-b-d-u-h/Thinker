@@ -63,6 +63,15 @@ async function main() {
     }));
   }
 
+  function nodeDescription(label: string): string {
+    const templates = [
+      `This section covers ${label.toLowerCase()} and the key ideas you need to understand.`,
+      `Learn about ${label.toLowerCase()} and how it applies in real world scenarios.`,
+      `Explore ${label.toLowerCase()} and discover practical ways to apply this concept.`,
+    ];
+    return templates[label.length % templates.length];
+  }
+
   function generateGraph(title: string, content: string) {
     const headings = content.split('\n').filter(l => l.trim().startsWith('### ')).map(l => l.trim().replace(/^### /, ''));
     const fallback = [
@@ -98,7 +107,10 @@ async function main() {
         { id: "5", positionX: 250, positionY: 450, label: labels[4] || "Mastery" },
       ],
     ];
-    const nodes = layouts[hash % layouts.length];
+    const nodes = layouts[hash % layouts.length].map((n: any) => ({
+      ...n,
+      description: nodeDescription(n.label),
+    }));
 
     const edgeSets = [
       [
@@ -1112,7 +1124,10 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
 
   // Insert full modules
   for (const mod of modulesData) {
-    const uniqueNodes = makeNodes(mod.slug, mod.nodes);
+    const uniqueNodes = makeNodes(mod.slug, mod.nodes).map((n) => ({
+      ...n,
+      description: n.description || nodeDescription(n.label),
+    }));
     const uniqueEdges = makeEdges(mod.slug, mod.edges);
     const created = await prisma.module.create({
       data: {
@@ -1122,12 +1137,14 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
         category: mod.category,
         content: mod.content,
         isPremium: true,
+        isDraft: false,
         nodes: {
           create: uniqueNodes.map((n) => ({
             id: n.id,
             positionX: n.positionX,
             positionY: n.positionY,
             label: n.label,
+            description: n.description,
           })),
         },
         edges: {
@@ -1165,12 +1182,14 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
         category: mod.category,
         content: mod.content,
         isPremium: true,
+        isDraft: false,
         nodes: {
           create: uniqueNodes.map((n) => ({
             id: n.id,
             positionX: n.positionX,
             positionY: n.positionY,
             label: n.label,
+            description: n.description,
           })),
         },
         edges: {

@@ -28,7 +28,7 @@ const CustomNode = ({ data }: { data: any }) => (
     <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-bg-elevated/50 backdrop-blur-md border border-border shadow-lg shadow-black/40 transition-opacity duration-150 pointer-events-none w-[260px] sm:w-[360px] ${
       data.showTooltip ? 'opacity-100' : 'opacity-0'
     }`}>
-      <div className="text-[10px] text-muted leading-relaxed">This module covers the key concepts and practical steps needed to understand and apply this topic in real world scenarios. You will learn the fundamental principles and best practices.</div>
+      <div className="text-[10px] text-muted leading-relaxed">{data.description || "This section covers the key concepts and practical steps needed to understand and apply this topic."}</div>
     </div>
   </div>
 );
@@ -119,7 +119,8 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
       const node = module.nodes.find((n: any) => n.id === nodeId);
       if (node) {
         const title = node.data?.label || '';
-        const text = `${title}. This module covers the key concepts and practical steps needed to understand and apply this topic in real world scenarios. You will learn the fundamental principles and best practices.`;
+        const desc = node.data?.description || "This section covers the key concepts and practical steps needed to understand and apply this topic.";
+        const text = `${title}. ${desc}`;
         speakText(text);
       }
     } else {

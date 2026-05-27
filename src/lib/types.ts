@@ -9,7 +9,7 @@ export type Category =
 export interface ReactFlowNode {
   id: string;
   position: { x: number; y: number };
-  data: { label: string };
+  data: { label: string; description?: string };
   type?: string;
   style?: Record<string, string>;
 }

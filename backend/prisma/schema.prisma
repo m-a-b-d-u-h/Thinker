@@ -85,6 +85,7 @@ model ModuleNode {
   positionX Float
   positionY Float
   label     String
+  description String?
   type      String @default("custom")
   style     Json?
 

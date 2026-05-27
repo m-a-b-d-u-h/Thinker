@@ -1,7 +1,7 @@
 export interface ReactFlowNode {
   id: string;
   position: { x: number; y: number };
-  data: { label: string };
+  data: { label: string; description?: string };
   type?: string;
   style?: Record<string, string>;
 }
@@ -19,13 +19,14 @@ export function transformNode(node: {
   positionX: number;
   positionY: number;
   label: string;
+  description?: string | null;
   type?: string | null;
   style?: unknown;
 }): ReactFlowNode {
   return {
     id: node.id,
     position: { x: node.positionX, y: node.positionY },
-    data: { label: node.label },
+    data: { label: node.label, ...(node.description ? { description: node.description } : {}) },
     type: node.type || "custom",
     ...(node.style ? { style: node.style as Record<string, string> } : {}),
   };

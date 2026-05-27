@@ -5,6 +5,7 @@ export const moduleNodeSchema = z.object({
   positionX: z.number(),
   positionY: z.number(),
   label: z.string(),
+  description: z.string().optional(),
   type: z.string().optional().default("custom"),
   style: z.any().optional(),
 });
