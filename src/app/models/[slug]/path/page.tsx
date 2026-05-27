@@ -31,7 +31,7 @@ const Flow = React.memo(({ nodes: initialNodes, edges }: { nodes: any[]; edges: 
     ...e,
     animated: true,
     style: { stroke: 'var(--color-border)', strokeWidth: 3 },
-    labelStyle: { fill: 'var(--color-muted)', fontSize: 9, fontWeight: 500 },
+    labelStyle: { fill: 'var(--color-muted-dark)', fontSize: 9, fontWeight: 500 },
     labelBgStyle: { fill: 'transparent' },
     labelBgPadding: [0, 0],
     labelBgBorderRadius: 0,

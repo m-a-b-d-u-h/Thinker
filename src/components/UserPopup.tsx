@@ -102,7 +102,7 @@ export default function UserPopup() {
     <div className="relative" ref={popupRef}>
       <button
         onClick={() => { setOpen(!open); setEditing(false); setRenaming(false); }}
-        className="flex items-center gap-2 px-3 py-1.5 rounded border border-border text-muted text-sm font-medium transition-colors hover:text-fg hover:border-border-light hover:bg-bg-elevated cursor-pointer"
+        className="flex items-center gap-2 text-muted text-sm font-medium transition-colors hover:text-fg cursor-pointer"
       >
         <span>{shortName}</span>
       </button>
