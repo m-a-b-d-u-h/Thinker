@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Play, Square, Moon, Sun, Menu, Heart, Volume2, FastForward, FileDown, RotateCcw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTheme } from "next-themes";
@@ -14,14 +14,14 @@ interface Props {
   voices: any[];
   selectedVoice: string;
   onVoiceChange: (voice: string) => void;
-  showVoiceList: boolean;
-  onToggleVoiceList: () => void;
   rate: number;
   onRateChange: (rate: number) => void;
   volume: number;
   onVolumeChange: (vol: number) => void;
   isFavorited: boolean;
   onToggleFavorite: () => void;
+  onSeeking: (pct: number) => void;
+  onSeekEnd: () => void;
 }
 
 export default function ModuleFloatingBar({
@@ -32,15 +32,51 @@ export default function ModuleFloatingBar({
   voices,
   selectedVoice,
   onVoiceChange,
-  showVoiceList,
-  onToggleVoiceList,
   rate,
   onRateChange,
   volume,
   onVolumeChange,
   isFavorited,
   onToggleFavorite,
+  onSeeking,
+  onSeekEnd,
 }: Props) {
+  const browserSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const getProgressFromEvent = useRef((e: MouseEvent | React.MouseEvent) => {
+    if (!progressBarRef.current) return 0;
+    const rect = progressBarRef.current.getBoundingClientRect();
+    return Math.max(0, Math.min(100, ((e.clientX - rect.left) / rect.width) * 100));
+  });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!browserSupported) return;
+    e.preventDefault();
+    setIsDragging(true);
+    const pct = getProgressFromEvent.current(e);
+    onSeeking(pct);
+  };
+
+  useEffect(() => {
+    if (!isDragging) return;
+    const handleMouseMove = (e: MouseEvent) => {
+      const pct = getProgressFromEvent.current(e);
+      onSeeking(pct);
+    };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      onSeekEnd();
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, onSeeking, onSeekEnd]);
+
   const { theme, setTheme } = useTheme();
   const { tocOpen, setTocOpen } = useReading();
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
@@ -86,7 +122,7 @@ export default function ModuleFloatingBar({
   return (
     <>
       <div className="fixed bottom-0 left-0 right-0 z-[2000] px-4 pointer-events-none" style={{ paddingBottom: "16px" }}>
-        <div className="pointer-events-auto w-full max-w-xl mx-auto rounded-2xl shadow-2xl border backdrop-blur-xl bg-bg-overlay border-border overflow-hidden">
+        <div className="pointer-events-auto w-full max-w-xl mx-auto rounded-2xl shadow-2xl border backdrop-blur-xl bg-bg-overlay border-border">
           {/* Progress bar & timer (ABOVE buttons) */}
           <AnimatePresence>
             {isPlaying && (
@@ -96,10 +132,18 @@ export default function ModuleFloatingBar({
                 exit={{ height: 0, opacity: 0 }}
                 className="overflow-hidden"
               >
-                <div className="relative h-1 bg-border rounded-full mx-4 mt-3 mb-1">
+                <div
+                  ref={progressBarRef}
+                  onMouseDown={handleMouseDown}
+                  className="relative h-1.5 bg-border rounded-full mx-4 mt-3 mb-1 cursor-pointer group"
+                >
                   <div
-                    className="absolute left-0 top-0 h-full rounded-full bg-fg"
+                    className="absolute left-0 top-0 h-full rounded-full bg-fg group-hover:bg-fg/80 transition-colors"
                     style={{ width: `${progress}%` }}
+                  />
+                  <div
+                    className={`absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 rounded-full bg-fg border-2 border-bg shadow-md transition-opacity ${isDragging ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                    style={{ left: `${progress}%` }}
                   />
                 </div>
                 <div className="flex items-center justify-between px-4 pb-1">
@@ -116,7 +160,12 @@ export default function ModuleFloatingBar({
 
           {/* Controls row */}
           <div className="flex items-center justify-around px-3 py-3">
-            <button onClick={onTogglePlay} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all border-none cursor-pointer text-muted bg-bg-elevated border border-border">
+            <button
+              onClick={browserSupported ? onTogglePlay : undefined}
+              disabled={!browserSupported}
+              title={!browserSupported ? 'Audio narration not supported in this browser' : undefined}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all border-none cursor-pointer text-muted bg-bg-elevated border-border ${browserSupported ? 'border' : 'border border-dashed opacity-40 cursor-not-allowed'}`}
+            >
               {isPlaying ? <Square size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
             </button>
             <button onClick={toggleTheme} className="w-9 h-9 rounded-xl flex items-center justify-center transition-all border-none cursor-pointer text-muted bg-bg-elevated border border-border hover:text-fg hover:border-border-light">
@@ -143,25 +192,24 @@ export default function ModuleFloatingBar({
           {/* Audio settings (below controls, visible only when playing) */}
           <AnimatePresence>
             {isPlaying && (
-              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                <div className="flex items-center justify-around px-3 pb-3 pt-2 border-t border-border-subtle">
-                  <div className="relative">
-                    <button onClick={onToggleVoiceList} className="flex items-center gap-1 text-xs border-none cursor-pointer bg-transparent text-muted">
-                      <Volume2 size={14} />
-                      <span>{voices.find((v: any) => v.name === selectedVoice)?.displayName || "Voice"}</span>
-                    </button>
-                    <AnimatePresence>
-                      {showVoiceList && (
-                        <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="absolute bottom-[120%] left-0 w-[160px] max-h-[200px] overflow-y-auto rounded-xl p-2 shadow-2xl z-[2001] bg-bg-elevated border border-border">
-                          {voices.map((voice: any) => (
-                            <button key={voice.name} onClick={() => { onVoiceChange(voice.name); onToggleVoiceList(); }} className={`w-full px-3 py-2 text-left text-xs rounded-lg cursor-pointer hover:bg-bg-card ${selectedVoice === voice.name ? "text-fg bg-bg-card" : "text-muted"}`}>
-                              {voice.displayName}
-                            </button>
-                          ))}
-              </motion.div>
-                      )}
-                    </AnimatePresence>
+              <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-border-subtle px-4 py-3">
+                <div className="mb-3">
+                  <label className="text-[0.65rem] font-semibold mb-1.5 block text-muted">Voice</label>
+                  <div className="grid grid-cols-4 gap-1.5">
+                    {voices.map((voice: any) => (
+                      <button
+                        key={voice.name}
+                        onClick={() => onVoiceChange(voice.name)}
+                        className={`py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                          selectedVoice === voice.name ? "bg-accent text-white" : "bg-bg-elevated text-fg border border-border"
+                        }`}
+                      >
+                        {voice.displayName}
+                      </button>
+                    ))}
                   </div>
+                </div>
+                <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-1 text-muted-dark">
                     <FastForward size={14} />
                     <select value={rate} onChange={(e) => onRateChange(parseFloat(e.target.value))} className="text-xs border-none cursor-pointer outline-none bg-transparent text-muted">
@@ -179,6 +227,15 @@ export default function ModuleFloatingBar({
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Browser not supported banner */}
+          {!browserSupported && (
+            <div className="px-4 py-2.5 border-t border-border-subtle bg-amber-500/5">
+              <p className="text-[0.7rem] text-amber-500 text-center font-medium">
+                Audio narration is not supported in this browser. Try Chrome or Edge.
+              </p>
+            </div>
+          )}
 
           {/* Reading settings (inline, toggle via Aa) */}
           <AnimatePresence>
@@ -257,6 +314,8 @@ export default function ModuleFloatingBar({
               </motion.div>
             )}
           </AnimatePresence>
+
+
         </div>
       </div>
     </>

@@ -27,7 +27,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const [selectedVoice, setSelectedVoice] = useState<string>("");
   const [progress, setProgress] = useState(0);
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
-  const [showVoiceList, setShowVoiceList] = useState(false);
   const [volume, setVolume] = useState(1);
   const [rate, setRate] = useState(1);
   const [showSettings, setShowSettings] = useState(false);
@@ -161,25 +160,36 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     const s = window.speechSynthesis;
     const loadVoices = () => {
       const v = s.getVoices();
-      const filteredVoices = v
-        .filter(voice => {
-          const isEnglish = voice.lang.startsWith('en');
-          const isRobot = /David|Mark|Zira/i.test(voice.name);
-          return isEnglish && !isRobot;
-        })
-        .map(voice => ({
-          original: voice,
-          name: voice.name,
-          displayName: voice.name
-            .replace(/Microsoft |Google |Apple |Natural |Online |Multilingual /gi, '')
-            .split(' ')[0]
-            .trim()
-        }));
+
+      const priority: { name: string; display: string }[] = [
+        { name: 'William', display: 'William' },
+        { name: 'Aria', display: 'Aria' },
+        { name: 'Guy', display: 'Guy' },
+        { name: 'Jenny', display: 'Jenny' },
+        { name: 'Ryan', display: 'Ryan' },
+        { name: 'Sonia', display: 'Sonia' },
+        { name: 'Andrew', display: 'Andrew' },
+        { name: 'Ava', display: 'Ava' },
+      ];
+
+      const matched: { voice: SpeechSynthesisVoice; display: string }[] = [];
+
+      for (const p of priority) {
+        const found = v.find(voice =>
+          voice.lang.startsWith('en') &&
+          voice.name.includes(p.name)
+        );
+        if (found) matched.push({ voice: found, display: p.display });
+      }
+
+      const filteredVoices = matched.map(({ voice, display }) => ({
+        original: voice,
+        name: voice.name,
+        displayName: display,
+      }));
 
       setVoices(filteredVoices);
-      const natural = filteredVoices.find(v => v.name.includes('Natural') || v.name.includes('Google'));
-      if (natural) setSelectedVoice(natural.name);
-      else if (filteredVoices.length > 0) setSelectedVoice(filteredVoices[0].name);
+      if (filteredVoices.length > 0) setSelectedVoice(filteredVoices[0].name);
     };
     loadVoices();
     s.addEventListener('voiceschanged', loadVoices);
@@ -327,10 +337,10 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const saveOnLeave = useCallback(() => {
     if (completedRef.current) return;
     const data: Record<string, any> = {};
-    if (progress > 0) {
-      data.listeningProgress = progress;
-      data.currentCharIndex = currentCharIndex;
-      data.audioRate = rate;
+    if (currentProgressRef.current > 0) {
+      data.listeningProgress = currentProgressRef.current;
+      data.currentCharIndex = currentCharIndexRef.current;
+      data.audioRate = currentRateRef.current;
     }
     const article = articleRef.current;
     if (article) {
@@ -345,7 +355,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     }
     if (Object.keys(data).length === 0) return;
     saveProgress(data);
-  }, [slug, progress, currentCharIndex, rate, saveProgress]);
+  }, [slug, saveProgress]);
 
   useEffect(() => {
     window.addEventListener("beforeunload", saveOnLeave);
@@ -354,11 +364,14 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       window.removeEventListener("beforeunload", saveOnLeave);
       window.removeEventListener("pagehide", saveOnLeave);
       saveOnLeave();
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
     };
   }, [saveOnLeave]);
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
 
   useEffect(() => {
     const handleSelection = () => {
@@ -444,8 +457,16 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
         setProgress((globalIdx / text.length) * 100);
       }
     };
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
+    utterance.onend = () => {
+      setCurrentCharIndex(0);
+      setProgress(0);
+      startSpeech(0, text, vol, spd, voiceName);
+    };
+    utterance.onerror = (event) => {
+      if (event.error !== 'canceled' && event.error !== 'interrupted') {
+        setIsPlaying(false);
+      }
+    };
     synth.speak(utterance);
     setIsPlaying(true);
   };
@@ -486,6 +507,20 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const toggleSpeech = () => {
     if (isPlaying) { synth?.cancel(); setIsPlaying(false); }
     else { startSpeech(Math.floor((progress / 100) * unifiedCleanText.length), unifiedCleanText, volume, rate, selectedVoice); }
+  };
+
+  const handleSeeking = (pct: number) => {
+    const idx = Math.floor((pct / 100) * currentTextRef.current.length);
+    setCurrentCharIndex(idx);
+    setProgress(pct);
+  };
+
+  const handleSeekEnd = () => {
+    if (isPlaying) {
+      synth?.cancel();
+      const idx = Math.floor((currentProgressRef.current / 100) * currentTextRef.current.length);
+      startSpeech(idx, currentTextRef.current, currentVolumeRef.current, currentRateRef.current, currentVoiceRef.current);
+    }
   };
 
   const toggleFavorite = async () => {
@@ -916,14 +951,14 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
         voices={voices}
         selectedVoice={selectedVoice}
         onVoiceChange={updateVoice}
-        showVoiceList={showVoiceList}
-        onToggleVoiceList={() => setShowVoiceList((v) => !v)}
         rate={rate}
         onRateChange={updateRate}
         volume={volume}
         onVolumeChange={updateVolume}
         isFavorited={isFavorited}
         onToggleFavorite={toggleFavorite}
+        onSeeking={handleSeeking}
+        onSeekEnd={handleSeekEnd}
       />
 
       <TableOfContents
