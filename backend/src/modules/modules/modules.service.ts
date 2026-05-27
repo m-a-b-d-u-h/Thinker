@@ -37,11 +37,19 @@ export namespace ModulesService {
       Cache.delByPattern(`${Cache.PREFIXES.MODULES_LIST}:*`),
       Cache.del(Cache.PREFIXES.MODULES_CATEGORIES),
       Cache.del(Cache.PREFIXES.CATEGORIES_LIST),
+      Cache.del(Cache.PREFIXES.DAILY_FREE),
+      Cache.del(Cache.PREFIXES.DAILY_FREE_SLUG),
     ]);
   }
 
+  const DAILY_FREE_TTL = 86400;
+
   /** Deterministic daily free module slug based on current date */
   export async function getDailyFreeSlug(): Promise<string | null> {
+    const cacheKey = Cache.PREFIXES.DAILY_FREE_SLUG;
+    const cached = await Cache.get<string>(cacheKey);
+    if (cached) return cached;
+
     const count = await prisma.module.count({ where: { isDraft: false } });
     if (count === 0) return null;
 
@@ -58,7 +66,9 @@ export namespace ModulesService {
       orderBy: { createdAt: "asc" },
     });
 
-    return module[0]?.slug || null;
+    const slug = module[0]?.slug || null;
+    if (slug) await Cache.set(cacheKey, slug, DAILY_FREE_TTL);
+    return slug;
   }
 
   /** Check if user has an active subscription */
@@ -174,6 +184,10 @@ export namespace ModulesService {
   }
 
   export async function getDailyFree() {
+    const cacheKey = Cache.PREFIXES.DAILY_FREE;
+    const cached = await Cache.get<any>(cacheKey);
+    if (cached) return cached;
+
     const slug = await getDailyFreeSlug();
     if (!slug) throw new NotFoundError("No modules available");
 
@@ -184,12 +198,15 @@ export namespace ModulesService {
 
     if (!module) throw new NotFoundError("Module");
 
-    return {
+    const result = {
       ...module,
       isPremium: false,
       nodes: module.nodes.map(transformNode),
       edges: module.edges.map(transformEdge),
     };
+
+    await Cache.set(cacheKey, result, DAILY_FREE_TTL);
+    return result;
   }
 
   export async function getBySlug(slug: string, userId?: string, admin?: boolean) {

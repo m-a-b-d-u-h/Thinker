@@ -50,7 +50,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#030303] flex items-center justify-center p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#030303] flex items-start justify-center relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,95,0,0.12)_0%,transparent_40%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(167,139,250,0.08)_0%,transparent_40%)] pointer-events-none" />
 
@@ -58,10 +58,10 @@ export default function LoginPage() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="w-full max-w-[400px] relative z-10"
+        className="w-full max-w-[400px] relative z-10 pt-24"
       >
         <div className="text-center mb-10">
-          <img src="/1section.png" alt="1SECTION" className="w-16 h-16 mx-auto mb-6" />
+          <img src="/1section.svg" alt="1SECTION" className="w-32 h-32 mx-auto mb-4" />
           <h1 className="text-3xl font-black text-white mb-2">
             {mode === "login" ? "Welcome back" : "Create account"}
           </h1>

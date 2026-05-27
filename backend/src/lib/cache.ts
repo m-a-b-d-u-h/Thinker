@@ -6,6 +6,8 @@ const CACHE_PREFIXES = {
   CATEGORIES_LIST: "cache:categories:list",
   MODULES_LIST: "cache:modules:list",
   MODULES_CATEGORIES: "cache:modules:categories",
+  DAILY_FREE: "cache:modules:daily-free",
+  DAILY_FREE_SLUG: "cache:modules:daily-free-slug",
 } as const;
 
 function buildKey(prefix: string, params?: Record<string, unknown>): string {
