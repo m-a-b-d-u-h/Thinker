@@ -28,7 +28,7 @@ const CustomNode = ({ data }: { data: any }) => (
     <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-bg-elevated/50 backdrop-blur-md border border-border shadow-lg shadow-black/40 transition-opacity duration-150 pointer-events-none w-[260px] sm:w-[360px] ${
       data.showTooltip ? 'opacity-100' : 'opacity-0'
     }`}>
-      <div className="text-[10px] text-muted leading-relaxed">This is a short description about this module. Hardcoded for now. But it will be replaced with real data later.</div>
+      <div className="text-[10px] text-muted leading-relaxed">This module covers the key concepts and practical steps needed to understand and apply this topic in real world scenarios. You will learn the fundamental principles and best practices.</div>
     </div>
   </div>
 );
@@ -47,6 +47,48 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
 
   const rf = useRef<any>(null);
   const selectedId = useRef<string | null>(null);
+  const synthRef = useRef<SpeechSynthesis | null>(null);
+  const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
+  const selectedVoiceRef = useRef<string>('');
+
+  useEffect(() => {
+    const synth = window.speechSynthesis;
+    synthRef.current = synth;
+    const load = () => {
+      const all = synth.getVoices();
+      const priority = ['William', 'Aria', 'Guy', 'Jenny', 'Ryan', 'Sonia', 'Andrew', 'Ava'];
+      const matched: SpeechSynthesisVoice[] = [];
+      for (const name of priority) {
+        const found = all.find(v => v.lang.startsWith('en') && v.name.includes(name));
+        if (found) matched.push(found);
+      }
+      voicesRef.current = matched;
+      if (matched.length > 0 && !selectedVoiceRef.current) {
+        selectedVoiceRef.current = matched[0].name;
+      }
+    };
+    load();
+    synth.addEventListener('voiceschanged', load);
+    return () => {
+      synth.cancel();
+      synth.removeEventListener('voiceschanged', load);
+    };
+  }, []);
+
+  const speakText = useCallback((text: string) => {
+    const synth = synthRef.current;
+    if (!synth || !text) return;
+    synth.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    if (selectedVoiceRef.current) {
+      const voice = voicesRef.current.find(v => v.name === selectedVoiceRef.current);
+      if (voice) utterance.voice = voice;
+    }
+    utterance.rate = 1;
+    utterance.volume = 1;
+    synth.speak(utterance);
+  }, []);
 
   const defaultNodes = useMemo(() => {
     if (!module) return [];
@@ -72,6 +114,17 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
   const highlightNodes = useCallback((nodeId: string | null) => {
     const instance = rf.current;
     if (!instance || !module) return;
+
+    if (nodeId) {
+      const node = module.nodes.find((n: any) => n.id === nodeId);
+      if (node) {
+        const title = node.data?.label || '';
+        const text = `${title}. This module covers the key concepts and practical steps needed to understand and apply this topic in real world scenarios. You will learn the fundamental principles and best practices.`;
+        speakText(text);
+      }
+    } else {
+      synthRef.current?.cancel();
+    }
 
     const cNodes = !nodeId ? null : new Set<string>([nodeId]);
     const cEdges = !nodeId ? null : new Set<string>();
@@ -120,7 +173,7 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
         };
       })
     );
-  }, [module, completedNodes]);
+  }, [module, completedNodes, speakText]);
 
   useEffect(() => {
     if (rf.current && defaultNodes.length > 0) {
