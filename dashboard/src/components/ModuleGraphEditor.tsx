@@ -17,13 +17,14 @@ import {
   type NodeProps,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 
 export interface NodeForm {
   id: string;
   positionX: number;
   positionY: number;
   label: string;
+  description?: string;
   type: string;
 }
 
@@ -47,7 +48,7 @@ function toFlowNode(n: NodeForm): Node {
   return {
     id: n.id,
     position: { x: n.positionX, y: n.positionY },
-    data: { label: n.label },
+    data: { label: n.label, description: n.description },
     type: "editor",
   };
 }
@@ -57,20 +58,28 @@ function toFlowEdge(e: EdgeForm): Edge {
     id: e.id,
     source: e.source,
     target: e.target,
+    label: e.label,
     animated: e.animated,
     style: { stroke: "rgba(255,255,255,0.45)", strokeWidth: 2.5 },
   };
 }
 
 const EditorNode = ({ data, selected }: NodeProps) => (
-  <div
-    className={`bg-[#0d0d0d]/90 border rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap backdrop-blur-sm shadow-lg shadow-black/20 transition-all ${
-      selected ? "border-white/50 ring-1 ring-white/20" : "border-[#333]"
-    }`}
-  >
-    <Handle type="target" position={Position.Top} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
-    {data.label as string}
-    <Handle type="source" position={Position.Bottom} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
+  <div className="relative">
+    <div
+      className={`bg-[#0d0d0d]/90 border rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap backdrop-blur-sm shadow-lg shadow-black/20 transition-all ${
+        selected ? "border-white/50 ring-1 ring-white/20" : "border-[#333]"
+      }`}
+    >
+      <Handle type="target" position={Position.Top} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
+      {data.label as string}
+      <Handle type="source" position={Position.Bottom} className="!bg-[#555] !border-0 !w-1.5 !h-1.5" />
+    </div>
+    <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-[#0d0d0d]/90 backdrop-blur-md border border-white/[0.08] shadow-lg shadow-black/40 transition-opacity duration-150 pointer-events-none w-[260px] sm:w-[360px] ${
+      selected ? 'opacity-100' : 'opacity-0'
+    }`}>
+      <div className="text-[10px] text-white/60 leading-relaxed">{(data.description as string) || "No description available."}</div>
+    </div>
   </div>
 );
 
@@ -96,6 +105,7 @@ function Flow({ nodes: parentNodes, edges: parentEdges, onNodesChange: notifyNod
         positionX: n.position.x,
         positionY: n.position.y,
         label: (n.data?.label as string) || "",
+        description: (n.data?.description as string) || undefined,
         type: "custom",
       }))
     );
@@ -175,7 +185,33 @@ function Flow({ nodes: parentNodes, edges: parentEdges, onNodesChange: notifyNod
     syncNodes(next);
   }, [syncNodes]);
 
+  const updateNodeDescription = useCallback((id: string, description: string) => {
+    const next = nodesRef.current.map((n) =>
+      n.id === id ? { ...n, data: { ...n.data, description } } : n
+    );
+    setNodes(next);
+    syncNodes(next);
+  }, [syncNodes]);
+
   const selectedNode = selectedId ? nodes.find((n) => n.id === selectedId) : null;
+
+  const connectedEdges = selectedId
+    ? edges.filter((e) => e.source === selectedId || e.target === selectedId)
+    : [];
+
+  const updateEdgeLabel = useCallback((id: string, label: string) => {
+    const next = edgesRef.current.map((e) =>
+      e.id === id ? { ...e, label } : e
+    );
+    setEdges(next);
+    syncEdges(next);
+  }, [syncEdges]);
+
+  const deleteEdge = useCallback((id: string) => {
+    const next = edgesRef.current.filter((e) => e.id !== id);
+    setEdges(next);
+    syncEdges(next);
+  }, [syncEdges]);
 
   return (
     <div className="space-y-4">
@@ -244,12 +280,45 @@ function Flow({ nodes: parentNodes, edges: parentEdges, onNodesChange: notifyNod
             <span className="text-xs font-bold text-white/40 uppercase tracking-wider">Node Properties</span>
             <span className="text-[10px] font-mono text-white/20">{selectedNode.id}</span>
           </div>
-          <input
-            value={selectedNode.data?.label as string || ""}
-            onChange={(e) => updateNodeLabel(selectedNode.id, e.target.value)}
-            placeholder="Node label"
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-all placeholder:text-white/20"
-          />
+          <div className="space-y-2.5">
+            <input
+              value={selectedNode.data?.label as string || ""}
+              onChange={(e) => updateNodeLabel(selectedNode.id, e.target.value)}
+              placeholder="Node label"
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-white/20 transition-all placeholder:text-white/20"
+            />
+            <input
+              value={(selectedNode.data?.description as string) || ""}
+              onChange={(e) => updateNodeDescription(selectedNode.id, e.target.value)}
+              placeholder="Node description"
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white/70 outline-none focus:border-white/20 transition-all placeholder:text-white/20"
+            />
+          </div>
+          {connectedEdges.length > 0 && (
+            <div className="pt-2 border-t border-white/[0.06] space-y-2">
+              <span className="text-xs font-bold text-white/30 uppercase tracking-wider">Connected Edges</span>
+              {connectedEdges.map((e) => (
+                <div key={e.id} className="flex items-center gap-1.5">
+                  <span className="text-[10px] text-white/20 font-mono shrink-0">
+                    {e.source}→{e.target}
+                  </span>
+                  <input
+                    value={typeof e.label === "string" ? e.label : ""}
+                    onChange={(ev) => updateEdgeLabel(e.id, ev.target.value)}
+                    placeholder="Edge label"
+                    className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-sm text-white/70 outline-none focus:border-white/20 transition-all placeholder:text-white/20"
+                  />
+                  <button
+                    onClick={() => deleteEdge(e.id)}
+                    className="text-white/20 hover:text-red-400 transition-all shrink-0"
+                    title="Delete edge"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex gap-4 text-xs text-white/30">
             <span>X: {Math.round(selectedNode.position.x)}</span>
             <span>Y: {Math.round(selectedNode.position.y)}</span>

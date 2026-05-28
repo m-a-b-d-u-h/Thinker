@@ -9,6 +9,7 @@ export interface NodeForm {
   positionX: number;
   positionY: number;
   label: string;
+  description?: string;
   type: string;
 }
 

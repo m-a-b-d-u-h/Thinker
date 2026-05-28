@@ -18,13 +18,14 @@ import ModuleForm, { type ModuleFormData } from "@/components/ModuleForm";
 
 function toNodeForm(n: any) {
   if (n.positionX != null) {
-    return { id: n.id, positionX: n.positionX, positionY: n.positionY, label: n.label, type: n.type || "custom" };
+    return { id: n.id, positionX: n.positionX, positionY: n.positionY, label: n.label, description: n.description || n.data?.description, type: n.type || "custom" };
   }
   return {
     id: n.id,
     positionX: n.position?.x ?? 0,
     positionY: n.position?.y ?? 0,
     label: n.data?.label ?? n.label ?? "",
+    description: n.data?.description || n.description,
     type: n.type || "custom",
   };
 }
@@ -194,10 +195,11 @@ export default function ModuleDetailPage() {
     );
   }
 
-  const viewNodes = isNew ? [] : (mod.nodes || []).map((n: any) => ({
+  const sourceNodes = (form.nodes && form.nodes.length > 0 ? form.nodes : mod?.nodes) || [];
+  const viewNodes = isNew ? [] : sourceNodes.map((n: any) => ({
     id: n.id,
     position: n.position || { x: n.positionX, y: n.positionY },
-    data: n.data || { label: n.label },
+    data: { label: n.data?.label || n.label, description: n.data?.description || n.description },
     type: n.type || "custom",
   }));
 
@@ -294,8 +296,20 @@ export default function ModuleDetailPage() {
 
           {graphEnabled && (
             <div>
-              <h3 className="text-lg font-bold text-white mb-4">Knowledge Graph</h3>
-              <ModuleGraph nodes={viewNodes} edges={mod.edges || []} />
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-white">Knowledge Graph</h3>
+                  <p className="text-xs text-white/30 mt-0.5">Visual overview of module structure</p>
+                </div>
+              </div>
+              <ModuleGraph
+                nodes={viewNodes}
+                edges={mod.edges || []}
+                nodeList={form.nodes}
+                onNodesChange={(nodes) => updateField("nodes", nodes)}
+                edgeList={form.edges}
+                onEdgesChange={(edges) => updateField("edges", edges)}
+              />
             </div>
           )}
 

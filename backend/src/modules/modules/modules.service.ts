@@ -319,7 +319,7 @@ export namespace ModulesService {
     content: string;
     isPremium?: boolean;
     isDraft?: boolean;
-    nodes?: { id: string; positionX: number; positionY: number; label: string; type?: string; style?: any }[];
+    nodes?: { id: string; positionX: number; positionY: number; label: string; description?: string; type?: string; style?: any }[];
     edges?: { id: string; source: string; target: string; label?: string; animated?: boolean }[];
     questions?: { question: string; options: string[]; correctAnswer: number; explanation?: string }[];
   }) {
@@ -338,7 +338,7 @@ export namespace ModulesService {
         isPremium: data.isPremium ?? true,
         isDraft: data.isDraft ?? true,
         nodes: data.nodes?.length
-          ? { create: data.nodes.map((n) => ({ id: n.id, positionX: n.positionX, positionY: n.positionY, label: n.label, type: n.type ?? "custom", style: n.style })) }
+          ? { create: data.nodes.map((n) => ({ id: n.id, positionX: n.positionX, positionY: n.positionY, label: n.label, description: n.description, type: n.type ?? "custom", style: n.style })) }
           : undefined,
         edges: data.edges?.length
           ? { create: data.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, label: e.label, animated: e.animated ?? true })) }
@@ -361,7 +361,7 @@ export namespace ModulesService {
       content?: string;
       isPremium?: boolean;
       isDraft?: boolean;
-      nodes?: { id: string; positionX: number; positionY: number; label: string; type?: string; style?: any }[];
+      nodes?: { id: string; positionX: number; positionY: number; label: string; description?: string; type?: string; style?: any }[];
       edges?: { id: string; source: string; target: string; label?: string; animated?: boolean }[];
       questions?: { question: string; options: string[]; correctAnswer: number; explanation?: string }[];
     }
@@ -393,6 +393,7 @@ export namespace ModulesService {
             positionX: n.positionX,
             positionY: n.positionY,
             label: n.label,
+            description: n.description,
             type: n.type ?? "custom",
             style: n.style,
           })),
