@@ -69,10 +69,11 @@ if (env.nodeEnv === "development") {
   app.use(morgan("dev"));
 }
 
-// Rate limiting — 100 requests per minute
+// Rate limiting — 100 requests per minute (excludes Stripe webhook)
 const limiter = rateLimit({
   windowMs: 60 * 1000,
   max: 100,
+  skip: (req) => req.path === "/payments/webhook",
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { message: "Too many requests, please try again later.", statusCode: 429 } },

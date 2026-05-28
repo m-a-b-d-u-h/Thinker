@@ -236,6 +236,15 @@ model SubscriptionPlan {
   updatedAt DateTime @updatedAt
 }
 
+model StripeEvent {
+  id        String   @id
+  type      String
+  processed Boolean  @default(false)
+  payload   Json
+  createdAt DateTime @default(now())
+  processedAt DateTime?
+}
+
 model Payment {
   id               String        @id @default(cuid())
   userId           String

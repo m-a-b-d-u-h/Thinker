@@ -10,7 +10,7 @@ import { paymentWs } from "@/lib/websocket";
 import { authApi } from "@/lib/api/auth";
 
 const POLL_INTERVAL = 2000;
-const MAX_RETRIES = 30;
+const MAX_RETRIES = 15; // 30 seconds before showing retry
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
@@ -19,11 +19,11 @@ export default function PaymentSuccessPage() {
   const [countdown, setCountdown] = useState(5);
   const mountedRef = useRef(true);
   const retriesRef = useRef(0);
+  const wsConnected = useRef(false);
 
-  const onPaymentSuccess = useCallback((data: Record<string, unknown>) => {
+  const onActive = useCallback(() => {
     if (!mountedRef.current) return;
     setStatus("active");
-    // Refresh user data
     authApi.getMe().then((u) => setUser(u)).catch(() => {});
   }, [setUser]);
 
@@ -31,20 +31,21 @@ export default function PaymentSuccessPage() {
     mountedRef.current = true;
     retriesRef.current = 0;
 
-    // Connect WebSocket for real-time payment confirmation
-    if (user?.id) {
-      const unsubscribe = paymentWs.on("payment_success", onPaymentSuccess);
+    if (user?.id && !wsConnected.current) {
+      wsConnected.current = true;
+      const unsub1 = paymentWs.on("payment_success", onActive);
+      const unsub2 = paymentWs.on("subscription_updated", onActive);
       paymentWs.connect(user.id);
       return () => {
         mountedRef.current = false;
-        unsubscribe();
+        unsub1();
+        unsub2();
       };
     }
-    // Fallback: poll if no user found
     return () => { mountedRef.current = false; };
-  }, [user?.id, onPaymentSuccess]);
+  }, [user?.id, onActive]);
 
-  // Also keep polling as fallback
+  // Polling fallback
   useEffect(() => {
     mountedRef.current = true;
     retriesRef.current = 0;
@@ -55,7 +56,10 @@ export default function PaymentSuccessPage() {
         const sub = await paymentsApi.getSubscription();
         if (!mountedRef.current) return;
 
-        if (sub.subscriptionStatus !== "FREE") {
+        const hasPremium = sub.subscriptionStatus === "MONTHLY" ||
+          sub.subscriptionStatus === "YEARLY" ||
+          sub.subscriptionStatus === "LIFETIME";
+        if (hasPremium) {
           setStatus("active");
           return;
         }

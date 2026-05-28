@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ChevronDown, ChevronUp, ChevronsUpDown, Search } from "lucide-react";
 
 interface Column<T> {
@@ -15,6 +15,8 @@ interface DataTableProps<T> {
   data: T[];
   searchable?: boolean;
   searchKeys?: string[];
+  pageSize?: number;
+  pageSizeOptions?: number[];
   onRowClick?: (item: T) => void;
 }
 
@@ -23,11 +25,15 @@ export default function DataTable<T extends Record<string, any>>({
   data,
   searchable = true,
   searchKeys,
+  pageSize = 10,
+  pageSizeOptions = [10, 25, 50],
   onRowClick,
 }: DataTableProps<T>) {
   const [search, setSearch] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(pageSize);
 
   const filtered = useMemo(() => {
     if (!search || !searchKeys) return data;
@@ -47,6 +53,15 @@ export default function DataTable<T extends Record<string, any>>({
       return 0;
     });
   }, [filtered, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / perPage));
+  const paginated = useMemo(() => {
+    const start = (page - 1) * perPage;
+    return sorted.slice(start, start + perPage);
+  }, [sorted, page, perPage]);
+
+  // Reset to page 1 when search/filter/sort changes
+  useEffect(() => { setPage(1); }, [search, sortKey, sortDir]);
 
   const toggleSort = (key: string) => {
     if (sortKey === key) {
@@ -103,14 +118,14 @@ export default function DataTable<T extends Record<string, any>>({
             </tr>
           </thead>
           <tbody>
-            {sorted.length === 0 ? (
+            {paginated.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="px-6 py-12 text-center text-[#555] text-sm">
                   No data found
                 </td>
               </tr>
             ) : (
-              sorted.map((item, i) => (
+              paginated.map((item, i) => (
                 <tr
                   key={item.id || i}
                   className={`border-b border-white/5 last:border-0 ${
@@ -129,6 +144,58 @@ export default function DataTable<T extends Record<string, any>>({
           </tbody>
         </table>
       </div>
+
+      {sorted.length > 0 && (
+        <div className="flex items-center justify-between px-6 py-3 border-t border-white/5 text-sm text-[#555]">
+          <div className="flex items-center gap-3">
+            <span>
+              Showing {(page - 1) * perPage + 1}–{Math.min(page * perPage, sorted.length)} of {sorted.length}
+            </span>
+            <select
+              value={perPage}
+              onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
+              className="bg-[#050505] border border-white/5 rounded-lg px-2 py-1 text-xs text-[#888] outline-none focus:border-white/20"
+            >
+              {pageSizeOptions.map((opt) => (
+                <option key={opt} value={opt}>{opt} / page</option>
+              ))}
+            </select>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              Prev
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+              .map((p, idx, arr) => (
+                <span key={p} className="flex items-center">
+                  {idx > 0 && arr[idx - 1] !== p - 1 && <span className="px-1 text-[#333]">...</span>}
+                  <button
+                    onClick={() => setPage(p)}
+                    className={`w-8 h-8 rounded-lg text-xs font-medium transition-all ${
+                      page === p
+                        ? "bg-white text-black"
+                        : "hover:bg-white/5 text-[#888]"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                </span>
+              ))}
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

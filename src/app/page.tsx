@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,7 +12,9 @@ import Marquee from "react-fast-marquee";
 import Navbar from "@/components/Navbar";
 import { ModuleCard } from "@/components/ModuleCard";
 import { paymentsApi } from "@/lib/api/payments";
+import { authApi } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth-context";
+import { paymentWs } from "@/lib/websocket";
 import { useModulesList, useCategories } from "@/lib/query-hooks";
 
 // Custom Node Component for MiniPreview
@@ -89,8 +91,21 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
 
 export default function Home() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const [subscribing, setSubscribing] = useState<string | null>(null);
+  const wsConnected = useRef<string | null>(null);
+
+  // Listen for subscription changes via WebSocket (connect once per user session)
+  useEffect(() => {
+    if (!user?.id) return;
+    if (wsConnected.current === user.id) return;
+    wsConnected.current = user.id;
+    const refresh = () => authApi.getMe().then((u) => setUser(u)).catch(() => {});
+    const unsub1 = paymentWs.on("payment_success", refresh);
+    const unsub2 = paymentWs.on("subscription_updated", refresh);
+    paymentWs.connect(user.id);
+    return () => { unsub1(); unsub2(); };
+  }, [user?.id]);
 
   const { data: modulesData } = useModulesList({ limit: "4" });
   const { data: collections } = useCategories();
