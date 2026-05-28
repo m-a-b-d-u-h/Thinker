@@ -17,6 +17,7 @@ import favoritesRoutes from "./modules/favorites/favorites.routes";
 import quizRoutes from "./modules/quiz/quiz.routes";
 import actionsRoutes from "./modules/actions/actions.routes";
 import paymentsRoutes from "./modules/payments/payments.routes";
+import subscriptionPlansRoutes from "./modules/subscription-plans/subscription-plans.routes";
 import reviewsRoutes from "./modules/reviews/reviews.routes";
 import aiRoutes from "./modules/ai/ai.routes";
 
@@ -94,6 +95,7 @@ app.use("/api/favorites", favoritesRoutes);
 app.use("/api/quiz", quizRoutes);
 app.use("/api/actions", actionsRoutes);
 app.use("/api/payments", paymentsRoutes);
+app.use("/api/subscription-plans", subscriptionPlansRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/ai", aiRoutes);
 

@@ -136,11 +136,7 @@ export default function Home() {
       const result = isUpgrade
         ? await paymentsApi.upgradeSubscription(planType)
         : await paymentsApi.createCheckoutSession(planType);
-      if ("success" in result && result.success) {
-        window.location.reload();
-        return;
-      }
-      if ("url" in result && result.url) {
+      if (result.url) {
         window.location.href = result.url;
       }
     } catch (err) {

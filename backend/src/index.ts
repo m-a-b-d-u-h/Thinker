@@ -1,7 +1,9 @@
+import { createServer } from "http";
 import app from "./app";
 import { env } from "./config/env";
 import { prisma } from "./lib/prisma";
 import { connectRedis, disconnectRedis } from "./lib/redis";
+import { initWebSocket } from "./lib/websocket";
 import { AiCron } from "./modules/ai/ai.cron";
 
 async function main() {
@@ -11,9 +13,12 @@ async function main() {
 
     await connectRedis();
 
+    const server = createServer(app);
+    initWebSocket(server);
+
     AiCron.restoreOnStartup();
 
-    app.listen(env.port, () => {
+    server.listen(env.port, () => {
       console.log(`Server running on http://localhost:${env.port}`);
       console.log(`Environment: ${env.nodeEnv}`);
     });

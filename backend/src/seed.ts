@@ -26,6 +26,48 @@ async function main() {
   await prisma.module.deleteMany();
   await prisma.user.deleteMany();
 
+  // Seed subscription plans
+  const plans = [
+    {
+      planType: "MONTHLY" as const,
+      name: "Thinker Monthly",
+      slug: "monthly",
+      description: "Full access for one month",
+      price: 1000,
+      interval: "month",
+      features: ["Full module access", "Premium content", "Advanced analytics", "Priority support"],
+      sortOrder: 1,
+    },
+    {
+      planType: "YEARLY" as const,
+      name: "Thinker Yearly",
+      slug: "yearly",
+      description: "Full access for one year",
+      price: 5000,
+      interval: "year",
+      features: ["Everything in Monthly", "2 months free", "Early access features", "Exclusive community"],
+      sortOrder: 2,
+    },
+    {
+      planType: "LIFETIME" as const,
+      name: "Thinker Lifetime",
+      slug: "lifetime",
+      description: "Full access forever",
+      price: 10000,
+      interval: null,
+      features: ["Everything in Yearly", "No recurring payments", "Lifetime upgrades", "Founder badge"],
+      sortOrder: 3,
+    },
+  ];
+  for (const plan of plans) {
+    await prisma.subscriptionPlan.upsert({
+      where: { planType: plan.planType },
+      update: plan,
+      create: plan,
+    });
+  }
+  console.log("Seeded subscription plans");
+
   // Create demo user
   const demoUser = await prisma.user.create({
     data: {

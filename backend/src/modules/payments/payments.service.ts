@@ -2,14 +2,20 @@ import { prisma } from "../../lib/prisma";
 import { stripe } from "../../config/stripe";
 import { env } from "../../config/env";
 import { AppError } from "../../lib/errors";
+import { sendToUser } from "../../lib/websocket";
 import type { CreateCheckoutInput } from "./payments.schema";
 import type { PlanType, PaymentStatus, SubscriptionStatus } from "@prisma/client";
 
-const PLAN_CONFIG = {
-  MONTHLY: { name: "Thinker Monthly", price: 1000 },
-  YEARLY: { name: "Thinker Yearly", price: 5000 },
-  LIFETIME: { name: "Thinker Lifetime", price: 10000 },
-} as const;
+async function getPlanByType(planType: string) {
+  const plan = await prisma.subscriptionPlan.findUnique({ where: { planType: planType as any } });
+  if (!plan) throw new AppError("Invalid plan type", 400);
+  return plan;
+}
+
+async function getPrice(planType: string): Promise<number> {
+  const plan = await getPlanByType(planType);
+  return plan.price;
+}
 
 let priceCache: Record<string, string> | null = null;
 
@@ -20,8 +26,7 @@ async function getPriceId(planType: string): Promise<string> {
 
   if (priceCache?.[planType]) return priceCache[planType];
 
-  const config = PLAN_CONFIG[planType as keyof typeof PLAN_CONFIG];
-  if (!config) throw new AppError("Invalid plan type", 400);
+  const config = await getPlanByType(planType);
 
   const products = await stripe.products.list({ limit: 100, active: true });
   let product = products.data.find((p) => p.name === config.name);
@@ -49,7 +54,7 @@ async function getPriceId(planType: string): Promise<string> {
     product: product.id,
     unit_amount: config.price,
     currency: "usd",
-    recurring: planType === "LIFETIME" ? undefined : { interval: planType === "MONTHLY" ? "month" : "year" },
+    recurring: planType === "LIFETIME" ? undefined : { interval: (config.interval || "month") as "month" | "year" },
   });
 
   if (!priceCache) priceCache = {};
@@ -80,45 +85,38 @@ export namespace PaymentsService {
     let stripeCustomerId = user.stripeCustomerId;
     if (!stripeCustomerId) throw new AppError("No Stripe customer found", 400);
 
-    if (newPlanType === "YEARLY" && currentPlan === "MONTHLY") {
-      const priceId = await getPriceId("YEARLY");
-      const subs = await stripe.subscriptions.list({ customer: stripeCustomerId, status: "active", limit: 1 });
-      if (subs.data.length === 0) throw new AppError("No active subscription", 400);
-      const sub = subs.data[0];
-      await stripe.subscriptions.update(sub.id, {
-        items: [{ id: sub.items.data[0].id, price: priceId }],
-        metadata: { userId, planType: "YEARLY" },
-        proration_behavior: "always_invoice",
-      });
-      // Webhook customer.subscription.updated will sync the status + plan type
-      return { success: true };
-    }
+    // ALL upgrades go through checkout — payment BEFORE upgrade
+    const currentPrice = await getPrice(currentPlan);
+    const newPrice = await getPrice(newPlanType);
+    const diff = newPrice - currentPrice;
+    if (diff <= 0) throw new AppError("No payment needed", 400);
 
-    if (newPlanType === "LIFETIME") {
-      const currentPrice = PLAN_CONFIG[currentPlan as keyof typeof PLAN_CONFIG]?.price || 0;
-      const diff = PLAN_CONFIG.LIFETIME.price - currentPrice;
-      if (diff <= 0) throw new AppError("No payment needed", 400);
+    const newPlan = await getPlanByType(newPlanType);
+    const newPlanName = newPlan.name;
+    const isSubscription = newPlanType !== "LIFETIME";
 
-      const session = await stripe.checkout.sessions.create({
-        customer: stripeCustomerId,
-        mode: "payment",
-        line_items: [{
-          price_data: {
-            currency: "usd",
-            product_data: { name: `Upgrade to Lifetime` },
-            unit_amount: diff,
-          },
-          quantity: 1,
-        }],
-        success_url: `${env.clientUrl}/payment/success`,
-        cancel_url: `${env.clientUrl}/#pricing`,
-        metadata: { userId, planType: "LIFETIME", isUpgrade: "true", previousPlan: currentPlan },
-      });
+    const session = await stripe.checkout.sessions.create({
+      customer: stripeCustomerId,
+      mode: isSubscription ? "subscription" : "payment",
+      line_items: isSubscription
+        ? [{ price: await getPriceId(newPlanType), quantity: 1 }]
+        : [{
+            price_data: {
+              currency: "usd",
+              product_data: { name: `Upgrade to ${newPlanName}` },
+              unit_amount: diff,
+            },
+            quantity: 1,
+          }],
+      ...(isSubscription
+        ? { subscription_data: { metadata: { userId, planType: newPlanType, isUpgrade: "true", previousPlan: currentPlan } } }
+        : {}),
+      success_url: `${env.clientUrl}/payment/success`,
+      cancel_url: `${env.clientUrl}/#pricing`,
+      metadata: { userId, planType: newPlanType, isUpgrade: "true", previousPlan: currentPlan },
+    });
 
-      return { url: session.url, sessionId: session.id, prorated: true, diff };
-    }
-
-    throw new AppError("Invalid upgrade path", 400);
+    return { url: session.url, sessionId: session.id, prorated: !isSubscription, diff };
   }
 
   export async function createCheckoutSession(userId: string, input: CreateCheckoutInput) {
@@ -188,7 +186,8 @@ export namespace PaymentsService {
           );
         }
 
-        // Handle upgrade — cancel any old active subscriptions
+        // Upgrade — cancel old subscriptions AFTER payment confirmed
+        const previousPlan = session.metadata?.previousPlan;
         if (session.metadata?.isUpgrade === "true") {
           const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -206,6 +205,13 @@ export namespace PaymentsService {
               }
             }
           }
+        }
+
+        // For subscription upgrades, also update the new subscription's metadata
+        if (session.mode === "subscription" && session.subscription && previousPlan) {
+          await stripe.subscriptions.update(session.subscription as string, {
+            metadata: { userId, planType, isUpgrade: "true", previousPlan },
+          });
         }
 
         await Promise.all([
@@ -232,19 +238,17 @@ export namespace PaymentsService {
           }),
         ]);
 
+        // Notify user via WebSocket
+        sendToUser(userId, { type: "payment_success", planType, subscriptionStatus });
+
         break;
       }
 
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const subscription = event.data.object;
+        const planType = subscription.metadata?.planType as PlanType | undefined;
 
-        // Read plan type from subscription metadata (set during checkout or upgrade)
-        const planType = subscription.metadata?.planType as
-          | PlanType
-          | undefined;
-
-        // Prefer lookup by subscription ID, fallback to customer ID
         let user = await prisma.user.findUnique({
           where: { stripeSubscriptionId: subscription.id },
         });
@@ -269,7 +273,6 @@ export namespace PaymentsService {
             ),
           };
 
-          // Sync plan type if available from subscription metadata
           if (planType && PLAN_TO_SUBSCRIPTION[planType]) {
             updateData.subscriptionStatus = PLAN_TO_SUBSCRIPTION[planType];
           }
@@ -279,7 +282,6 @@ export namespace PaymentsService {
             data: updateData,
           });
         } else {
-          // Check if this is an upgrade scenario — user may have a recent lifetime payment
           if (user.subscriptionStatus === "LIFETIME") break;
 
           const recentUpgrade = await prisma.payment.findFirst({
@@ -287,7 +289,7 @@ export namespace PaymentsService {
               userId: user.id,
               planType: "LIFETIME",
               status: "SUCCEEDED",
-              createdAt: { gte: new Date(Date.now() - 60000) }, // within last 60s
+              createdAt: { gte: new Date(Date.now() - 60000) },
             },
           });
           if (recentUpgrade) break;

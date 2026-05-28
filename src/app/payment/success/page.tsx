@@ -1,23 +1,50 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, ArrowRight, Sparkles, RefreshCw, XCircle } from "lucide-react";
 import { paymentsApi } from "@/lib/api/payments";
 import { useAuth } from "@/lib/auth-context";
+import { paymentWs } from "@/lib/websocket";
+import { authApi } from "@/lib/api/auth";
 
 const POLL_INTERVAL = 2000;
 const MAX_RETRIES = 30;
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
-  const { setUser } = useAuth();
+  const { setUser, user } = useAuth();
   const [status, setStatus] = useState<"polling" | "active" | "timeout">("polling");
   const [countdown, setCountdown] = useState(5);
   const mountedRef = useRef(true);
   const retriesRef = useRef(0);
 
+  const onPaymentSuccess = useCallback((data: Record<string, unknown>) => {
+    if (!mountedRef.current) return;
+    setStatus("active");
+    // Refresh user data
+    authApi.getMe().then((u) => setUser(u)).catch(() => {});
+  }, [setUser]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    retriesRef.current = 0;
+
+    // Connect WebSocket for real-time payment confirmation
+    if (user?.id) {
+      const unsubscribe = paymentWs.on("payment_success", onPaymentSuccess);
+      paymentWs.connect(user.id);
+      return () => {
+        mountedRef.current = false;
+        unsubscribe();
+      };
+    }
+    // Fallback: poll if no user found
+    return () => { mountedRef.current = false; };
+  }, [user?.id, onPaymentSuccess]);
+
+  // Also keep polling as fallback
   useEffect(() => {
     mountedRef.current = true;
     retriesRef.current = 0;

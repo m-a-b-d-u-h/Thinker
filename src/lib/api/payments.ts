@@ -27,7 +27,7 @@ export interface PaymentHistory {
   createdAt: string;
 }
 
-export type UpgradeResult = { success: true } | (CheckoutResponse & { prorated?: boolean; diff?: number });
+export type UpgradeResult = CheckoutResponse & { prorated?: boolean; diff?: number };
 
 export const paymentsApi = {
   createCheckoutSession: (planType: "MONTHLY" | "YEARLY" | "LIFETIME") =>

@@ -220,6 +220,22 @@ model Review {
   module Module? @relation(fields: [moduleId], references: [id], onDelete: SetNull)
 }
 
+model SubscriptionPlan {
+  id        String   @id @default(cuid())
+  planType  PlanType @unique
+  name      String
+  slug      String   @unique
+  description String
+  price     Int      // in cents
+  interval  String?  // "month" | "year" | null (lifetime)
+  features  String[] // feature list
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  stripePriceId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Payment {
   id               String        @id @default(cuid())
   userId           String
