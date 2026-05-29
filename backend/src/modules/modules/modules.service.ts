@@ -21,6 +21,7 @@ export namespace ModulesService {
   function listCacheParams(query: {
     page?: number; limit?: number; category?: string;
     categories?: string; search?: string; userId?: string; admin?: boolean;
+    preferred?: boolean;
   }): Record<string, unknown> {
     return {
       page: query.page ?? 1,
@@ -29,6 +30,7 @@ export namespace ModulesService {
       categories: query.categories ?? "",
       search: query.search ?? "",
       admin: query.admin ?? false,
+      preferred: query.preferred ?? false,
     };
   }
 
@@ -91,11 +93,23 @@ export namespace ModulesService {
     search?: string;
     userId?: string;
     admin?: boolean;
+    preferred?: boolean;
   }) {
     const page = Math.max(1, query.page || 1);
     const maxLimit = query.admin ? 1000 : 50;
-    const limit = Math.min(maxLimit, Math.max(1, query.limit || 12));
+    let limit = Math.min(maxLimit, Math.max(1, query.limit || 12));
     const skip = (page - 1) * limit;
+
+    if (query.preferred && query.userId) {
+      const user = await prisma.user.findUnique({
+        where: { id: query.userId },
+        select: { preferredCategories: true },
+      });
+      if (user?.preferredCategories?.length) {
+        query.categories = user.preferredCategories.join(",");
+        limit = 3;
+      }
+    }
 
     const shouldCache = !query.search && !query.category && !query.categories && !query.userId && !query.admin;
 

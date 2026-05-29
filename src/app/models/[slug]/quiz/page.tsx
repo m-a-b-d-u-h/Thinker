@@ -1,18 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, ArrowRight, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, ArrowRight, RefreshCw, Play } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
-import { useModule, useQuizQuestions, useSubmitQuiz } from "@/lib/query-hooks";
+import { useModule, useQuizQuestions, useSubmitQuiz, useSaveQuizProgress, useQuizProgress } from "@/lib/query-hooks";
 import type { QuizSubmitResponse } from "@/lib/types";
+
+type Answer = { questionId: string; selectedAnswer: number };
 
 export default function QuizPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
   const { data: module, isLoading: moduleLoading } = useModule(slug);
   const { data: questions = [], isLoading: questionsLoading } = useQuizQuestions(slug);
+  const { data: savedProgress, isLoading: progressLoading } = useQuizProgress(slug);
   const submitMutation = useSubmitQuiz();
+  const saveProgressMutation = useSaveQuizProgress();
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -20,22 +24,94 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
   const [result, setResult] = useState<QuizSubmitResponse | null>(null);
-  const [allAnswers, setAllAnswers] = useState<number[]>([]);
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  const [showResume, setShowResume] = useState(false);
+  const pendingSubmitRef = useRef<Answer[] | null>(null);
 
-  const loading = moduleLoading || questionsLoading;
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const loading = moduleLoading || questionsLoading || progressLoading;
+
+  useEffect(() => {
+    if (savedProgress && questions.length > 0) {
+      const savedAnswers = savedProgress.answers ?? [];
+      const answeredCount = savedAnswers.length;
+      setAnswers(savedAnswers);
+      const nextQuestion = Math.min(answeredCount, questions.length - 1);
+      setCurrentQuestion(nextQuestion);
+      setScore(savedProgress.score);
+
+      if (answeredCount >= questions.length && !finished) {
+        pendingSubmitRef.current = savedAnswers;
+        setShowResume(false);
+      } else {
+        setShowResume(true);
+      }
+    }
+  }, [savedProgress, questions, finished]);
+
+  useEffect(() => {
+    if (pendingSubmitRef.current) {
+      const ans = pendingSubmitRef.current;
+      pendingSubmitRef.current = null;
+      submitWithAnswers(ans);
+    }
+  }, [answers, questions]);
+
+  const autoSave = useCallback((currentAnswers: Answer[], questionIndex: number) => {
+    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      saveProgressMutation.mutate({ slug, answers: currentAnswers, currentQuestion: questionIndex });
+    }, 1500);
+  }, [slug, saveProgressMutation]);
+
+  const submitWithAnswers = async (submitAnswers: Answer[]) => {
+    try {
+      const res = await submitMutation.mutateAsync({ slug, answers: submitAnswers });
+      setResult(res);
+    } catch {
+      const s = submitAnswers.reduce((acc, a) => {
+        const isCorrect = a.selectedAnswer === (module?.questions?.find((_, i) => questions[i]?.id === a.questionId)?.correctAnswer ?? -1);
+        return acc + (isCorrect ? 1 : 0);
+      }, 0);
+      setResult({ score: s, total: questions.length, percentage: Math.round((s / questions.length) * 100), answers: [] });
+    } finally {
+      setFinished(true);
+    }
+  };
 
   const handleSelect = (index: number) => {
     if (showResult) return;
     setSelectedAnswer(index);
   };
 
+  const handleResume = () => {
+    setShowResume(false);
+  };
+
+  const handleStartFresh = () => {
+    setShowResume(false);
+    setAnswers([]);
+    setCurrentQuestion(0);
+    setSelectedAnswer(null);
+    setScore(0);
+  };
+
   const handleNext = () => {
     if (selectedAnswer === null) return;
 
+    const question = questions[currentQuestion];
+    if (!question) return;
+
     const isCorrect = selectedAnswer === (module?.questions?.[currentQuestion]?.correctAnswer ?? -1);
     if (isCorrect) setScore(s => s + 1);
-    setAllAnswers(prev => [...prev, selectedAnswer]);
+
+    const newAnswer: Answer = { questionId: question.id, selectedAnswer };
+    const newAnswers = [...answers, newAnswer];
+    setAnswers(newAnswers);
     setShowResult(true);
+
+    autoSave(newAnswers, currentQuestion);
   };
 
   const handleContinue = () => {
@@ -48,15 +124,8 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
     }
   };
 
-  const submitQuiz = async () => {
-    try {
-      const res = await submitMutation.mutateAsync({ slug, answers: allAnswers });
-      setResult(res);
-    } catch {
-      setResult({ score, total: questions.length, percentage: Math.round((score / questions.length) * 100), answers: [] });
-    } finally {
-      setFinished(true);
-    }
+  const submitQuiz = () => {
+    submitWithAnswers(answers);
   };
 
   const handleRestart = () => {
@@ -66,7 +135,8 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
     setScore(0);
     setFinished(false);
     setResult(null);
-    setAllAnswers([]);
+    setAnswers([]);
+    setShowResume(false);
   };
 
   const percentage = Math.round((score / (questions.length || 1)) * 100);
@@ -90,6 +160,40 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
     );
   }
 
+  if (showResume) {
+    return (
+      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-10 md:pt-16">
+        <div className="max-w-[500px] mx-auto text-center">
+          <div className="w-16 h-16 rounded-full bg-bg-elevated flex items-center justify-center mx-auto mb-6">
+            <Play size={28} className="text-premium ml-1" />
+          </div>
+          <h2 className="text-2xl font-bold text-fg mb-2">Continue Quiz?</h2>
+          <p className="text-[0.9375rem] text-muted mb-2">
+            You have an incomplete quiz for <strong>{module.title}</strong>.
+          </p>
+          <p className="text-[0.8125rem] text-muted-dark mb-8">
+            {savedProgress?.answers?.length ?? 0} of {questions.length} questions answered
+            {" · "}{savedProgress?.score ?? 0} correct so far
+          </p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleResume}
+              className="w-full py-4 bg-fg text-bg rounded-xl font-bold text-[0.9375rem] cursor-pointer hover:opacity-90 transition-all"
+            >
+              Resume Quiz
+            </button>
+            <button
+              onClick={handleStartFresh}
+              className="w-full py-4 bg-bg-card text-muted rounded-xl font-bold text-[0.9375rem] cursor-pointer border border-border-subtle hover:border-border hover:text-fg transition-all"
+            >
+              Start Fresh
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-[160px] pt-10 md:pt-16">
       <div className="max-w-[700px] mx-auto">
@@ -101,8 +205,11 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
 
         {!finished ? (
           <div>
-            <div className="mb-6">
+            <div className="mb-6 flex items-center justify-between">
               <span className="text-[0.875rem] text-muted-dark">Question {currentQuestion + 1} of {questions.length}</span>
+              {answers.length > 0 && (
+                <span className="text-[0.75rem] text-muted-dark">Auto-saving...</span>
+              )}
             </div>
 
             <AnimatePresence mode="wait">
@@ -184,7 +291,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
         ) : (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center">
             <div className="w-24 h-24 rounded-full bg-bg-elevated flex items-center justify-center mx-auto mb-6">
-              <span className="text-4xl font-black">{percentage}%</span>
+              <span className="text-4xl font-black">{result?.percentage ?? percentage}%</span>
             </div>
             <h2 className="text-3xl font-bold text-fg mb-2">
               {percentage >= 80 ? "Great job!" : percentage >= 50 ? "Good effort!" : "Keep practicing!"}

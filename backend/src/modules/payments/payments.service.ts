@@ -496,6 +496,60 @@ export namespace PaymentsService {
     return user;
   }
 
+  export async function getReceipts(userId: string) {
+    const payments = await prisma.payment.findMany({
+      where: { userId, status: "SUCCEEDED" },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const receipts = await Promise.all(
+      payments.map(async (p) => {
+        try {
+          let invoiceUrl = "";
+
+          if (p.stripePaymentId.startsWith("cs_")) {
+            const session = await stripe.checkout.sessions.retrieve(p.stripePaymentId);
+            if (session.invoice) {
+              const invoice = await stripe.invoices.retrieve(session.invoice as string);
+              invoiceUrl = invoice.hosted_invoice_url || "";
+            } else if (session.payment_intent) {
+              const pi = await stripe.paymentIntents.retrieve(session.payment_intent as string);
+              const chargeId = pi.latest_charge;
+              if (chargeId) {
+                const charge = await stripe.charges.retrieve(chargeId as string);
+                invoiceUrl = charge.receipt_url || "";
+              }
+            }
+          } else if (p.stripePaymentId.startsWith("invoice_")) {
+            const invoiceId = p.stripePaymentId.replace("invoice_", "");
+            const invoice = await stripe.invoices.retrieve(invoiceId);
+            invoiceUrl = invoice.hosted_invoice_url || "";
+          }
+
+          return {
+            id: p.id,
+            planType: p.planType,
+            amount: p.amount,
+            currency: p.currency,
+            date: p.createdAt,
+            invoiceUrl,
+          };
+        } catch {
+          return {
+            id: p.id,
+            planType: p.planType,
+            amount: p.amount,
+            currency: p.currency,
+            date: p.createdAt,
+            invoiceUrl: "",
+          };
+        }
+      })
+    );
+
+    return receipts.filter((r) => r.invoiceUrl);
+  }
+
   export async function createPortalSession(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
@@ -510,16 +564,33 @@ export namespace PaymentsService {
   }
 
   export async function getHistory(userId: string, all?: boolean) {
+    const mapPayment = (p: any) => {
+      const isCheckout = p.stripePaymentId?.startsWith("cs_");
+      const isInvoice = p.stripePaymentId?.startsWith("invoice_");
+      let description = "";
+      if (isCheckout) {
+        description = p.status === "SUCCEEDED" ? "New Membership" : "Expired Checkout";
+      } else if (isInvoice) {
+        description = p.status === "SUCCEEDED" ? "Renewal" : "Failed Renewal";
+      } else {
+        description = "Payment";
+      }
+      description += ` · ${p.planType?.charAt(0) + p.planType?.slice(1).toLowerCase() || ""}`;
+      return { ...p, description };
+    };
+
     if (all) {
-      return prisma.payment.findMany({
+      const payments = await prisma.payment.findMany({
         orderBy: { createdAt: "desc" },
         include: { user: { select: { name: true, email: true } } },
       });
+      return payments.map(mapPayment);
     }
-    return prisma.payment.findMany({
+    const payments = await prisma.payment.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
       take: 20,
     });
+    return payments.map(mapPayment);
   }
 }

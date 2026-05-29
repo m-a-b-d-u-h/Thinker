@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
-import { CheckCircle2, ArrowRight, Target, Trash2, Type, CheckSquare, Sliders, List, Save } from "lucide-react";
+import { CheckCircle2, ArrowRight, Target, Trash2, Type, CheckSquare, Sliders, List, Save, Zap } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import Pagination from "@/components/Pagination";
 import { useActionPlans, useUpdateActionPlan, useDeleteActionPlan } from "@/lib/query-hooks";
 import { useAuth } from "@/lib/auth-context";
@@ -14,71 +15,73 @@ function MatrixInput({ row, onChange }: { row: MatrixRow; onChange: (id: number,
   switch (row.type) {
     case "text":
       return (
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-md bg-bg-elevated flex items-center justify-center shrink-0">
-            <Type size={11} className="text-muted-dark" />
+        <div className="flex items-center gap-3 px-1">
+          <div className="w-6 h-6 rounded-lg bg-fg/5 flex items-center justify-center shrink-0">
+            <Type size={12} className="text-fg/40" />
           </div>
-          <span className="text-[0.8125rem] text-muted min-w-[100px]">{row.label || "Untitled"}</span>
+          <span className="text-[0.8125rem] text-fg/60 font-medium min-w-[120px]">{row.label || "Untitled"}</span>
           <input
             type="text"
             value={row.value}
             onChange={(e) => onChange(row.id, e.target.value)}
-            className="flex-1 max-w-[200px] ml-auto bg-transparent border border-border rounded-lg px-3 py-1.5 text-[0.875rem] text-fg outline-none focus:border-border-light text-right"
+            className="flex-1 max-w-[240px] ml-auto bg-bg-elevated/50 border border-border-subtle rounded-lg px-3 py-1.5 text-[0.875rem] text-fg outline-none focus:border-border focus:bg-bg-elevated transition-all"
           />
         </div>
       );
     case "checkbox":
       return (
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-md bg-bg-elevated flex items-center justify-center shrink-0">
-            <CheckSquare size={11} className="text-muted-dark" />
+        <div className="flex items-center gap-3 px-1">
+          <div className="w-6 h-6 rounded-lg bg-fg/5 flex items-center justify-center shrink-0">
+            <CheckSquare size={12} className="text-fg/40" />
           </div>
-          <span className="text-[0.8125rem] text-muted min-w-[100px]">{row.label || "Untitled"}</span>
-          <label className="ml-auto flex items-center gap-2 cursor-pointer text-[0.875rem] text-muted">
+          <span className="text-[0.8125rem] text-fg/60 font-medium min-w-[120px]">{row.label || "Untitled"}</span>
+          <label className="ml-auto flex items-center gap-2.5 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={row.value}
               onChange={(e) => onChange(row.id, e.target.checked)}
-              className="accent-fg"
+              className="accent-fg w-4 h-4"
             />
-            {row.value ? "Yes" : "No"}
+            <span className={`text-[0.8125rem] transition-colors ${row.value ? 'text-fg font-medium' : 'text-muted-dark'}`}>
+              {row.value ? "Yes" : "No"}
+            </span>
           </label>
         </div>
       );
     case "slider":
       return (
-        <div className="flex items-center gap-3">
-          <div className="w-5 h-5 rounded-md bg-bg-elevated flex items-center justify-center shrink-0">
-            <Sliders size={11} className="text-muted-dark" />
+        <div className="flex items-center gap-3 px-1">
+          <div className="w-6 h-6 rounded-lg bg-fg/5 flex items-center justify-center shrink-0">
+            <Sliders size={12} className="text-fg/40" />
           </div>
-          <span className="text-[0.8125rem] text-muted min-w-[100px]">{row.label || "Untitled"}</span>
-          <div className="flex-1 max-w-[160px] ml-auto flex items-center gap-2">
+          <span className="text-[0.8125rem] text-fg/60 font-medium min-w-[120px]">{row.label || "Untitled"}</span>
+          <div className="flex-1 max-w-[200px] ml-auto flex items-center gap-3">
             <input
               type="range" min="0" max="100"
               value={row.value}
               onChange={(e) => onChange(row.id, parseInt(e.target.value))}
-              className="flex-1 accent-fg"
+              className="flex-1 accent-fg h-1.5"
             />
-            <span className="text-[0.8125rem] text-fg min-w-[28px]">{row.value}</span>
+            <span className="text-[0.8125rem] text-fg font-medium tabular-nums min-w-[28px] text-right">{row.value}</span>
           </div>
         </div>
       );
     case "radio":
       return (
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-md bg-bg-elevated flex items-center justify-center shrink-0">
-            <List size={11} className="text-muted-dark" />
+        <div className="flex items-center gap-3 px-1">
+          <div className="w-6 h-6 rounded-lg bg-fg/5 flex items-center justify-center shrink-0">
+            <List size={12} className="text-fg/40" />
           </div>
-          <span className="text-[0.8125rem] text-muted min-w-[100px]">{row.label || "Untitled"}</span>
+          <span className="text-[0.8125rem] text-fg/60 font-medium min-w-[120px]">{row.label || "Untitled"}</span>
           <div className="ml-auto flex flex-wrap gap-1.5">
             {row.options?.map((opt) => (
               <button
                 key={opt}
                 onClick={() => onChange(row.id, opt)}
-                className={`text-[0.75rem] px-2.5 py-1 rounded-lg border cursor-pointer transition-all ${
+                className={`text-[0.75rem] px-3 py-1.5 rounded-lg border cursor-pointer transition-all font-medium ${
                   row.value === opt
-                    ? "bg-bg-elevated border-border text-fg"
-                    : "bg-transparent border-border-subtle text-muted-dark hover:text-muted"
+                    ? "bg-fg text-bg border-fg"
+                    : "bg-transparent border-border-subtle text-muted-dark hover:text-fg hover:border-border"
                 }`}
               >
                 {opt}
@@ -120,58 +123,55 @@ function PlanCard({ plan }: { plan: import("@/lib/types").ActionPlan }) {
   };
 
   return (
-    <div className="bg-bg-card rounded-2xl border border-border-subtle overflow-hidden">
-      <div className="flex items-center gap-4 px-6 pt-5 pb-4 border-b border-border-subtle">
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${plan.completed ? 'bg-green-500/10' : 'bg-bg-elevated'}`}>
-          <CheckCircle2 size={20} className={plan.completed ? 'text-green-400' : 'text-muted-dark'} />
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-0.5">
-            <span className="font-semibold text-fg truncate">{plan.title}</span>
-            {plan.completed && <span className="text-[0.6875rem] text-green-400 font-semibold">Completed</span>}
-          </div>
-          {plan.module && (
-            <div className="flex items-center gap-2">
-              <span className="text-[0.75rem] text-muted-dark">{plan.module.title}</span>
-              <span className="text-[0.625rem] px-2 py-0.5 rounded-full bg-bg-elevated text-muted" style={{ background: `var(--color-c-${plan.module.category})15`, color: `var(--color-c-${plan.module.category})` }}>{plan.module.category}</span>
-            </div>
-          )}
-          <div className="text-[0.6875rem] text-muted-dark mt-1">
-            {new Date(plan.appliedAt).toLocaleDateString()}
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          {hasChanges && (
-            <button
-              onClick={handleSave}
-              disabled={savingId === plan.id}
-              className="flex items-center gap-1.5 px-4 py-2 bg-green-500/10 border border-green-500/30 rounded-xl text-[0.75rem] text-green-400 hover:bg-green-500/20 transition-all cursor-pointer disabled:opacity-40"
-            >
-              {savingId === plan.id ? (
-                <div className="w-3.5 h-3.5 border-2 border-green-400/20 border-t-green-400 rounded-full animate-spin" />
-              ) : (
-                <Save size={12} />
+    <div className="bg-bg-card border border-border-subtle rounded-2xl overflow-hidden hover:border-border transition-colors">
+      <div className="px-6 pt-5 pb-4 border-b border-border-subtle">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5 mb-1">
+              <h3 className="font-semibold text-fg break-words">{plan.title}</h3>
+              {plan.completed && (
+                <span className="text-[0.6875rem] font-semibold text-green-400 bg-green-500/10 px-2 py-0.5 rounded-md shrink-0">Completed</span>
               )}
-              Save
+            </div>
+
+            <span className="text-[0.6875rem] text-muted-dark/60 mt-1 block">
+              {new Date(plan.appliedAt).toLocaleDateString()}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            {hasChanges && (
+              <button
+                onClick={handleSave}
+                disabled={savingId === plan.id}
+                className="flex items-center gap-1.5 px-3.5 py-2 bg-fg text-bg rounded-xl text-[0.75rem] font-semibold hover:opacity-90 transition-all cursor-pointer disabled:opacity-40"
+              >
+                {savingId === plan.id ? (
+                  <div className="w-3.5 h-3.5 border-2 border-bg/20 border-t-bg rounded-full animate-spin" />
+                ) : (
+                  <Save size={12} />
+                )}
+                Save
+              </button>
+            )}
+            <Link
+              href={`/models/${plan.module?.slug}/action`}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-bg-elevated border border-border-subtle rounded-xl text-[0.75rem] text-muted hover:text-fg hover:border-border transition-all no-underline"
+            >
+              Edit <ArrowRight size={12} />
+            </Link>
+            <button
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              className="p-2 text-muted-dark hover:text-red-400 bg-transparent border border-transparent hover:border-red-400/20 rounded-xl transition-all cursor-pointer disabled:opacity-30"
+            >
+              <Trash2 size={14} />
             </button>
-          )}
-          <Link
-            href={`/models/${plan.module?.slug}/action`}
-            className="flex items-center gap-1.5 px-4 py-2 bg-bg-elevated border border-border rounded-xl text-[0.75rem] text-muted hover:text-fg hover:border-border-light transition-all no-underline"
-          >
-            Edit <ArrowRight size={12} />
-          </Link>
-          <button
-            onClick={handleDelete}
-            disabled={deleteMutation.isPending}
-            className="p-2 text-muted-dark hover:text-red-400 transition-colors cursor-pointer bg-transparent border-none disabled:opacity-30"
-          >
-            <Trash2 size={14} />
-          </button>
+          </div>
         </div>
       </div>
 
-      <div className="px-6 py-4 space-y-3">
+      <div className="px-6 py-4 space-y-2.5">
         {matrix.map((row) => (
           <MatrixInput key={row.id} row={row} onChange={handleChange} />
         ))}
@@ -182,6 +182,7 @@ function PlanCard({ plan }: { plan: import("@/lib/types").ActionPlan }) {
 
 export default function ActionsPage() {
   const { user } = useAuth();
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const { data: plans, isLoading } = useActionPlans();
 
@@ -196,6 +197,12 @@ export default function ActionsPage() {
     );
   }
 
+  const filteredPlans = (plans || []).filter(p =>
+    !search || p.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  useEffect(() => { setPage(1); }, [search]);
+
   if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-10 md:py-16 flex justify-center">
@@ -206,12 +213,14 @@ export default function ActionsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-10 md:py-16">
-      <header className="mb-10">
-        <h1 className="text-4xl font-black tracking-[-0.02em] mb-2">Action Plans</h1>
-        <p className="text-lg text-muted">Your commitments to apply what you&apos;ve learned</p>
-      </header>
+      <PageHeader
+        icon={<Zap size={16} />}
+        title="Action Plans"
+        description="Your commitments to apply what you&apos;ve learned"
+        search={{ value: search, onChange: setSearch, placeholder: "Search action plans..." }}
+      />
 
-      {!plans || plans.length === 0 ? (
+      {!filteredPlans || filteredPlans.length === 0 ? (
         <div className="bg-bg-card rounded-2xl p-12 border border-border-subtle text-center">
           <Target size={40} className="mx-auto mb-4 text-muted-dark" />
           <p className="text-[0.875rem] text-muted mb-2">No action plans yet.</p>
@@ -223,11 +232,11 @@ export default function ActionsPage() {
       ) : (
         <>
           <div className="flex flex-col gap-6">
-            {plans.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((plan) => (
+            {filteredPlans.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((plan) => (
               <PlanCard key={plan.id} plan={plan} />
             ))}
           </div>
-          <Pagination page={page} totalPages={Math.max(1, Math.ceil(plans.length / PER_PAGE))} onPageChange={setPage} />
+          <Pagination page={page} totalPages={Math.max(1, Math.ceil(filteredPlans.length / PER_PAGE))} onPageChange={setPage} />
         </>
       )}
     </div>

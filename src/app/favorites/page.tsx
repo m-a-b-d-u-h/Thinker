@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Search, Bookmark } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { ModuleCard } from "@/components/ModuleCard";
+import { PageHeader } from "@/components/PageHeader";
 import Pagination from "@/components/Pagination";
 import { useFavorites } from "@/lib/query-hooks";
 import { useAuth } from "@/lib/auth-context";
@@ -50,28 +51,12 @@ export default function FavoritesPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 py-10 md:py-16">
-      <header className="mb-12">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-bg-elevated flex items-center justify-center text-fg">
-            <Bookmark size={20} />
-          </div>
-        </div>
-        <h1 className="text-5xl font-black mb-4 tracking-[-0.04em]">Favorites</h1>
-        <p className="text-muted text-lg max-w-[500px]">Your saved mental models for quick access.</p>
-      </header>
-
-      <div className="flex items-center justify-between mb-8">
-        <div className="relative">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-dark" />
-          <input
-            type="text"
-            placeholder="Search favorites..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full max-w-[400px] py-3 pl-12 pr-4 bg-bg-input border border-border rounded-xl text-fg text-[0.875rem] outline-none focus:border-border-light transition-colors placeholder:text-muted-dark"
-          />
-        </div>
-      </div>
+      <PageHeader
+        icon={<Bookmark size={16} />}
+        title="Favorites"
+        description="Your saved mental models for quick access."
+        search={{ value: search, onChange: setSearch, placeholder: "Search favorites..." }}
+      />
 
       {pagedModules.length > 0 ? (
         <>

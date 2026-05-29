@@ -501,112 +501,126 @@ export default function Home() {
             <p className="text-muted text-xl max-w-[600px] mx-auto">{user && user.subscriptionStatus !== "FREE" ? "You're already subscribed. Manage your plan below." : "Choose a plan that fits your goals. Cancel anytime."}</p>
           </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
-            {(() => {
-              const planOrder = ["Free", "1 Month", "1 Year", "Lifetime"];
-              const statusToPlan: Record<string, string> = { FREE: "Free", MONTHLY: "1 Month", YEARLY: "1 Year", LIFETIME: "Lifetime" };
-              const currentPlanName = user ? statusToPlan[user.subscriptionStatus || "FREE"] : "Free";
-              const currentIdx = planOrder.indexOf(currentPlanName);
-              return plans.filter(p => !user || user.subscriptionStatus === "FREE" || planOrder.indexOf(p.name) >= currentIdx);
-            })().map((plan, idx) => {
-              const Icon = plan.icon;
-              const planToStatus: Record<string, string> = { "1 Month": "MONTHLY", "1 Year": "YEARLY", Lifetime: "LIFETIME" };
-              const isCurrentPlan = user && planToStatus[plan.name] === user.subscriptionStatus;
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto justify-items-center">
+              {(() => {
+                const planOrder = ["Free", "1 Month", "1 Year", "Lifetime"];
+                const statusToPlan: Record<string, string> = { FREE: "Free", MONTHLY: "1 Month", YEARLY: "1 Year", LIFETIME: "Lifetime" };
+                const currentPlanName = user ? statusToPlan[user.subscriptionStatus || "FREE"] : "Free";
+                const currentIdx = planOrder.indexOf(currentPlanName);
+                return plans.map((plan, idx) => {
+                  const planIdx = planOrder.indexOf(plan.name);
+                  const isCurrentPlan = user && user.subscriptionStatus && statusToPlan[user.subscriptionStatus] === plan.name;
+                  const isBelowCurrent = user && user.subscriptionStatus !== "FREE" && planIdx < currentIdx;
+                  const Icon = plan.icon;
+                  const planToStatus: Record<string, string> = { "1 Month": "MONTHLY", "1 Year": "YEARLY", Lifetime: "LIFETIME" };
 
-              return (
-                <motion.div
-                  key={plan.name}
-                  initial={{ opacity: 0, y: 5 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: idx * 0.1 }}
-                  className={`relative flex flex-col bg-[#080808] border rounded-2xl p-6 transition-all duration-300 hover:-translate-y-1.5 w-[280px] ${isCurrentPlan ? 'border-[#00ff80] shadow-lg shadow-[#00ff800d]' : plan.popular ? 'bg-gradient-to-b from-[#111] to-[#050505] border-[#ffb8004d] shadow-lg shadow-[#ffb8000d] scale-[1.02] z-10 hover:scale-[1.02]' : 'border-white/5'}`}
-                >
-                  {plan.popular && !isCurrentPlan && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#ffb800] to-[#ff8a00] text-black text-[0.625rem] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
-                      Popular
-                    </div>
-                  )}
-
-                  {isCurrentPlan && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#00ff80] to-[#00cc66] text-black text-[0.625rem] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider whitespace-nowrap">
-                      Current Plan
-                    </div>
-                  )}
-
-                  <div className="mb-8">
-                    <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-6" style={{ color: plan.color }}>
-                      <Icon size={24} />
-                    </div>
-                    <h3 className="text-2xl font-black text-white mb-2">{plan.name}</h3>
-                    <p className="text-[0.875rem] text-[#666] leading-relaxed">{plan.desc}</p>
-                  </div>
-
-                  <div className="mb-10 flex flex-col gap-1">
-                    <div className="flex items-center gap-3">
-                      {(() => {
-                        const planPrices: Record<string, number> = { "1 Month": 10, "1 Year": 50, Lifetime: 100 };
-                        const planNameKey = user ? ({ FREE: "Free", MONTHLY: "1 Month", YEARLY: "1 Year", LIFETIME: "Lifetime" } as Record<string, string>)[user.subscriptionStatus || "FREE"] : "Free";
-                        const currentPrice = planPrices[planNameKey] || 0;
-                        const planPrice = planPrices[plan.name] || 0;
-                        const upgradePrice = planPrice - currentPrice;
-                        const isUpgrade = user && user.subscriptionStatus !== "FREE" && upgradePrice > 0;
-                        return (
-                          <>
-                            {isUpgrade && <span className="text-2xl font-black text-[#444] line-through tracking-[-0.05em]">{plan.price}</span>}
-                            <span className="text-5xl font-black text-white tracking-[-0.05em]">{isUpgrade ? `$${upgradePrice}` : plan.price}</span>
-                            {isUpgrade && <span className="bg-[#ffb8001a] text-[#ffb800] border border-[#ffb80033] px-2.5 py-1 rounded-full text-[0.625rem] font-bold uppercase tracking-wider whitespace-nowrap">Save ${currentPrice}</span>}
-                          </>
-                        );
-                      })()}
-                      {plan.discount && !(user && user.subscriptionStatus !== "FREE") && <span className="bg-[#00ff801a] text-[#00ff80] border border-[#00ff8033] px-2.5 py-1 rounded-full text-[0.625rem] font-bold uppercase tracking-wider">{plan.discount}</span>}
-                    </div>
-                    <span className="text-[0.875rem] text-[#555] font-semibold">{(() => {
-                      const planPrices: Record<string, number> = { "1 Month": 10, "1 Year": 50, Lifetime: 100 };
-                      const pn = user ? ({ FREE: "Free", MONTHLY: "1 Month", YEARLY: "1 Year", LIFETIME: "Lifetime" } as Record<string, string>)[user.subscriptionStatus || "FREE"] : "Free";
-                      const cp = planPrices[pn] || 0;
-                      const pp = planPrices[plan.name] || 0;
-                      return user && user.subscriptionStatus !== "FREE" && pp > cp ? "upgrade (one-time)" : plan.period;
-                    })()}</span>
-                  </div>
-
-                  <ul className="list-none p-0 m-0 mb-10 flex flex-col gap-4 flex-grow">
-                    {plan.features.map((feat, fIdx) => (
-                      <li key={fIdx} className="flex items-start gap-3 text-[0.875rem] text-[#888] leading-relaxed">
-                        <ShieldCheck size={16} className={`${isCurrentPlan ? 'text-[#00ff80]' : plan.popular ? 'text-[#ffb800]' : 'text-white'} opacity-80 flex-shrink-0 mt-0.5`} />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  {isCurrentPlan ? (
-                    <div className="w-full py-4 rounded-xl text-[0.875rem] font-bold text-center bg-[#00ff801a] text-[#00ff80] border border-[#00ff8033]">
-                      Active
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        if (plan.name === "Free") {
-                          router.push("/login");
-                          return;
-                        }
-                        const planTypes: Record<string, "MONTHLY" | "YEARLY" | "LIFETIME"> = {
-                          "1 Month": "MONTHLY",
-                          "1 Year": "YEARLY",
-                          Lifetime: "LIFETIME",
-                        };
-                        const mapped = planTypes[plan.name];
-                        if (mapped) handleSubscribe(mapped);
-                      }}
-                      disabled={subscribing !== null}
-                      className={`w-full py-4 border-none rounded-xl text-[0.875rem] font-bold cursor-pointer transition-all duration-200 hover:opacity-90 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${plan.popular ? 'bg-white text-black' : 'bg-white/5 text-white'}`}
+                  return (
+                    <motion.div
+                      key={plan.name}
+                      initial={{ opacity: 0, y: 5 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ delay: idx * 0.1 }}
+                      className={`relative flex flex-col bg-[#080808] border rounded-2xl p-6 transition-all duration-300 w-[280px] ${
+                        isBelowCurrent
+                          ? 'border-white/[0.04] opacity-40 pointer-events-none grayscale'
+                          : isCurrentPlan
+                            ? 'border-[#00ff80] shadow-lg shadow-[#00ff800d]'
+                            : plan.popular
+                              ? 'bg-gradient-to-b from-[#111] to-[#050505] border-[#ffb8004d] shadow-lg shadow-[#ffb8000d] scale-[1.02] z-10'
+                              : 'border-white/5 hover:-translate-y-1.5'
+                      }`}
                     >
-                      {subscribing ? "Redirecting..." : user && user.subscriptionStatus !== "FREE" ? "Upgrade" : plan.buttonText}
-                    </button>
-                  )}
-                </motion.div>
-              );
-            })}
+                      {plan.popular && !isCurrentPlan && !isBelowCurrent && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#ffb800] to-[#ff8a00] text-black text-[0.625rem] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
+                          Popular
+                        </div>
+                      )}
+
+                      {isCurrentPlan && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#00ff80] to-[#00cc66] text-black text-[0.625rem] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider whitespace-nowrap">
+                          Current Plan
+                        </div>
+                      )}
+
+                      <div className="mb-8">
+                        <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-6" style={{ color: plan.color }}>
+                          <Icon size={24} />
+                        </div>
+                        <h3 className="text-2xl font-black text-white mb-2">{plan.name}</h3>
+                        <p className="text-[0.875rem] text-[#666] leading-relaxed">{plan.desc}</p>
+                      </div>
+
+                      <div className="mb-10 flex flex-col gap-1">
+                        <div className="flex items-center gap-3">
+                          {(() => {
+                            const planPrices: Record<string, number> = { "1 Month": 10, "1 Year": 50, Lifetime: 100 };
+                            const planNameKey = user ? ({ FREE: "Free", MONTHLY: "1 Month", YEARLY: "1 Year", LIFETIME: "Lifetime" } as Record<string, string>)[user.subscriptionStatus || "FREE"] : "Free";
+                            const currentPrice = planPrices[planNameKey] || 0;
+                            const planPrice = planPrices[plan.name] || 0;
+                            const upgradePrice = planPrice - currentPrice;
+                            const isUpgrade = user && user.subscriptionStatus !== "FREE" && upgradePrice > 0;
+                            return (
+                              <>
+                                {isUpgrade && <span className="text-2xl font-black text-[#444] line-through tracking-[-0.05em]">{plan.price}</span>}
+                                <span className="text-5xl font-black text-white tracking-[-0.05em]">{isUpgrade ? `$${upgradePrice}` : plan.price}</span>
+                                {isUpgrade && <span className="bg-[#ffb8001a] text-[#ffb800] border border-[#ffb80033] px-2.5 py-1 rounded-full text-[0.625rem] font-bold uppercase tracking-wider whitespace-nowrap">Save ${currentPrice}</span>}
+                              </>
+                            );
+                          })()}
+                          {plan.discount && !(user && user.subscriptionStatus !== "FREE") && <span className="bg-[#00ff801a] text-[#00ff80] border border-[#00ff8033] px-2.5 py-1 rounded-full text-[0.625rem] font-bold uppercase tracking-wider">{plan.discount}</span>}
+                        </div>
+                        <span className="text-[0.875rem] text-[#555] font-semibold">{(() => {
+                          const planPrices: Record<string, number> = { "1 Month": 10, "1 Year": 50, Lifetime: 100 };
+                          const pn = user ? ({ FREE: "Free", MONTHLY: "1 Month", YEARLY: "1 Year", LIFETIME: "Lifetime" } as Record<string, string>)[user.subscriptionStatus || "FREE"] : "Free";
+                          const cp = planPrices[pn] || 0;
+                          const pp = planPrices[plan.name] || 0;
+                          return user && user.subscriptionStatus !== "FREE" && pp > cp ? "upgrade (one-time)" : plan.period;
+                        })()}</span>
+                      </div>
+
+                      <ul className="list-none p-0 m-0 mb-10 flex flex-col gap-4 flex-grow">
+                        {plan.features.map((feat, fIdx) => (
+                          <li key={fIdx} className="flex items-start gap-3 text-[0.875rem] text-[#888] leading-relaxed">
+                            <ShieldCheck size={16} className={`${isCurrentPlan ? 'text-[#00ff80]' : plan.popular ? 'text-[#ffb800]' : 'text-white'} opacity-80 flex-shrink-0 mt-0.5`} />
+                            <span>{feat}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      {isBelowCurrent ? (
+                        <div className="w-full py-4 rounded-xl text-[0.75rem] font-bold text-center bg-white/[0.03] text-[#555] border border-white/[0.06]">
+                          Included
+                        </div>
+                      ) : isCurrentPlan ? (
+                        <div className="w-full py-4 rounded-xl text-[0.875rem] font-bold text-center bg-[#00ff801a] text-[#00ff80] border border-[#00ff8033]">
+                          Active
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => {
+                            if (plan.name === "Free") {
+                              router.push("/login");
+                              return;
+                            }
+                            const planTypes: Record<string, "MONTHLY" | "YEARLY" | "LIFETIME"> = {
+                              "1 Month": "MONTHLY",
+                              "1 Year": "YEARLY",
+                              Lifetime: "LIFETIME",
+                            };
+                            const mapped = planTypes[plan.name];
+                            if (mapped) handleSubscribe(mapped);
+                          }}
+                          disabled={subscribing !== null}
+                          className={`w-full py-4 border-none rounded-xl text-[0.875rem] font-bold cursor-pointer transition-all duration-200 hover:opacity-90 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${plan.popular ? 'bg-white text-black' : 'bg-white/5 text-white'}`}
+                        >
+                          {subscribing ? "Redirecting..." : user && user.subscriptionStatus !== "FREE" ? "Upgrade" : plan.buttonText}
+                        </button>
+                      )}
+                    </motion.div>
+                  );
+                });
+              })()}
           </div>
         </section>
 

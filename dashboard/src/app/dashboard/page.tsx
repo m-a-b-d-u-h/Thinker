@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useRef, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
@@ -12,8 +13,8 @@ import {
   User,
 } from "lucide-react";
 import {
-  PieChart, Pie, Cell, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid,
+  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, Cell,
+  LineChart, Line,
 } from "recharts";
 import Link from "next/link";
 import api from "@/lib/api";
@@ -77,10 +78,33 @@ export default function DashboardPage() {
     })
     .reduce((sum: number, p: any) => sum + p.amount, 0);
 
-  const donutData = [
-    { name: "Free", value: Math.max(totalUsers - premiumUsers.length, 0), color: "#1f2937" },
-    { name: "Premium", value: premiumUsers.length || 0, color: "#f59e0b" },
-  ];
+  const [userGrowthDays, setUserGrowthDays] = useState(7);
+
+  const userGrowthData = useMemo(() => {
+    if (!allUsers || allUsers.length === 0) return [];
+    const days: Record<string, { total: number; premium: number }> = {};
+    for (let i = userGrowthDays - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      days[key] = { total: 0, premium: 0 };
+    }
+    allUsers.forEach((u: any) => {
+      const d = new Date(u.createdAt);
+      const key = d.toISOString().slice(0, 10);
+      if (days[key]) {
+        days[key].total++;
+        if (u.subscriptionStatus && u.subscriptionStatus !== "FREE") {
+          days[key].premium++;
+        }
+      }
+    });
+    return Object.entries(days).map(([date, data]) => ({
+      date,
+      free: data.total - data.premium,
+      premium: data.premium,
+    }));
+  }, [allUsers, userGrowthDays]);
 
   const moduleCatData = modules
     ? Object.entries(
@@ -109,6 +133,32 @@ export default function DashboardPage() {
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     )
     .slice(0, 5) || [];
+
+  const growthChartRef = useRef<HTMLDivElement>(null);
+  const [growthDims, setGrowthDims] = useState({ width: 0, height: 240 });
+  useEffect(() => {
+    const el = growthChartRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width > 0) setGrowthDims(w => w.width !== width ? { width, height: height || 240 } : w);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const catChartRef = useRef<HTMLDivElement>(null);
+  const [catDims, setCatDims] = useState({ width: 0, height: 240 });
+  useEffect(() => {
+    const el = catChartRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      if (width > 0) setCatDims(w => w.width !== width ? { width, height: height || 240 } : w);
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   return (
     <div className="space-y-8">
@@ -160,41 +210,42 @@ export default function DashboardPage() {
         <div className="relative bg-gradient-to-br from-white/[0.07] to-white/[0.02] backdrop-blur-xl border border-white/[0.06] rounded-2xl p-6 overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
           <div className="relative flex items-center justify-between mb-6">
-            <div>
-              <h3 className="text-sm font-bold text-white">User Distribution</h3>
-              <p className="text-xs text-white/30 mt-0.5">{fmt(totalUsers)} total users</p>
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-bold text-white">User Growth</h3>
+              <div className="flex items-center gap-1 bg-white/[0.05] rounded-lg p-0.5">
+                <button onClick={() => setUserGrowthDays(7)} className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors ${userGrowthDays === 7 ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'}`}>7 days</button>
+                <button onClick={() => setUserGrowthDays(30)} className={`px-2.5 py-1 text-[11px] font-semibold rounded-md transition-colors ${userGrowthDays === 30 ? 'bg-white/10 text-white' : 'text-white/40 hover:text-white/60'}`}>30 days</button>
+              </div>
             </div>
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-xs">
-                <span className="w-2 h-2 rounded-full bg-[#1f2937]" />
-                <span className="text-white/40">Free</span>
-              </div>
               <div className="flex items-center gap-1.5 text-xs">
                 <span className="w-2 h-2 rounded-full bg-[#f59e0b]" />
                 <span className="text-white/40">Premium</span>
               </div>
+              <div className="flex items-center gap-1.5 text-xs">
+                <span className="w-2 h-2 rounded-full bg-white/30" />
+                <span className="text-white/40">Free Users</span>
+              </div>
             </div>
           </div>
-           <div className="h-[240px] max-sm:h-[200px] relative">
-            {totalUsers === 0 ? (
-              <div className="h-full flex items-center justify-center text-white/20 text-sm">No data</div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={donutData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={105}
-                    paddingAngle={3}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {donutData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
+            <div ref={growthChartRef} className="h-[240px] max-sm:h-[200px]">
+              {userGrowthData.length > 0 && growthDims.width > 0 && (
+                <LineChart width={growthDims.width} height={growthDims.height} data={userGrowthData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(v: string) => new Date(v).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                    interval={3}
+                  />
+                  <YAxis
+                    tick={{ fill: "rgba(255,255,255,0.25)", fontSize: 11 }}
+                    axisLine={false}
+                    tickLine={false}
+                    width={40}
+                  />
                   <Tooltip
                     contentStyle={{
                       background: "rgba(17,17,17,0.95)",
@@ -204,17 +255,34 @@ export default function DashboardPage() {
                       color: "#fff",
                       fontSize: "13px",
                     }}
-                    formatter={(value: any, name: any) => [fmt(Number(value)), name]}
+                    labelFormatter={(label: any) => {
+                      const d = new Date(label);
+                      return isNaN(d.getTime()) ? label : d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                    }}
                   />
-                </PieChart>
-              </ResponsiveContainer>
-            )}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <div className="text-2xl font-extrabold text-white">{premiumUsers.length}</div>
-                <div className="text-[10px] text-white/30 font-semibold uppercase tracking-widest">Premium</div>
-              </div>
-            </div>
+                  <Line
+                    type="monotone"
+                    dataKey="free"
+                    name="Free Users"
+                    stroke="rgba(255,255,255,0.35)"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4, fill: "rgba(255,255,255,0.5)" }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="premium"
+                    name="Premium"
+                    stroke="#f59e0b"
+                    strokeWidth={2}
+                    dot={false}
+                    activeDot={{ r: 4, fill: "#f59e0b" }}
+                  />
+                </LineChart>
+              )}
+              {userGrowthData.length === 0 && (
+                <div className="h-full flex items-center justify-center text-white/20 text-sm">No data</div>
+              )}
           </div>
         </div>
 
@@ -227,12 +295,9 @@ export default function DashboardPage() {
                 <p className="text-xs text-white/30 mt-0.5">{fmt(modules?.length || 0)} total modules</p>
               </div>
             </div>
-             <div className="h-[240px] max-sm:h-[200px]">
-              {moduleCatData.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-white/20 text-sm">No data</div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={moduleCatData} layout="vertical" barCategoryGap={8}>
+             <div ref={catChartRef} className="h-[240px] max-sm:h-[200px]">
+              {moduleCatData.length > 0 && catDims.width > 0 && (
+                  <BarChart width={catDims.width} height={catDims.height} data={moduleCatData} layout="vertical" barCategoryGap={8}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" horizontal={false} />
                     <XAxis
                       type="number"
@@ -267,7 +332,9 @@ export default function DashboardPage() {
                         ))}
                       </Bar>
                   </BarChart>
-                </ResponsiveContainer>
+              )}
+              {moduleCatData.length === 0 && (
+                <div className="h-full flex items-center justify-center text-white/20 text-sm">No data</div>
               )}
             </div>
           </div>

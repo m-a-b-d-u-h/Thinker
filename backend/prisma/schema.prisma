@@ -26,6 +26,11 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum QuizAttemptStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
 model User {
   id                String             @id @default(cuid())
   email             String             @unique
@@ -181,13 +186,16 @@ model Favorite {
 }
 
 model QuizAttempt {
-  id            String   @id @default(cuid())
-  userId        String
-  moduleId      String
-  score         Int
-  totalQuestions Int
-  percentage    Float
-  completedAt   DateTime @default(now())
+  id              String            @id @default(cuid())
+  userId          String
+  moduleId        String
+  score           Int               @default(0)
+  totalQuestions  Int               @default(0)
+  percentage      Float             @default(0)
+  status          QuizAttemptStatus @default(IN_PROGRESS)
+  answers         Json?
+  currentQuestion Int?
+  completedAt     DateTime          @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)

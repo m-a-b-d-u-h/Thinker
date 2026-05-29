@@ -12,7 +12,7 @@ export default function PaymentsPage() {
       const { data } = await api.get("/payments/history?all=true");
       return Array.isArray(data) ? data : data.data || [];
     },
-    refetchInterval: 5000,
+    refetchInterval: false,
   });
 
   const columns = [
@@ -32,6 +32,13 @@ export default function PaymentsPage() {
       label: "Amount",
       sortable: true,
       render: (p: any) => <span className="text-white font-semibold">${(p.amount / 100).toFixed(2)}</span>,
+    },
+    {
+      key: "description",
+      label: "Description",
+      render: (p: any) => (
+        <span className="text-sm text-[#ccc]">{p.description}</span>
+      ),
     },
     {
       key: "planType",
@@ -112,7 +119,7 @@ export default function PaymentsPage() {
       <DataTable
         columns={columns}
         data={payments || []}
-        searchKeys={["stripePaymentId", "planType", "status", "user.email", "user.name"]}
+        searchKeys={["description", "stripePaymentId", "planType", "status", "user.email", "user.name"]}
       />
     </div>
   );

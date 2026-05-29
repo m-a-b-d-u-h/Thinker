@@ -273,8 +273,37 @@ export function useQuizQuestions(slug: string) {
 
 export function useSubmitQuiz() {
   return useMutation({
-    mutationFn: ({ slug, answers }: { slug: string; answers: number[] }) =>
+    mutationFn: ({ slug, answers }: { slug: string; answers: { questionId: string; selectedAnswer: number }[] }) =>
       quizApi.submit(slug, { answers }),
+  });
+}
+
+export function useSaveQuizProgress() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ slug, answers, currentQuestion }: { slug: string; answers: { questionId: string; selectedAnswer: number }[]; currentQuestion: number }) =>
+      quizApi.saveProgress(slug, { answers, currentQuestion }),
+    onSuccess: (_data, { slug }) => qc.invalidateQueries({ queryKey: ["quiz", slug, "progress"] }),
+  });
+}
+
+export function useQuizProgress(slug: string) {
+  const token = useAuthStore((s) => s.token);
+  return useQuery({
+    queryKey: ["quiz", slug, "progress"],
+    queryFn: () => quizApi.getProgress(slug),
+    enabled: !!slug && !!token,
+    staleTime: 10 * 1000,
+  });
+}
+
+export function useQuizStats() {
+  const token = useAuthStore((s) => s.token);
+  return useQuery({
+    queryKey: ["quiz-stats"],
+    queryFn: () => quizApi.getQuizStats(),
+    enabled: !!token,
+    staleTime: 60 * 1000,
   });
 }
 

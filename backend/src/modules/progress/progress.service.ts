@@ -107,22 +107,39 @@ export namespace ProgressService {
   }
 
   export async function getStats(userId: string) {
-    const [progress, totalModules, completedNodes, reflections, highlights, user] = await Promise.all([
+    const [progress, totalModules, completedNodes, reflections, highlights, user, reflectionRecords] = await Promise.all([
       prisma.userProgress.findMany({
         where: { userId },
         include: {
-          module: { select: { content: true } },
+          module: { select: { slug: true, title: true, category: true, content: true, createdAt: true } },
         },
+        orderBy: { lastReadAt: "desc" },
       }),
       prisma.module.count({ where: { isDraft: false } }),
       prisma.completedGraphNode.count({ where: { userId } }),
-      prisma.reflection.count({ where: { userId } }),
+      prisma.reflection.findMany({
+        where: { userId },
+        select: { timestamp: true },
+        orderBy: { timestamp: "desc" },
+      }),
       prisma.highlight.count({ where: { userId } }),
       prisma.user.findUnique({
         where: { id: userId },
-        select: { streakCount: true },
+        select: { streakCount: true, preferredCategories: true },
       }),
     ]);
+
+    const reflectionCount = reflections.length;
+    const now = new Date();
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - (now.getDay() === 0 ? 6 : now.getDay() - 1));
+    weekStart.setHours(0, 0, 0, 0);
+    const weeklyReflectionDates = reflections
+      .filter((r) => new Date(r.timestamp) >= weekStart)
+      .map((r) => {
+        const d = new Date(r.timestamp);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      });
 
     let totalListenSeconds = 0;
     let totalReadSeconds = 0;
@@ -141,15 +158,43 @@ export namespace ProgressService {
       else if (p.listeningProgress > 0 || p.readingProgress > 0) inProgressCount++;
     });
 
-    const completedModules = await prisma.userProgress.findMany({
+    const completedProgress = await prisma.userProgress.findMany({
       where: { userId, completed: true },
       include: { module: { select: { category: true } } },
     });
 
     const categoryBreakdown: Record<string, number> = {};
-    completedModules.forEach((p) => {
+    completedProgress.forEach((p) => {
       categoryBreakdown[p.module.category] = (categoryBreakdown[p.module.category] || 0) + 1;
     });
+
+    const completedCategoryBreakdown = Object.entries(categoryBreakdown).map(([name, value]) => ({ name, value }));
+
+    const recentActivity = progress.slice(0, 5).map((p) => ({
+      slug: p.module.slug,
+      title: p.module.title,
+      category: p.module.category,
+      listened: p.listeningProgress,
+      read: p.readingProgress,
+      lastReadAt: p.lastReadAt,
+    }));
+
+    const allModules = await prisma.module.findMany({
+      where: { isDraft: false },
+      select: { slug: true, title: true, category: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    let recommendedModules: { slug: string; title: string; category: string }[];
+    const preferred = user?.preferredCategories ?? [];
+    if (preferred.length > 0) {
+      const preferredList = allModules.filter((m) => preferred.includes(m.category));
+      recommendedModules = preferredList.length > 0
+        ? preferredList.slice(0, 3).map((m) => ({ slug: m.slug, title: m.title, category: m.category }))
+        : allModules.slice(0, 3).map((m) => ({ slug: m.slug, title: m.title, category: m.category }));
+    } else {
+      recommendedModules = allModules.slice(0, 3).map((m) => ({ slug: m.slug, title: m.title, category: m.category }));
+    }
 
     const overallProgress = totalModules > 0 ? Math.round((completedCount / totalModules) * 100) : 0;
 
@@ -160,7 +205,7 @@ export namespace ProgressService {
     const listenXp = listeningMinutes * 10;
     const readXp = readingMinutes * 10;
     const completedXp = completedCount * 50;
-    const reflectionXp = reflections * 150;
+    const reflectionXp = reflectionCount * 150;
     const highlightXp = highlights * 100;
     const streakXp = streak * 5;
     const totalXp = listenXp + readXp + completedXp + reflectionXp + highlightXp + streakXp;
@@ -197,6 +242,10 @@ export namespace ProgressService {
       highlights,
       historyCount: progress.length,
       categoryBreakdown,
+      completedCategoryBreakdown,
+      recentActivity,
+      recommendedModules,
+      reflectionCount,
       // XP
       listenXp,
       readXp,
@@ -210,6 +259,7 @@ export namespace ProgressService {
       nextRank: nextRank?.name ?? null,
       nextLevelXp: nextRank?.xp ?? currentRank.xp,
       prevLevelXp: currentRank.xp,
+      weeklyReflectionDates,
     };
   }
 

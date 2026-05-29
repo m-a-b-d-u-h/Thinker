@@ -5,7 +5,8 @@ import type { AuthRequest } from "../../types";
 export namespace ModulesController {
   export async function list(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const { page, limit, category, categories, search, admin } = req.query;
+      const { page, limit, category, categories, search, admin, preferred } = req.query;
+
       const result = await ModulesService.list({
         page: page ? parseInt(page as string) : undefined,
         limit: limit ? parseInt(limit as string) : undefined,
@@ -14,6 +15,7 @@ export namespace ModulesController {
         search: search as string | undefined,
         userId: req.user?.userId,
         admin: admin === "true",
+        preferred: preferred === "true",
       });
       res.json(result);
     } catch (err) {

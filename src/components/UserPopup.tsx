@@ -31,7 +31,7 @@ export default function UserPopup() {
   const popupRef = useRef<HTMLDivElement>(null);
 
   const { data: stats } = useQuery({
-    queryKey: ["popup-stats"],
+    queryKey: ["dashboard-stats"],
     queryFn: () => progressApi.getStats(),
     enabled: !!user,
     staleTime: 30 * 1000,
@@ -176,12 +176,29 @@ export default function UserPopup() {
                         {user.subscriptionStatus === "LIFETIME" ? "Lifetime" : user.subscriptionStatus === "YEARLY" ? "Yearly" : "Monthly"}
                       </span>
                     </div>
-                    <button
-                      onClick={async (e) => { e.stopPropagation(); try { const { url } = await paymentsApi.createPortalSession(); window.location.href = url; } catch {} }}
-                      className="text-[0.625rem] text-muted hover:text-fg bg-transparent border border-border hover:border-border-light rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0"
-                    >
-                      Manage
-                    </button>
+                    {user.subscriptionStatus === "LIFETIME" ? (
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            const receipts = await paymentsApi.getReceipts();
+                            if (receipts.length > 0 && receipts[0].invoiceUrl) {
+                              window.open(receipts[0].invoiceUrl, "_blank");
+                            }
+                          } catch {}
+                        }}
+                        className="text-[0.625rem] text-muted hover:text-fg bg-transparent border border-border hover:border-border-light rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0"
+                      >
+                        Receipt
+                      </button>
+                    ) : (
+                      <button
+                        onClick={async (e) => { e.stopPropagation(); try { const { url } = await paymentsApi.createPortalSession(); window.location.href = url; } catch {} }}
+                        className="text-[0.625rem] text-muted hover:text-fg bg-transparent border border-border hover:border-border-light rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0"
+                      >
+                        Manage
+                      </button>
+                    )}
                   </div>
                 )}
                 <button

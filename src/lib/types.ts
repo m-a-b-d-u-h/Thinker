@@ -129,6 +129,16 @@ export interface QuizAttempt {
   totalQuestions: number;
   percentage: number;
   completedAt: string;
+  answers?: { questionId: string; selectedAnswer: number }[];
+  currentQuestion?: number;
+}
+
+export interface QuizStats {
+  totalQuizzesTaken: number;
+  averagePercentage: number;
+  totalCorrect: number;
+  totalAnswered: number;
+  quizXp: number;
 }
 
 export interface FavoriteItem {
@@ -185,6 +195,26 @@ export interface ActionPlan {
   module?: { slug: string; title: string; category: string };
 }
 
+export interface ActivityItem {
+  slug: string;
+  title: string;
+  category: string;
+  listened: number;
+  read: number;
+  lastReadAt: string;
+}
+
+export interface RecommendedItem {
+  slug: string;
+  title: string;
+  category: string;
+}
+
+export interface CategoryEntry {
+  name: string;
+  value: number;
+}
+
 export interface ProgressStats {
   totalModules: number;
   completedModules: number;
@@ -194,8 +224,12 @@ export interface ProgressStats {
   completedNodes: number;
   inProgressCount: number;
   highlights: number;
+  reflectionCount: number;
   historyCount: number;
   categoryBreakdown: Record<string, number>;
+  completedCategoryBreakdown: CategoryEntry[];
+  recentActivity: ActivityItem[];
+  recommendedModules: RecommendedItem[];
   listenXp: number;
   readXp: number;
   completedXp: number;
@@ -208,6 +242,7 @@ export interface ProgressStats {
   nextRank: string | null;
   nextLevelXp: number;
   prevLevelXp: number;
+  weeklyReflectionDates: string[];
 }
 
 export interface PaginationInfo {

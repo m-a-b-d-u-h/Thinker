@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { timeAgo } from "@/lib/format";
 import { useAuth } from "@/lib/auth-context";
@@ -14,6 +14,7 @@ import {
   Sparkles,
   ArrowRight,
   Crown,
+  HelpCircle,
 } from "lucide-react";
 import { paymentsApi } from "@/lib/api/payments";
 import { authApi } from "@/lib/api/auth";
@@ -24,7 +25,7 @@ import {
   Pie,
   Cell
 } from "recharts";
-import { useDashboardStats, useAllProgress, useModulesList, useReflections, useStreak, useResetStreak } from "@/lib/query-hooks";
+import { useDashboardStats, useStreak, useResetStreak, useQuizStats } from "@/lib/query-hooks";
 
 export default function DashboardPage() {
   const { user, setUser } = useAuth();
@@ -33,34 +34,9 @@ export default function DashboardPage() {
   const [paymentVerified, setPaymentVerified] = useState(false);
 
   const { data: stats } = useDashboardStats();
-  const { data: saved = [] } = useAllProgress();
-  const { data: modulesRes } = useModulesList({ limit: "50" });
-  const { data: reflections = [] } = useReflections();
   const { data: streakData } = useStreak();
   const resetStreak = useResetStreak();
-
-  const allModules = modulesRes?.data || [];
-
-  const recentModules = useMemo(() => {
-    const recent: { slug: string; title: string; listened: number; read: number; lastReadAt: string }[] = [];
-    saved.slice(0, 5).forEach((p: any) => {
-      const mod = allModules.find((m: any) => m.id === p.moduleId);
-      if (mod) {
-        recent.push({ slug: mod.slug, title: mod.title, listened: p.listeningProgress, read: p.readingProgress, lastReadAt: p.lastReadAt });
-      }
-    });
-    return recent;
-  }, [saved, allModules]);
-
-  const completedCategoryData = useMemo(() => {
-    const completed = saved.filter((p: any) => p.completed);
-    const completedMods = allModules.filter((m: any) => completed.some((p: any) => p.moduleId === m.id));
-    const catCount = completedMods.reduce((acc: Record<string, number>, m: any) => {
-      acc[m.category] = (acc[m.category] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    return Object.entries(catCount).map(([name, value]) => ({ name, value }));
-  }, [saved, allModules]);
+  const { data: quizStats } = useQuizStats();
 
   const streak = streakData?.streak ?? 0;
   const showStreakPopup = streakData?.showPopup ?? false;
@@ -181,7 +157,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
           <div className="flex items-center gap-2 text-muted mb-3">
             <Headphones size={14} />
@@ -211,7 +187,7 @@ export default function DashboardPage() {
             <Sparkles size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Reflections</span>
           </div>
-          <p className="text-2xl font-black text-fg">{reflections.length}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.reflectionXp || 0} XP</span></p>
+          <p className="text-2xl font-black text-fg">{stats?.reflectionCount || 0}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.reflectionXp || 0} XP</span></p>
           <p className="text-[0.6875rem] text-muted-dark mt-1">Total reflections</p>
         </div>
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
@@ -221,6 +197,14 @@ export default function DashboardPage() {
           </div>
           <p className="text-2xl font-black text-fg">{stats?.highlights || 0}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.highlightXp || 0} XP</span></p>
           <p className="text-[0.6875rem] text-muted-dark mt-1">Total highlights</p>
+        </div>
+        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-muted mb-3">
+            <HelpCircle size={14} />
+            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Quizzes</span>
+          </div>
+          <p className="text-2xl font-black text-fg">{quizStats?.totalQuizzesTaken || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">taken</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{quizStats?.quizXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">{quizStats?.totalQuizzesTaken ? `${quizStats.totalCorrect}/${quizStats.totalAnswered} correct (${Math.round(quizStats.averagePercentage)}%)` : 'No quizzes yet'}</p>
         </div>
       </div>
 
@@ -298,10 +282,8 @@ export default function DashboardPage() {
                   const daysAgo = dayOfWeek - weekDays.indexOf(day);
                   const targetDate = new Date(now);
                   targetDate.setDate(now.getDate() - Math.abs(daysAgo));
-                  const hasReflection = reflections.some((r: any) => {
-                    const rDate = new Date(r.timestamp);
-                    return rDate.toDateString() === targetDate.toDateString();
-                  });
+                  const dateStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, "0")}-${String(targetDate.getDate()).padStart(2, "0")}`;
+                  const hasReflection = stats?.weeklyReflectionDates?.includes(dateStr) ?? false;
                   return (
                     <div key={day} className="flex flex-col items-center gap-2">
                       <div className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${hasReflection ? 'bg-[#f97316] text-black' : 'bg-bg-elevated'}`}>
@@ -314,12 +296,7 @@ export default function DashboardPage() {
               </div>
               <div className="text-[0.75rem] text-muted-light">
                 <span className="text-xl font-bold text-fg">
-                  {reflections.filter((r: any) => {
-                    const now = new Date();
-                    const rDate = new Date(r.timestamp);
-                    const diffDays = Math.floor((now.getTime() - rDate.getTime()) / 86400000);
-                    return diffDays < 7;
-                  }).length}
+                  {stats?.weeklyReflectionDates?.length || 0}
                 </span>
                 {" "}reflections this week
               </div>
@@ -329,7 +306,7 @@ export default function DashboardPage() {
           <div>
             <h3 className="text-[0.875rem] text-muted-dark uppercase font-bold mb-4 tracking-[0.05em]">Recent Activity</h3>
             <div className="flex flex-col gap-2">
-              {recentModules.length > 0 ? recentModules.map((r) => (
+              {(stats?.recentActivity || []).length > 0 ? stats?.recentActivity.map((r) => (
                 <Link key={r.slug} href={`/models/${r.slug}`} className="group bg-bg-card rounded-xl px-6 py-4 border border-border-subtle no-underline flex items-center gap-4 hover:bg-bg hover:border-border transition-all">
                   <div className="flex flex-col items-center gap-0.5 min-w-[36px]">
                     {r.listened > 0 && <span className="text-[0.5625rem] text-muted-dark font-bold">{Math.round(r.listened)}%</span>}
@@ -362,12 +339,12 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-8">
           <div className="bg-bg-card rounded-2xl p-6 border border-border-subtle">
             <h3 className="text-[0.875rem] text-muted-dark uppercase font-bold tracking-[0.05em] mb-6">Library Breakdown</h3>
-            {completedCategoryData.length > 0 ? (
+            {(stats?.completedCategoryBreakdown || []).length > 0 ? (
               <>
                 <ResponsiveContainer width="100%" height={220}>
                   <PieChart>
-                    <Pie data={completedCategoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" stroke="none" isAnimationActive={false}>
-                      {completedCategoryData.map((entry, index) => (
+                    <Pie data={stats?.completedCategoryBreakdown || []} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={4} dataKey="value" stroke="none" isAnimationActive={false}>
+                      {(stats?.completedCategoryBreakdown || []).map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={categoryColors[entry.name] || '#555'} />
                       ))}
                     </Pie>
@@ -381,7 +358,7 @@ export default function DashboardPage() {
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="grid grid-cols-2 gap-1.5 mt-2">
-                  {completedCategoryData.slice(0, 8).map((cat) => (
+                  {(stats?.completedCategoryBreakdown || []).slice(0, 8).map((cat) => (
                     <div key={cat.name} className="flex items-center gap-2 text-[0.6875rem] text-muted-dark">
                       <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: categoryColors[cat.name] || '#555' }} />
                       <span className="capitalize truncate">{cat.name}</span>
@@ -397,10 +374,10 @@ export default function DashboardPage() {
           <div className="bg-bg-card rounded-2xl p-6 border border-border-subtle">
             <div className="flex items-center gap-2 mb-5">
               <Sparkles size={14} className="text-premium" />
-              <h3 className="text-[0.875rem] text-muted-dark uppercase font-bold tracking-[0.05em]">Latest</h3>
+              <h3 className="text-[0.875rem] text-muted-dark uppercase font-bold tracking-[0.05em]">Recommended</h3>
             </div>
             <div className="flex flex-col gap-3">
-              {[...allModules].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3).map((m: any, i: number) => {
+              {(stats?.recommendedModules || []).map((m, i) => {
                 const colors = ['#a78bfa', '#60a5fa', '#34d399'];
                 return (
                   <Link key={m.slug} href={`/models/${m.slug}`} className="group flex items-center gap-3 no-underline hover:bg-bg-elevated rounded-xl px-3 py-2.5 transition-all -mx-3">

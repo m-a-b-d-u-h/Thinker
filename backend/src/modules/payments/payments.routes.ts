@@ -15,5 +15,6 @@ router.post("/create-checkout-session", validate(createCheckoutSchema), Payments
 router.get("/subscription", PaymentsController.getSubscription);
 router.get("/history", PaymentsController.getHistory);
 router.post("/portal", PaymentsController.createPortalSession);
+router.get("/receipts", PaymentsController.getReceipts);
 
 export default router;

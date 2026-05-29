@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle2, ArrowRight, Plus, Trash2, Type, CheckSquare, Sliders, List } from "lucide-react";
+import { CheckCircle2, ArrowRight, Plus, Trash2, Type, CheckSquare, Sliders, List, Save, XCircle } from "lucide-react";
 import Link from "next/link";
 import { use } from "react";
-import { useModule, useActionPlanByModule, useCreateActionPlan, useUpdateActionPlan } from "@/lib/query-hooks";
+import { useModule, useActionPlanByModule, useCreateActionPlan, useUpdateActionPlan, useDeleteActionPlan } from "@/lib/query-hooks";
 import type { MatrixRow } from "@/lib/types";
 
 type InputType = 'text' | 'checkbox' | 'slider' | 'radio';
@@ -23,24 +23,51 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
   const { data: existingPlan, isLoading: planLoading } = useActionPlanByModule(slug);
   const createMutation = useCreateActionPlan();
   const updateMutation = useUpdateActionPlan();
+  const deleteMutation = useDeleteActionPlan();
   const [saving, setSaving] = useState(false);
+  const [optimisticApplied, setOptimisticApplied] = useState<boolean | null>(null);
   const [title, setTitle] = useState(existingPlan?.title || (module ? `${module.title} Protocol` : ""));
   const [matrix, setMatrix] = useState<MatrixRow[]>(existingPlan?.content || defaultMatrix);
 
-  const isApplied = !!existingPlan;
-  const planId = existingPlan?.id || null;
+  useEffect(() => {
+    if (existingPlan) {
+      setTitle(existingPlan.title);
+      setMatrix(existingPlan.content);
+    } else if (module) {
+      setTitle(`${module.title} Protocol`);
+    }
+  }, [existingPlan, module]);
 
-  const handleMarkApplied = async () => {
+  useEffect(() => {
+    if (optimisticApplied === null) return;
+    const matches = optimisticApplied ? !!existingPlan : !existingPlan;
+    if (matches) setOptimisticApplied(null);
+  }, [existingPlan, optimisticApplied]);
+
+  const showApplied = optimisticApplied !== null ? optimisticApplied : !!existingPlan;
+
+  const hasChanges = useMemo(() => {
+    if (!existingPlan) return false;
+    if (title !== existingPlan.title) return true;
+    if (JSON.stringify(matrix) !== JSON.stringify(existingPlan.content)) return true;
+    return false;
+  }, [existingPlan, title, matrix]);
+
+  const handleAction = async () => {
     if (!module) return;
     setSaving(true);
+    if (!existingPlan || hasChanges) setOptimisticApplied(true);
+    else setOptimisticApplied(false);
     try {
-      if (planId) {
-        await updateMutation.mutateAsync({ id: planId, title, content: matrix, completed: !isApplied });
-      } else {
+      if (!existingPlan) {
         await createMutation.mutateAsync({ moduleSlug: slug, title, content: matrix });
+      } else if (hasChanges) {
+        await updateMutation.mutateAsync({ id: existingPlan.id, title, content: matrix });
+      } else {
+        await deleteMutation.mutateAsync(existingPlan.id);
       }
     } catch {
-      // silently fail
+      setOptimisticApplied(null);
     } finally {
       setSaving(false);
     }
@@ -100,7 +127,7 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
               className="text-2xl font-semibold text-fg bg-transparent border-none outline-none flex-1"
               placeholder="Action Protocol Title"
             />
-            {isApplied && (
+            {existingPlan && (
               <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-2 text-green-400 text-[0.8125rem] font-semibold">
                 <CheckCircle2 size={18} /> Applied
               </motion.div>
@@ -225,17 +252,21 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
           </div>
 
           <button
-            onClick={handleMarkApplied}
+            onClick={handleAction}
             disabled={saving}
             className={`w-full py-4 rounded-xl text-[0.9375rem] font-bold cursor-pointer transition-all flex items-center justify-center gap-2 ${
               saving ? 'opacity-50 pointer-events-none' :
-              isApplied ? 'bg-green-500/10 border border-green-500/30 text-green-400' : 'bg-fg text-bg hover:opacity-90'
+              !showApplied ? 'bg-fg text-bg hover:opacity-90' :
+              hasChanges ? 'bg-fg text-bg hover:opacity-90' :
+              'bg-green-500/10 border border-green-500/30 text-green-400'
             }`}
           >
-            {saving ? "Saving..." : isApplied ? (
-              <><CheckCircle2 size={18} /> Applied</>
-            ) : (
+            {saving ? "Saving..." : !showApplied ? (
               <><CheckCircle2 size={18} /> Mark as Applied</>
+            ) : hasChanges ? (
+              <><Save size={18} /> Save Changes</>
+            ) : (
+              <><XCircle size={18} /> Applied</>
             )}
           </button>
         </div>

@@ -70,4 +70,13 @@ export namespace PaymentsController {
       next(err);
     }
   }
+
+  export async function getReceipts(req: AuthRequest, res: Response, next: NextFunction) {
+    try {
+      const result = await PaymentsService.getReceipts(req.user!.userId);
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  }
 }

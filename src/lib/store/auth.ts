@@ -35,6 +35,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           const me = await authApi.getMe();
           set({ user: me, loading: false });
+          if (me.preferredCategories) set({ preferences: me.preferredCategories });
         } catch {
           localStorage.removeItem("token");
           set({ user: null, token: null, loading: false });

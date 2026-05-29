@@ -44,4 +44,7 @@ export const paymentsApi = {
 
   createPortalSession: () =>
     api.post<PortalResponse>("/payments/portal").then(r => r.data),
+
+  getReceipts: () =>
+    api.get<{ id: string; planType: string; amount: number; date: string; invoiceUrl: string }[]>("/payments/receipts").then(r => r.data),
 };
