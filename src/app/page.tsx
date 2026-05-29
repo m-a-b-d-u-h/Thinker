@@ -199,7 +199,7 @@ export default function Home() {
       <Navbar />
       <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-14 md:pb-0">
         {/* Hero Section */}
-        <section className="min-h-screen flex items-center py-20">
+        <section className="min-h-[calc(100vh-4rem)] flex items-center">
           <div className="w-full grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Text */}
             <div>
@@ -244,95 +244,15 @@ export default function Home() {
               </motion.div>
             </div>
 
-            {/* Right: Device Mockups */}
+            {/* Right: Hero Image */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="relative">
-              {/* Desktop Mockup */}
-              <div className="rounded-xl border border-white/10 overflow-hidden shadow-2xl shadow-black/50 bg-[#050505]">
-                <div className="h-7 bg-[#111] flex items-center px-4 gap-2 border-b border-white/5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-                  <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-                  <div className="ml-6 flex-1 max-w-[300px] h-4 rounded-md bg-white/5 flex items-center justify-center text-[0.5rem] text-[#555] font-semibold">1section.app/models</div>
-                </div>
-                <div className="aspect-[16/10] bg-[#0a0a0c] grid grid-cols-2 gap-px">
-                  <div className="p-5 flex flex-col gap-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 rounded-lg bg-white/10" />
-                      <div className="h-2.5 w-20 rounded-full bg-white/10" />
-                      <div className="h-5 w-16 rounded-full bg-[#ffb800]/20 ml-auto" />
-                    </div>
-                    <div className="h-5 w-3/4 rounded bg-white/10" />
-                    <div className="h-3 w-full rounded bg-white/5" />
-                    <div className="h-3 w-2/3 rounded bg-white/5" />
-                    <div className="mt-auto grid grid-cols-2 gap-2">
-                      <div className="aspect-[4/3] rounded-lg bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/5 flex items-center justify-center">
-                        <div className="w-8 h-8 rounded border border-white/10" />
-                      </div>
-                      <div className="aspect-[4/3] rounded-lg bg-gradient-to-br from-white/5 to-white/[0.02] border border-white/5 flex items-center justify-center">
-                        <div className="w-8 h-8 rounded border border-white/10" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-white/[0.02] p-5 flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-5 h-5 rounded bg-white/10" />
-                      <div className="h-2.5 w-16 rounded-full bg-white/10" />
-                    </div>
-                    <div className="h-4 w-full rounded bg-white/5" />
-                    <div className="h-4 w-3/4 rounded bg-white/5" />
-                    <div className="flex gap-2 mt-auto">
-                      <div className="flex-1 h-8 rounded-lg bg-white/10" />
-                      <div className="flex-1 h-8 rounded-lg border border-white/10" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tablet Mockup */}
-              <div className="absolute -bottom-6 -left-6 w-[200px] rounded-2xl border border-white/10 overflow-hidden shadow-xl shadow-black/40 bg-[#050505] hidden md:block">
-                <div className="aspect-[4/3] bg-[#0a0a0c] p-4 flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-[#ffb800]" />
-                    <div className="h-2 w-12 rounded-full bg-white/10" />
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="w-12 h-16 rounded-lg bg-white/5" />
-                    <div className="flex-1 flex flex-col gap-1">
-                      <div className="h-2 w-full rounded bg-white/10" />
-                      <div className="h-2 w-2/3 rounded bg-white/5" />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <div className="w-12 h-16 rounded-lg bg-white/5" />
-                    <div className="flex-1 flex flex-col gap-1">
-                      <div className="h-2 w-full rounded bg-white/10" />
-                      <div className="h-2 w-2/3 rounded bg-white/5" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Phone Mockup */}
-              <div className="absolute -top-4 -right-4 w-[140px] rounded-[1.5rem] border border-white/10 overflow-hidden shadow-xl shadow-black/40 bg-[#050505] hidden sm:block">
-                <div className="h-5 bg-[#111] flex items-center justify-center gap-2 border-b border-white/5">
-                  <div className="w-12 h-1.5 rounded-full bg-[#222]" />
-                </div>
-                <div className="aspect-[9/16] bg-[#0a0a0c] p-3 flex flex-col gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#ffb800]" />
-                    <div className="flex-1" />
-                    <div className="w-4 h-4 rounded bg-white/10" />
-                  </div>
-                  <div className="h-2 w-3/4 rounded bg-white/10" />
-                  <div className="w-full h-16 rounded-lg bg-gradient-to-b from-[#ffb800]/10 to-transparent border border-[#ffb800]/10 flex items-center justify-center">
-                    <svg className="w-6 h-6 text-[#ffb800]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-                  </div>
-                  <div className="flex gap-1.5 mt-auto">
-                    <div className="flex-1 h-6 rounded-md bg-white/10" />
-                    <div className="flex-1 h-6 rounded-md border border-white/10" />
-                  </div>
-                </div>
-              </div>
+              <img
+                src="/landing/hero.png"
+                alt="1section hero preview"
+                draggable={false}
+                onContextMenu={(e) => e.preventDefault()}
+                className="w-full h-auto rounded-2xl lg:scale-125 origin-center select-none pointer-events-none"
+              />
             </motion.div>
           </div>
         </section>
