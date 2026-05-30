@@ -107,7 +107,7 @@ export namespace ProgressService {
   }
 
   export async function getStats(userId: string) {
-    const [progress, totalModules, completedNodes, reflections, highlights, user, reflectionRecords] = await Promise.all([
+    const [progress, totalModules, completedNodes, reflections, highlights, user] = await Promise.all([
       prisma.userProgress.findMany({
         where: { userId },
         include: {
