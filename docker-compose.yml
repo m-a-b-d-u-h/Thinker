@@ -44,7 +44,7 @@ services:
       context: ./app
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: https://api.1section.com
+        NEXT_PUBLIC_API_URL: https://api.1section.com/api
         NEXT_PUBLIC_WS_URL: wss://api.1section.com/ws
         NEXT_PUBLIC_GOOGLE_CLIENT_ID: ${NEXT_PUBLIC_GOOGLE_CLIENT_ID}
     container_name: 1section-app
@@ -59,7 +59,7 @@ services:
       context: ./dashboard
       dockerfile: Dockerfile
       args:
-        NEXT_PUBLIC_API_URL: https://api.1section.com
+        NEXT_PUBLIC_API_URL: https://api.1section.com/api
     container_name: 1section-dashboard
     restart: unless-stopped
     ports:
