@@ -11,13 +11,14 @@ export const env = {
     expiresIn: process.env.JWT_EXPIRES_IN || "7d",
   },
 
-  stripe: {
-    secretKey: process.env.STRIPE_SECRET_KEY || "",
-    webhookSecret: process.env.STRIPE_WEBHOOK_SECRET || "",
-    prices: {
-      monthly: process.env.STRIPE_PRICE_MONTHLY || "",
-      yearly: process.env.STRIPE_PRICE_YEARLY || "",
-      lifetime: process.env.STRIPE_PRICE_LIFETIME || "",
+  lemonSqueezy: {
+    apiKey: process.env.LEMONSQUEEZY_API_KEY || "",
+    storeId: process.env.LEMONSQUEEZY_STORE_ID || "",
+    webhookSecret: process.env.LEMONSQUEEZY_WEBHOOK_SECRET || "",
+    variantIds: {
+      monthly: process.env.LS_VARIANT_MONTHLY || "1727361",
+      yearly: process.env.LS_VARIANT_YEARLY || "1727397",
+      lifetime: process.env.LS_VARIANT_LIFETIME || "1727400",
     },
   },
 

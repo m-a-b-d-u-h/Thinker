@@ -38,8 +38,8 @@ model User {
   name              String?
   avatar            String?
   googleId          String?            @unique
-  stripeCustomerId      String?            @unique
-  stripeSubscriptionId  String?            @unique
+  lsCustomerId          String?            @unique
+  lsSubscriptionId      String?            @unique
   subscriptionStatus    SubscriptionStatus @default(FREE)
   subscriptionEnd       DateTime?
   streakCount          Int                @default(0)
@@ -49,7 +49,6 @@ model User {
   updatedAt         DateTime           @updatedAt
 
   progress          UserProgress[]
-  completedNodes    CompletedGraphNode[]
   reflections       Reflection[]
   highlights        Highlight[]
   favorites         Favorite[]
@@ -75,7 +74,6 @@ model Module {
   edges           ModuleEdge[]
   questions       Question[]
   progress        UserProgress[]
-  completedNodes  CompletedGraphNode[]
   reflections     Reflection[]
   highlights      Highlight[]
   favorites       Favorite[]
@@ -135,18 +133,6 @@ model UserProgress {
   module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   @@unique([userId, moduleId])
-}
-
-model CompletedGraphNode {
-  id       String @id @default(cuid())
-  userId   String
-  moduleId String
-  nodeId   String
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, moduleId, nodeId])
 }
 
 model Reflection {
@@ -239,12 +225,12 @@ model SubscriptionPlan {
   features  String[] // feature list
   isActive  Boolean  @default(true)
   sortOrder Int      @default(0)
-  stripePriceId String?
+  lemonsqueezyVariantId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model StripeEvent {
+model LemonSqueezyEvent {
   id        String   @id
   type      String
   processed Boolean  @default(false)
@@ -256,8 +242,8 @@ model StripeEvent {
 model Payment {
   id               String        @id @default(cuid())
   userId           String
-  stripePaymentId  String        @unique
-  stripeSubscriptionId String?
+  lsOrderId        String        @unique
+  lsSubscriptionId String?
   amount           Int
   currency         String        @default("usd")
   status           PaymentStatus @default(PENDING)

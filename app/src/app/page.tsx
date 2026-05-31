@@ -16,6 +16,7 @@ import { authApi } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth-context";
 import { paymentWs } from "@/lib/websocket";
 import { useModulesList, useCategories } from "@/lib/query-hooks";
+import { openCheckout } from "@/lib/lemon-squeezy";
 
 // Custom Node Component for MiniPreview
 const CustomNode = ({ data }: { data: any }) => (
@@ -147,13 +148,11 @@ export default function Home() {
     }
     setSubscribing(planType);
     try {
-      const isUpgrade = user.subscriptionStatus && user.subscriptionStatus !== "FREE";
-      const result = isUpgrade
-        ? await paymentsApi.upgradeSubscription(planType)
-        : await paymentsApi.createCheckoutSession(planType);
+      const result = await paymentsApi.createCheckout(planType);
       if (result.url) {
-        window.location.href = result.url;
+        openCheckout(result.url);
       }
+      setSubscribing(null);
     } catch (err) {
       console.error("Checkout error:", err);
       setSubscribing(null);
@@ -485,7 +484,7 @@ export default function Home() {
                                 {isUpgrade && <span className="text-2xl font-black text-[#444] line-through tracking-[-0.05em]">{plan.price}</span>}
                                 <span className="text-5xl font-black text-white tracking-[-0.05em]">{isUpgrade ? `$${upgradePrice}` : plan.price}</span>
                                 {isUpgrade && <span className="bg-[#ffb8001a] text-[#ffb800] border border-[#ffb80033] px-2.5 py-1 rounded-full text-[0.625rem] font-bold uppercase tracking-wider whitespace-nowrap">Save ${currentPrice}</span>}
-                              </>
+    </>
                             );
                           })()}
                           {plan.discount && !(user && user.subscriptionStatus !== "FREE") && <span className="bg-[#00ff801a] text-[#00ff80] border border-[#00ff8033] px-2.5 py-1 rounded-full text-[0.625rem] font-bold uppercase tracking-wider">{plan.discount}</span>}
@@ -534,7 +533,7 @@ export default function Home() {
                           disabled={subscribing !== null}
                           className={`w-full py-4 border-none rounded-xl text-[0.875rem] font-bold cursor-pointer transition-all duration-200 hover:opacity-90 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${plan.popular ? 'bg-white text-black' : 'bg-white/5 text-white'}`}
                         >
-                          {subscribing ? "Redirecting..." : user && user.subscriptionStatus !== "FREE" ? "Upgrade" : plan.buttonText}
+                          {subscribing ? "Loading..." : user && user.subscriptionStatus !== "FREE" ? "Upgrade" : plan.buttonText}
                         </button>
                       )}
                     </motion.div>

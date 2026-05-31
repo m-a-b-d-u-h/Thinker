@@ -221,7 +221,6 @@ export interface ProgressStats {
   overallProgress: number;
   listeningMinutes: number;
   readingMinutes: number;
-  completedNodes: number;
   inProgressCount: number;
   highlights: number;
   reflectionCount: number;

@@ -60,10 +60,15 @@ async function main() {
     },
   ];
   for (const plan of plans) {
+    const variantIds: Record<string, string> = {
+      MONTHLY: "1727361",
+      YEARLY: "1727397",
+      LIFETIME: "1727400",
+    };
     await prisma.subscriptionPlan.upsert({
       where: { planType: plan.planType },
-      update: plan,
-      create: plan,
+      update: { ...plan, lemonsqueezyVariantId: variantIds[plan.planType] },
+      create: { ...plan, lemonsqueezyVariantId: variantIds[plan.planType] },
     });
   }
   console.log("Seeded subscription plans");

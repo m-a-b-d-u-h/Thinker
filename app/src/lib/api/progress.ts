@@ -40,12 +40,6 @@ export const progressApi = {
   getStats: () =>
     api.get<ProgressStats>("/progress/stats").then(r => r.data),
 
-  addCompletedNode: (slug: string, nodeId: string) =>
-    api.post<{ id: string }>(`/progress/${slug}/completed-nodes`, { nodeId }).then(r => r.data),
-
-  getCompletedNodes: (slug: string) =>
-    api.get<string[]>(`/progress/${slug}/completed-nodes`).then(r => r.data),
-
   getStreak: () =>
     api.get<{ streak: number; showPopup: boolean }>("/progress/streak").then(r => r.data),
 

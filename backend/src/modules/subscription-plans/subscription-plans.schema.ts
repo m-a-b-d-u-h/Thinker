@@ -10,7 +10,7 @@ export const createPlanSchema = z.object({
   features: z.array(z.string()).optional().default([]),
   isActive: z.boolean().optional().default(true),
   sortOrder: z.number().int().optional().default(0),
-  stripePriceId: z.string().nullable().optional(),
+  lemonsqueezyVariantId: z.string().optional(),
 });
 
 export const updatePlanSchema = createPlanSchema.partial();

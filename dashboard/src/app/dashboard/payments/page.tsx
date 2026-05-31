@@ -71,11 +71,11 @@ export default function PaymentsPage() {
       ),
     },
     {
-      key: "stripePaymentId",
-      label: "Stripe ID",
+      key: "lsOrderId",
+      label: "Order ID",
       render: (p: any) => (
         <span className="text-[#555] text-xs font-mono">
-          {p.stripePaymentId?.slice(0, 14)}...
+          {p.lsOrderId?.slice(0, 14)}...
         </span>
       ),
     },
@@ -119,7 +119,7 @@ export default function PaymentsPage() {
       <DataTable
         columns={columns}
         data={payments || []}
-        searchKeys={["description", "stripePaymentId", "planType", "status", "user.email", "user.name"]}
+        searchKeys={["description", "lsOrderId", "planType", "status", "user.email", "user.name"]}
       />
     </div>
   );

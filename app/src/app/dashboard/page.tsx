@@ -16,8 +16,8 @@ import {
   Crown,
   HelpCircle,
 } from "lucide-react";
-import { paymentsApi } from "@/lib/api/payments";
 import { authApi } from "@/lib/api/auth";
+import { paymentsApi } from "@/lib/api/payments";
 import {
   Tooltip,
   ResponsiveContainer,
@@ -52,35 +52,7 @@ export default function DashboardPage() {
     await resetStreak.mutateAsync();
   }, [resetStreak]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const sessionId = params.get("session_id");
-    if (!sessionId || paymentVerified) return;
-
-    setVerifyingPayment(true);
-    let cancelled = false;
-
-    const poll = async () => {
-      if (cancelled) return;
-      try {
-        const sub = await paymentsApi.getSubscription();
-        if (sub.subscriptionStatus !== "FREE") {
-          const me = await authApi.getMe();
-          if (!cancelled) {
-            setUser(me);
-            setPaymentVerified(true);
-            setVerifyingPayment(false);
-            window.history.replaceState({}, "", "/dashboard");
-          }
-          return;
-        }
-      } catch {}
-      if (!cancelled) setTimeout(poll, 2000);
-    };
-
-    poll();
-    return () => { cancelled = true; };
-  }, [paymentVerified, setUser]);
+  // Payment verification handled via /payment/success page
 
   const todayQuote = "Action is the foundational key to all success.";
 

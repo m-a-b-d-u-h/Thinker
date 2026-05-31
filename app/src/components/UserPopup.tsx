@@ -181,10 +181,8 @@ export default function UserPopup() {
                         onClick={async (e) => {
                           e.stopPropagation();
                           try {
-                            const receipts = await paymentsApi.getReceipts();
-                            if (receipts.length > 0 && receipts[0].invoiceUrl) {
-                              window.open(receipts[0].invoiceUrl, "_blank");
-                            }
+                            const { url } = await paymentsApi.createCustomerPortal();
+                            if (url) window.open(url, "_blank");
                           } catch {}
                         }}
                         className="text-[0.625rem] text-muted hover:text-fg bg-transparent border border-border hover:border-border-light rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0"
@@ -193,7 +191,7 @@ export default function UserPopup() {
                       </button>
                     ) : (
                       <button
-                        onClick={async (e) => { e.stopPropagation(); try { const { url } = await paymentsApi.createPortalSession(); window.location.href = url; } catch {} }}
+                        onClick={async (e) => { e.stopPropagation(); try { const { url } = await paymentsApi.createCustomerPortal(); window.location.href = url; } catch {} }}
                         className="text-[0.625rem] text-muted hover:text-fg bg-transparent border border-border hover:border-border-light rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0"
                       >
                         Manage

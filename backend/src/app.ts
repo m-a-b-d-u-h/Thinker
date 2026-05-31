@@ -35,7 +35,9 @@ app.use(
 // CORS
 const allowedOrigins = [
   env.clientUrl,
+  "http://localhost:3000",
   "http://localhost:3001",
+  "http://127.0.0.1:3000",
   "http://127.0.0.1:3001",
 ];
 app.use(
@@ -53,9 +55,10 @@ app.use(
   })
 );
 
-// Body parsing — raw body for Stripe webhooks
+// Body parsing — raw body for webhook verification (accept LS content-type)
 app.use(
   express.json({
+    type: ["application/json", "application/vnd.api+json"],
     verify: (req, _res, buf) => {
       (req as any).rawBody = buf.toString();
     },
@@ -69,11 +72,11 @@ if (env.nodeEnv === "development") {
   app.use(morgan("dev"));
 }
 
-// Rate limiting — 100 requests per minute (excludes Stripe webhook)
+// Rate limiting — 100 requests per minute (excludes webhook)
 const limiter = rateLimit({
   windowMs: 60 * 1000,
   max: 100,
-  skip: (req) => req.path === "/payments/webhook",
+  skip: (req) => req.path.endsWith("/webhook"),
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: { message: "Too many requests, please try again later.", statusCode: 429 } },

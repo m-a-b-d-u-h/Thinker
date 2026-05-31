@@ -2,24 +2,20 @@ import { api } from "@/lib/axios";
 
 export interface CheckoutResponse {
   url: string;
-  sessionId: string;
+  id: string;
 }
 
 export interface SubscriptionInfo {
   subscriptionStatus: string;
   subscriptionEnd: string | null;
-  stripeCustomerId: string | null;
-  stripeSubscriptionId: string | null;
-}
-
-export interface PortalResponse {
-  url: string;
+  lsCustomerId: string | null;
+  lsSubscriptionId: string | null;
 }
 
 export interface PaymentHistory {
   id: string;
   userId: string;
-  stripePaymentId: string;
+  lsOrderId: string;
   amount: number;
   currency: string;
   status: string;
@@ -27,14 +23,9 @@ export interface PaymentHistory {
   createdAt: string;
 }
 
-export type UpgradeResult = CheckoutResponse & { prorated?: boolean; diff?: number };
-
 export const paymentsApi = {
-  createCheckoutSession: (planType: "MONTHLY" | "YEARLY" | "LIFETIME") =>
-    api.post<CheckoutResponse>("/payments/create-checkout-session", { planType }).then(r => r.data),
-
-  upgradeSubscription: (planType: "MONTHLY" | "YEARLY" | "LIFETIME") =>
-    api.post<UpgradeResult>("/payments/upgrade", { planType }).then(r => r.data),
+  createCheckout: (planType: "MONTHLY" | "YEARLY" | "LIFETIME") =>
+    api.post<CheckoutResponse>("/payments/create-checkout", { planType }).then(r => r.data),
 
   getSubscription: () =>
     api.get<SubscriptionInfo>("/payments/subscription").then(r => r.data),
@@ -42,9 +33,6 @@ export const paymentsApi = {
   getHistory: () =>
     api.get<PaymentHistory[]>("/payments/history").then(r => r.data),
 
-  createPortalSession: () =>
-    api.post<PortalResponse>("/payments/portal").then(r => r.data),
-
-  getReceipts: () =>
-    api.get<{ id: string; planType: string; amount: number; date: string; invoiceUrl: string }[]>("/payments/receipts").then(r => r.data),
+  createCustomerPortal: () =>
+    api.post<{ url: string }>("/payments/customer-portal").then(r => r.data),
 };

@@ -1,7 +1,7 @@
 import { Response, NextFunction } from "express";
 import { ProgressService } from "./progress.service";
 import type { AuthRequest } from "../../types";
-import type { UpdateProgressInput, AddCompletedNodeInput } from "./progress.schema";
+import type { UpdateProgressInput } from "./progress.schema";
 
 export namespace ProgressController {
   export async function getAll(req: AuthRequest, res: Response, next: NextFunction) {
@@ -70,24 +70,4 @@ export namespace ProgressController {
     }
   }
 
-  export async function addCompletedNode(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const slug = req.params.slug as string;
-      const body = req.body as AddCompletedNodeInput;
-      const result = await ProgressService.addCompletedNode(req.user!.userId, slug, body.nodeId);
-      res.json(result);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  export async function getCompletedNodes(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const slug = req.params.slug as string;
-      const nodes = await ProgressService.getCompletedNodes(req.user!.userId, slug);
-      res.json(nodes);
-    } catch (err) {
-      next(err);
-    }
-  }
 }

@@ -6,7 +6,6 @@ export interface ModuleProgress {
   currentCharIndex: number;
   audioRate: number;
   lastReadAt: number;
-  completedGraphNodes: string[];
 }
 
 const STORAGE_KEY = "thinker_progress_v3";
@@ -30,7 +29,6 @@ function defaults(slug: string): ModuleProgress {
     currentCharIndex: 0,
     audioRate: 1,
     lastReadAt: Date.now(),
-    completedGraphNodes: [],
   };
 }
 
@@ -57,20 +55,4 @@ export function getContinueLearning(): ModuleProgress[] {
     .sort((a, b) => b.lastReadAt - a.lastReadAt);
 }
 
-export function getCompletedGraphNodes(slug: string): string[] {
-  return getModuleProgress(slug)?.completedGraphNodes || [];
-}
 
-export function addCompletedGraphNode(slug: string, nodeId: string) {
-  const all = getAllProgress();
-  const existing = all[slug];
-  const nodes = existing?.completedGraphNodes || [];
-  if (!nodes.includes(nodeId)) {
-    all[slug] = Object.assign(defaults(slug), existing, {
-      slug,
-      completedGraphNodes: [...nodes, nodeId],
-      lastReadAt: Date.now(),
-    });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
-  }
-}

@@ -6,9 +6,6 @@ import React from "react";
 import { ReactFlow, Handle, Position } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useModule } from "@/lib/query-hooks";
-import { progressApi } from "@/lib/api/progress";
-import { useAuth } from "@/lib/auth-context";
-import { useQuery } from "@tanstack/react-query";
 
 const CustomNode = ({ data }: { data: any }) => (
   <div className="relative">
@@ -37,13 +34,7 @@ const nodeTypes = { custom: CustomNode };
 
 export default function PathPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = React.use(params);
-  const { user } = useAuth();
   const { data: module, isLoading } = useModule(slug);
-  const { data: completedNodes = [] } = useQuery({
-    queryKey: ["completed-nodes", slug],
-    queryFn: () => progressApi.getCompletedNodes(slug),
-    enabled: !!user && !!slug,
-  });
 
   const rf = useRef<any>(null);
   const selectedId = useRef<string | null>(null);
@@ -94,9 +85,9 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
     if (!module) return [];
     return module.nodes.map((n: any) => ({
       ...n,
-      data: { ...n.data, isCompleted: completedNodes.includes(n.id) },
+      data: { ...n.data },
     }));
-  }, [module, completedNodes]);
+  }, [module]);
 
   const defaultEdges = useMemo(() => {
     if (!module) return [];
@@ -146,7 +137,6 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
           ...n,
           data: {
             ...(original?.data || n.data),
-            isCompleted: completedNodes.includes(n.id),
             highlighted: cNodes ? cNodes.has(n.id) : false,
             dimmed: cNodes ? !cNodes.has(n.id) : false,
             showTooltip: nodeId === n.id,
@@ -174,7 +164,7 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
         };
       })
     );
-  }, [module, completedNodes, speakText]);
+  }, [module, speakText]);
 
   useEffect(() => {
     if (rf.current && defaultNodes.length > 0) {

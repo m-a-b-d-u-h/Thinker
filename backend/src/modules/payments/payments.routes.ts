@@ -1,8 +1,6 @@
 import { Router } from "express";
 import { PaymentsController } from "./payments.controller";
 import { authenticate } from "../../middleware/auth";
-import { validate } from "../../middleware/validate";
-import { createCheckoutSchema } from "./payments.schema";
 
 const router = Router();
 
@@ -10,11 +8,10 @@ router.post("/webhook", PaymentsController.handleWebhook);
 
 router.use(authenticate);
 
-router.post("/upgrade", PaymentsController.upgradeSubscription);
-router.post("/create-checkout-session", validate(createCheckoutSchema), PaymentsController.createCheckoutSession);
+router.post("/create-checkout", PaymentsController.createCheckout);
 router.get("/subscription", PaymentsController.getSubscription);
 router.get("/history", PaymentsController.getHistory);
-router.post("/portal", PaymentsController.createPortalSession);
-router.get("/receipts", PaymentsController.getReceipts);
+router.post("/customer-portal", PaymentsController.createCustomerPortal);
+router.post("/cancel", PaymentsController.cancelSubscription);
 
 export default router;

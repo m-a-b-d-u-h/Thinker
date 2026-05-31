@@ -107,7 +107,7 @@ export namespace ProgressService {
   }
 
   export async function getStats(userId: string) {
-    const [progress, totalModules, completedNodes, reflections, highlights, user] = await Promise.all([
+    const [progress, totalModules, reflections, highlights, user] = await Promise.all([
       prisma.userProgress.findMany({
         where: { userId },
         include: {
@@ -116,7 +116,6 @@ export namespace ProgressService {
         orderBy: { lastReadAt: "desc" },
       }),
       prisma.module.count({ where: { isDraft: false } }),
-      prisma.completedGraphNode.count({ where: { userId } }),
       prisma.reflection.findMany({
         where: { userId },
         select: { timestamp: true },
@@ -237,7 +236,6 @@ export namespace ProgressService {
       overallProgress,
       listeningMinutes,
       readingMinutes,
-      completedNodes,
       inProgressCount,
       highlights,
       historyCount: progress.length,
@@ -320,29 +318,4 @@ export namespace ProgressService {
     return { streak: 0 };
   }
 
-  export async function addCompletedNode(userId: string, slug: string, nodeId: string) {
-    const module = await prisma.module.findUnique({ where: { slug } });
-    if (!module) throw new NotFoundError("Module");
-
-    const existing = await prisma.completedGraphNode.findUnique({
-      where: { userId_moduleId_nodeId: { userId, moduleId: module.id, nodeId } },
-    });
-
-    if (existing) return existing;
-
-    return prisma.completedGraphNode.create({
-      data: { userId, moduleId: module.id, nodeId },
-    });
-  }
-
-  export async function getCompletedNodes(userId: string, slug: string) {
-    const module = await prisma.module.findUnique({ where: { slug } });
-    if (!module) throw new NotFoundError("Module");
-
-    const nodes = await prisma.completedGraphNode.findMany({
-      where: { userId, moduleId: module.id },
-    });
-
-    return nodes.map((n) => n.nodeId);
-  }
 }

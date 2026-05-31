@@ -9,9 +9,4 @@ export const updateProgressSchema = z.object({
   completed: z.boolean().optional(),
 });
 
-export const addCompletedNodeSchema = z.object({
-  nodeId: z.string().min(1),
-});
-
 export type UpdateProgressInput = z.infer<typeof updateProgressSchema>;
-export type AddCompletedNodeInput = z.infer<typeof addCompletedNodeSchema>;

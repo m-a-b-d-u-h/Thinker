@@ -18,7 +18,7 @@ interface PlanForm {
   features: string[];
   isActive: boolean;
   sortOrder: number;
-  stripePriceId: string | null;
+  lemonsqueezyVariantId: string | null;
 }
 
 export default function SubscriptionPlanDetailPage() {
@@ -38,7 +38,7 @@ export default function SubscriptionPlanDetailPage() {
     features: [],
     isActive: true,
     sortOrder: 0,
-    stripePriceId: null,
+    lemonsqueezyVariantId: null,
   });
   const [deleting, setDeleting] = useState(false);
 
@@ -63,7 +63,7 @@ export default function SubscriptionPlanDetailPage() {
         features: plan.features || [],
         isActive: plan.isActive,
         sortOrder: plan.sortOrder,
-        stripePriceId: plan.stripePriceId || null,
+        lemonsqueezyVariantId: plan.lemonsqueezyVariantId || null,
       });
     }
   }, [plan, isNew]);
@@ -234,11 +234,11 @@ export default function SubscriptionPlanDetailPage() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-xs font-medium text-white/40">Stripe Price ID (optional)</label>
+          <label className="text-xs font-medium text-white/40">Lemon Squeezy Variant ID (optional)</label>
           <input
-            value={form.stripePriceId || ""}
-            onChange={(e) => updateField("stripePriceId", e.target.value || null)}
-            placeholder="price_xxxxx"
+            value={form.lemonsqueezyVariantId || ""}
+            onChange={(e) => updateField("lemonsqueezyVariantId", e.target.value || null)}
+            placeholder="123456"
             className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-white/20 transition-all font-mono placeholder:text-white/20"
           />
         </div>

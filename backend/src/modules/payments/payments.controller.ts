@@ -4,24 +4,10 @@ import type { AuthRequest } from "../../types";
 import type { CreateCheckoutInput } from "./payments.schema";
 
 export namespace PaymentsController {
-  export async function upgradeSubscription(req: AuthRequest, res: Response, next: NextFunction) {
-    try {
-      const { planType } = req.body as { planType: "MONTHLY" | "YEARLY" | "LIFETIME" };
-      if (!planType) {
-        res.status(400).json({ error: "Missing planType" });
-        return;
-      }
-      const result = await PaymentsService.upgradeSubscription(req.user!.userId, planType);
-      res.json(result);
-    } catch (err) {
-      next(err);
-    }
-  }
-
-  export async function createCheckoutSession(req: AuthRequest, res: Response, next: NextFunction) {
+  export async function createCheckout(req: AuthRequest, res: Response, next: NextFunction) {
     try {
       const body = req.body as CreateCheckoutInput;
-      const result = await PaymentsService.createCheckoutSession(req.user!.userId, body);
+      const result = await PaymentsService.createCheckout(req.user!.userId, body);
       res.json(result);
     } catch (err) {
       next(err);
@@ -30,14 +16,10 @@ export namespace PaymentsController {
 
   export async function handleWebhook(req: Request, res: Response, next: NextFunction) {
     try {
-      const sig = req.headers["stripe-signature"] as string;
-      if (!sig) {
-        res.status(400).json({ error: "Missing stripe-signature header" });
-        return;
-      }
-      const rawBody = (req as any).rawBody;
-      const result = await PaymentsService.handleWebhook(rawBody, sig);
-      res.json(result);
+      const signature = req.headers["x-signature"] as string;
+      const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+      await PaymentsService.handleWebhook(rawBody, signature, req.body);
+      res.json({ received: true });
     } catch (err) {
       next(err);
     }
@@ -45,8 +27,8 @@ export namespace PaymentsController {
 
   export async function getSubscription(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const subscription = await PaymentsService.getSubscription(req.user!.userId);
-      res.json(subscription);
+      const sub = await PaymentsService.getSubscription(req.user!.userId);
+      res.json(sub);
     } catch (err) {
       next(err);
     }
@@ -62,18 +44,18 @@ export namespace PaymentsController {
     }
   }
 
-  export async function createPortalSession(req: AuthRequest, res: Response, next: NextFunction) {
+  export async function createCustomerPortal(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const result = await PaymentsService.createPortalSession(req.user!.userId);
+      const result = await PaymentsService.createCustomerPortal(req.user!.userId);
       res.json(result);
     } catch (err) {
       next(err);
     }
   }
 
-  export async function getReceipts(req: AuthRequest, res: Response, next: NextFunction) {
+  export async function cancelSubscription(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const result = await PaymentsService.getReceipts(req.user!.userId);
+      const result = await PaymentsService.cancelSubscription(req.user!.userId);
       res.json(result);
     } catch (err) {
       next(err);

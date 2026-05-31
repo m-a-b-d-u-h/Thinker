@@ -14,6 +14,7 @@ export const metadata: Metadata = {
 };
 
 import MainLayout from "@/components/MainLayout";
+import { LemonScript } from "@/components/LemonScript";
 
 export default function RootLayout({
   children,
@@ -26,6 +27,7 @@ export default function RootLayout({
         <link rel="icon" href="/1section_logo.svg" type="image/svg+xml" />
       </head>
       <body>
+        <LemonScript />
         <Providers>
           <AuthProvider>
             <MainLayout>
