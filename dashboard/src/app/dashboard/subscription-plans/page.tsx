@@ -59,25 +59,6 @@ export default function SubscriptionPlansPage() {
       ),
     },
     {
-      key: "interval",
-      label: "Interval",
-      render: (p: any) => (
-        <span className="text-xs text-white/40">{p.interval || "—"}</span>
-      ),
-    },
-    {
-      key: "isActive",
-      label: "Active",
-      sortable: true,
-      render: (p: any) => (
-        p.isActive ? (
-          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400">Active</span>
-        ) : (
-          <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-red-500/10 text-red-400">Inactive</span>
-        )
-      ),
-    },
-    {
       key: "sortOrder",
       label: "Order",
       render: (p: any) => (

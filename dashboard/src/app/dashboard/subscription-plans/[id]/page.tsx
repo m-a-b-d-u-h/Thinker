@@ -14,11 +14,8 @@ interface PlanForm {
   slug: string;
   description: string;
   price: number;
-  interval: string | null;
   features: string[];
-  isActive: boolean;
   sortOrder: number;
-  lemonsqueezyVariantId: string | null;
 }
 
 export default function SubscriptionPlanDetailPage() {
@@ -34,11 +31,8 @@ export default function SubscriptionPlanDetailPage() {
     slug: "",
     description: "",
     price: 0,
-    interval: "month",
     features: [],
-    isActive: true,
     sortOrder: 0,
-    lemonsqueezyVariantId: null,
   });
   const [deleting, setDeleting] = useState(false);
 
@@ -59,11 +53,8 @@ export default function SubscriptionPlanDetailPage() {
         slug: plan.slug,
         description: plan.description,
         price: plan.price,
-        interval: plan.interval,
         features: plan.features || [],
-        isActive: plan.isActive,
         sortOrder: plan.sortOrder,
-        lemonsqueezyVariantId: plan.lemonsqueezyVariantId || null,
       });
     }
   }, [plan, isNew]);
@@ -179,18 +170,6 @@ export default function SubscriptionPlanDetailPage() {
             </select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-white/40">Interval</label>
-            <select
-              value={form.interval || ""}
-              onChange={(e) => updateField("interval", e.target.value || null)}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-white/20 transition-all"
-            >
-              <option value="">None (lifetime)</option>
-              <option value="month">Monthly</option>
-              <option value="year">Yearly</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
             <label className="text-xs font-medium text-white/40">Price (cents)</label>
             <input
               type="number"
@@ -220,28 +199,6 @@ export default function SubscriptionPlanDetailPage() {
           />
         </div>
 
-        <div className="flex items-center gap-6">
-          <label className="flex items-center gap-3 cursor-pointer">
-            <span className="text-xs font-medium text-white/40">Active</span>
-            <button
-              type="button"
-              onClick={() => updateField("isActive", !form.isActive)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${form.isActive ? "bg-emerald-500" : "bg-white/10"}`}
-            >
-              <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${form.isActive ? "translate-x-5" : "translate-x-0.5"}`} />
-            </button>
-          </label>
-        </div>
-
-        <div className="space-y-1.5">
-          <label className="text-xs font-medium text-white/40">Lemon Squeezy Variant ID (optional)</label>
-          <input
-            value={form.lemonsqueezyVariantId || ""}
-            onChange={(e) => updateField("lemonsqueezyVariantId", e.target.value || null)}
-            placeholder="123456"
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-white/20 transition-all font-mono placeholder:text-white/20"
-          />
-        </div>
       </div>
 
       {/* Features */}

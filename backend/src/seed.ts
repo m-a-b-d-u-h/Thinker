@@ -34,7 +34,6 @@ async function main() {
       slug: "monthly",
       description: "Full access for one month",
       price: 1000,
-      interval: "month",
       features: ["Full module access", "Premium content", "Advanced analytics", "Priority support"],
       sortOrder: 1,
     },
@@ -44,7 +43,6 @@ async function main() {
       slug: "yearly",
       description: "Full access for one year",
       price: 5000,
-      interval: "year",
       features: ["Everything in Monthly", "2 months free", "Early access features", "Exclusive community"],
       sortOrder: 2,
     },
@@ -54,7 +52,6 @@ async function main() {
       slug: "lifetime",
       description: "Full access forever",
       price: 10000,
-      interval: null,
       features: ["Everything in Yearly", "No recurring payments", "Lifetime upgrades", "Founder badge"],
       sortOrder: 3,
     },
@@ -67,8 +64,8 @@ async function main() {
     };
     await prisma.subscriptionPlan.upsert({
       where: { planType: plan.planType },
-      update: { ...plan, lemonsqueezyVariantId: variantIds[plan.planType] },
-      create: { ...plan, lemonsqueezyVariantId: variantIds[plan.planType] },
+      update: { ...plan },
+      create: { ...plan },
     });
   }
   console.log("Seeded subscription plans");

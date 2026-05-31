@@ -128,6 +128,7 @@ export interface QuizAttempt {
   score: number;
   totalQuestions: number;
   percentage: number;
+  status?: string;
   completedAt: string;
   answers?: { questionId: string; selectedAnswer: number }[];
   currentQuestion?: number;

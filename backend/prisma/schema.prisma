@@ -221,11 +221,8 @@ model SubscriptionPlan {
   slug      String   @unique
   description String
   price     Int      // in cents
-  interval  String?  // "month" | "year" | null (lifetime)
   features  String[] // feature list
-  isActive  Boolean  @default(true)
   sortOrder Int      @default(0)
-  lemonsqueezyVariantId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
