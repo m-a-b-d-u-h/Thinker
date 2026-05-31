@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 
 import { Play, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X, Crown, Lock, Sparkles, Star } from "lucide-react";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { progressApi } from "@/lib/api/progress";
@@ -182,11 +183,22 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
         if (found) matched.push({ voice: found, display: p.display });
       }
 
-      const filteredVoices = matched.map(({ voice, display }) => ({
+      let filteredVoices = matched.map(({ voice, display }) => ({
         original: voice,
         name: voice.name,
         displayName: display,
       }));
+
+      if (filteredVoices.length === 0) {
+        const firstEnglish = v.find(voice => voice.lang.startsWith('en'));
+        if (firstEnglish) {
+          filteredVoices = [{
+            original: firstEnglish,
+            name: firstEnglish.name,
+            displayName: firstEnglish.name,
+          }];
+        }
+      }
 
       setVoices(filteredVoices);
       if (filteredVoices.length > 0) setSelectedVoice(filteredVoices[0].name);
@@ -460,11 +472,12 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     utterance.onend = () => {
       setCurrentCharIndex(0);
       setProgress(0);
-      startSpeech(0, text, vol, spd, voiceName);
+      setIsPlaying(false);
     };
     utterance.onerror = (event) => {
       if (event.error !== 'canceled' && event.error !== 'interrupted') {
         setIsPlaying(false);
+        toast.error("Speech not available on this device. Please try a different voice or browser.");
       }
     };
     synth.speak(utterance);

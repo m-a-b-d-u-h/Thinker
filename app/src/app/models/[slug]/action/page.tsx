@@ -127,11 +127,6 @@ export default function ActionPage({ params }: { params: Promise<{ slug: string 
               className="text-2xl font-semibold text-fg bg-transparent border-none outline-none flex-1"
               placeholder="Action Protocol Title"
             />
-            {existingPlan && (
-              <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} className="flex items-center gap-2 text-green-400 text-[0.8125rem] font-semibold">
-                <CheckCircle2 size={18} /> Applied
-              </motion.div>
-            )}
           </div>
 
           <div className="space-y-4 mb-8">

@@ -198,14 +198,16 @@ export default function ProductsPage() {
         )}
       </div>
 
-      <header className="mb-16 max-w-[800px]">
-        <h1 className="text-6xl font-black mb-4 tracking-[-0.04em] leading-none">
-          Master Your <span className="text-muted-dark">Thinking Library</span>
-        </h1>
-        <p className="text-muted text-lg leading-relaxed">
-          Visual mental models and immersive audio narration for deep learning.
-        </p>
-      </header>
+      {historyModules.length === 0 && (
+        <header className="mb-16 max-w-[800px]">
+          <h1 className="text-6xl font-black mb-4 tracking-[-0.04em] leading-none">
+            Master Your <span className="text-muted-dark">Thinking Library</span>
+          </h1>
+          <p className="text-muted text-lg leading-relaxed">
+            Visual mental models and immersive audio narration for deep learning.
+          </p>
+        </header>
+      )}
 
       {historyModules.length > 0 && (
         <section className="mb-16">

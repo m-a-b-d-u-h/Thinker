@@ -26,14 +26,18 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
   const [result, setResult] = useState<QuizSubmitResponse | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [showResume, setShowResume] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const pendingSubmitRef = useRef<Answer[] | null>(null);
-
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const initializedRef = useRef(false);
+  const submittedRef = useRef(false);
 
   const loading = moduleLoading || questionsLoading || progressLoading;
 
   useEffect(() => {
-    if (savedProgress && questions.length > 0) {
+    if (initializedRef.current || questions.length === 0) return;
+    initializedRef.current = true;
+
+    if (savedProgress) {
       const savedAnswers = savedProgress.answers ?? [];
       const answeredCount = savedAnswers.length;
       setAnswers(savedAnswers);
@@ -44,7 +48,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
       if (answeredCount >= questions.length && !finished) {
         pendingSubmitRef.current = savedAnswers;
         setShowResume(false);
-      } else {
+      } else if (answeredCount > 0) {
         setShowResume(true);
       }
     }
@@ -54,15 +58,13 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
     if (pendingSubmitRef.current) {
       const ans = pendingSubmitRef.current;
       pendingSubmitRef.current = null;
+      setSubmitting(true);
       submitWithAnswers(ans);
     }
   }, [answers, questions]);
 
   const autoSave = useCallback((currentAnswers: Answer[], questionIndex: number) => {
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => {
-      saveProgressMutation.mutate({ slug, answers: currentAnswers, currentQuestion: questionIndex });
-    }, 1500);
+    saveProgressMutation.mutate({ slug, answers: currentAnswers, currentQuestion: questionIndex });
   }, [slug, saveProgressMutation]);
 
   const submitWithAnswers = async (submitAnswers: Answer[]) => {
@@ -77,6 +79,7 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
       setResult({ score: s, total: questions.length, percentage: Math.round((s / questions.length) * 100), answers: [] });
     } finally {
       setFinished(true);
+      setSubmitting(false);
     }
   };
 
@@ -89,16 +92,9 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
     setShowResume(false);
   };
 
-  const handleStartFresh = () => {
-    setShowResume(false);
-    setAnswers([]);
-    setCurrentQuestion(0);
-    setSelectedAnswer(null);
-    setScore(0);
-  };
-
   const handleNext = () => {
-    if (selectedAnswer === null) return;
+    if (selectedAnswer === null || submitting || submittedRef.current) return;
+    submittedRef.current = true;
 
     const question = questions[currentQuestion];
     if (!question) return;
@@ -115,11 +111,14 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
   };
 
   const handleContinue = () => {
+    if (submitting) return;
+    submittedRef.current = false;
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(c => c + 1);
       setSelectedAnswer(null);
       setShowResult(false);
     } else {
+      setSubmitting(true);
       submitQuiz();
     }
   };
@@ -137,6 +136,17 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
     setResult(null);
     setAnswers([]);
     setShowResume(false);
+    setSubmitting(false);
+    submittedRef.current = false;
+  };
+
+  const handleStartFresh = () => {
+    setShowResume(false);
+    setAnswers([]);
+    setCurrentQuestion(0);
+    setSelectedAnswer(null);
+    setScore(0);
+    submittedRef.current = false;
   };
 
   const percentage = Math.round((score / (questions.length || 1)) * 100);
@@ -261,10 +271,10 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
             {!showResult ? (
               <button
                 onClick={handleNext}
-                disabled={selectedAnswer === null}
+                disabled={selectedAnswer === null || submitting}
                 className="w-full py-4 bg-fg text-bg rounded-xl font-bold text-[0.9375rem] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-all flex items-center justify-center gap-2"
               >
-                Submit Answer
+                {submitting ? "Submitting..." : "Submit Answer"}
               </button>
             ) : (
               <div>
@@ -277,9 +287,10 @@ export default function QuizPage({ params }: { params: Promise<{ slug: string }>
                 </div>
                 <button
                   onClick={handleContinue}
-                  className="w-full py-4 bg-fg text-bg rounded-xl font-bold text-[0.9375rem] cursor-pointer hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                  disabled={submitting}
+                  className="w-full py-4 bg-fg text-bg rounded-xl font-bold text-[0.9375rem] cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-90 transition-all flex items-center justify-center gap-2"
                 >
-                  {currentQuestion < questions.length - 1 ? (
+                  {submitting ? "Submitting..." : currentQuestion < questions.length - 1 ? (
                     <>Next Question <ArrowRight size={18} /></>
                   ) : (
                     <>See Results <ArrowRight size={18} /></>

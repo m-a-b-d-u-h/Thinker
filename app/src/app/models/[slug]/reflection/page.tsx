@@ -1,19 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { notFound } from "next/navigation";
 import { use } from "react";
-import { BookOpen, Lightbulb, Target, Zap, Sparkles, Trash2, History } from "lucide-react";
+import { Trash2, History, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useModule, useReflections, useCreateReflection, useDeleteReflection } from "@/lib/query-hooks";
 import { useAuth } from "@/lib/auth-context";
-
-const prompts = [
-  { icon: Lightbulb, label: "Key Insight", text: "What was the single most important idea you learned from this module?" },
-  { icon: Target, label: "Personal Connection", text: "How does this concept relate to your own life or work?" },
-  { icon: Zap, label: "Action Step", text: "What is one specific thing you will do differently after learning this?" },
-  { icon: BookOpen, label: "Challenge", text: "What part of this module was hardest to understand or apply?" },
-  { icon: Sparkles, label: "Surprise", text: "What surprised you or challenged your existing beliefs?" },
-];
 
 export default function ReflectionPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -25,8 +18,24 @@ export default function ReflectionPage({ params }: { params: Promise<{ slug: str
   const [content, setContent] = useState("");
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const existingReflections = (allReflections || []).filter((r) => r.module?.slug === slug);
+  const charLimit = 5000;
+  const charCount = content.length;
+  const charPercent = Math.min((charCount / charLimit) * 100, 100);
+  const nearLimit = charCount > charLimit * 0.85;
+
+  useEffect(() => {
+    if (saved) {
+      const t = setTimeout(() => setSaved(false), 2500);
+      return () => clearTimeout(t);
+    }
+  }, [saved]);
+
+  const handleDelete = async (id: string) => {
+    await deleteMutation.mutateAsync(id);
+  };
 
   const handleSave = async () => {
     if (!user || !module || !content.trim()) return;
@@ -39,20 +48,11 @@ export default function ReflectionPage({ params }: { params: Promise<{ slug: str
       });
       setContent("");
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
     } catch {
       alert("Failed to save reflection");
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleDelete = async (id: string) => {
-    await deleteMutation.mutateAsync(id);
-  };
-
-  const applyPrompt = (promptText: string) => {
-    setContent((prev) => (prev ? `${prev}\n\n${promptText}\n` : `${promptText}\n`));
   };
 
   if (isLoading) {
@@ -87,69 +87,104 @@ export default function ReflectionPage({ params }: { params: Promise<{ slug: str
           </div>
         ) : (
           <>
-            <div className="flex flex-wrap gap-2 mb-6">
-              {prompts.map((p) => {
-                const Icon = p.icon;
-                return (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => applyPrompt(p.text)}
-                    className="flex items-center gap-2 px-3 py-2 bg-bg-card border border-border-subtle rounded-lg text-[0.75rem] text-muted cursor-pointer hover:border-border hover:text-fg transition-all"
-                    title={p.text}
-                  >
-                    <Icon size={14} />
-                    {p.label}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="bg-bg-card border border-border rounded-2xl p-8">
+            <div className="relative bg-gradient-to-b from-bg-card to-bg-elevated border border-border rounded-2xl overflow-hidden focus-within:border-border-light focus-within:shadow-[0_0_0_1px_var(--color-border-light)] transition-all">
               <textarea
-                className="w-full min-h-[300px] bg-bg-elevated border border-border rounded-xl p-5 text-fg text-base resize-y focus:outline-none focus:border-border-light transition-colors"
-                placeholder="What did you learn? How does it apply to your life? What will you do differently?"
+                ref={textareaRef}
+                className="w-full min-h-[280px] bg-transparent border-none p-6 pb-4 text-fg text-base resize-y focus:outline-none placeholder:text-muted-dark leading-relaxed"
+                placeholder={"What did you learn?\nHow does it apply to your life?\nWhat will you do differently?"}
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
               />
-              <div className="mt-4 flex items-center justify-between">
-                <span className="text-[0.75rem] text-muted-dark">{content.length}/5000</span>
+              <div className="sticky bottom-0 bg-gradient-to-t from-bg-card via-bg-card/95 to-transparent px-6 py-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2.5">
+                  <div className={`h-1 w-20 rounded-full bg-bg-elevated overflow-hidden ${nearLimit ? 'ring-1 ring-red-500/30' : ''}`}>
+                    <div
+                      className={`h-full rounded-full transition-all duration-300 ${
+                        nearLimit ? 'bg-red-500' : 'bg-premium/60'
+                      }`}
+                      style={{ width: `${charPercent}%` }}
+                    />
+                  </div>
+                  <span className={`text-[0.6875rem] font-medium tabular-nums ${nearLimit ? 'text-red-400' : 'text-muted-dark'}`}>
+                    {charCount}/{charLimit}
+                  </span>
+                </div>
                 <div className="flex items-center gap-3">
-                  {saved && <span className="text-green-400 text-sm">Saved!</span>}
+                  <AnimatePresence mode="wait">
+                    {saved && (
+                      <motion.div
+                        key="saved"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        className="flex items-center gap-1.5 text-green-400 text-[0.8125rem] font-medium"
+                      >
+                        <Check size={14} />
+                        Saved
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                   <button
                     type="button"
                     onClick={handleSave}
                     disabled={saving || !content.trim()}
-                    className="px-6 py-3.5 bg-fg text-bg rounded-xl text-[0.9375rem] font-semibold cursor-pointer hover:opacity-90 transition-opacity disabled:opacity-30"
+                    className="relative px-5 py-2.5 bg-fg text-bg rounded-xl text-[0.8125rem] font-semibold cursor-pointer hover:opacity-90 transition-all disabled:opacity-25 disabled:cursor-not-allowed overflow-hidden"
                   >
-                    {saving ? "Saving..." : "Save Reflection"}
+                    {saving && (
+                      <motion.span
+                        initial={{ x: '-100%' }}
+                        animate={{ x: '100%' }}
+                        transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                      />
+                    )}
+                    {saving ? "Saving..." : "Save"}
                   </button>
                 </div>
               </div>
             </div>
 
             {existingReflections.length > 0 && (
-              <div className="mt-12">
-                <div className="flex items-center gap-2 mb-6">
-                  <History size={18} className="text-muted" />
-                  <h2 className="text-xl font-semibold text-fg">Previous Reflections</h2>
+              <div className="mt-14">
+                <div className="flex items-center gap-2.5 mb-6 pb-4 border-b border-border">
+                  <History size={16} className="text-muted-dark" />
+                  <h2 className="text-base font-bold text-fg">
+                    Previous Reflections
+                  </h2>
+                  <span className="text-[0.6875rem] font-medium text-muted-dark bg-bg-card border border-border-subtle px-2 py-0.5 rounded-md ml-auto">{existingReflections.length}</span>
                 </div>
-                <div className="space-y-4">
-                  {existingReflections.map((ref) => (
-                    <div key={ref.id} className="group bg-bg-card border border-border rounded-2xl p-6 hover:border-border-light transition-colors">
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-fg">{ref.title}</h3>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(ref.id)}
-                          className="p-2 text-muted-dark opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all cursor-pointer bg-transparent border-none"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                <div className="space-y-3">
+                  {existingReflections.map((ref, idx) => (
+                    <motion.div
+                      key={ref.id}
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
+                      className="group relative bg-bg-card border border-border rounded-xl p-5 hover:border-border-light transition-all"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="hidden sm:flex w-8 h-8 rounded-lg bg-bg-elevated border border-border-subtle items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="text-[0.6875rem] font-bold text-muted-dark">{idx + 1}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-3">
+                            <p className="text-[0.9375rem] text-muted leading-relaxed whitespace-pre-wrap">
+                              {ref.content}
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(ref.id)}
+                              className="p-1.5 text-muted-dark opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all cursor-pointer bg-transparent border-none rounded-lg hover:bg-red-500/10 flex-shrink-0 mt-0.5"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                          <p className="text-[0.6875rem] text-muted-dark mt-3 font-medium">
+                            {new Date(ref.timestamp).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
                       </div>
-                      <p className="text-[0.9375rem] text-muted leading-relaxed whitespace-pre-wrap">{ref.content}</p>
-                      <p className="text-[0.75rem] text-muted-dark mt-3">{new Date(ref.timestamp).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</p>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </div>

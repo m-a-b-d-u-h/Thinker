@@ -84,21 +84,21 @@ export default function Navbar() {
 
         {isModelPage && (
           <div className="border-t border-border-subtle">
-            <div className="mx-auto max-w-[1100px] px-4">
-              <div className="flex items-center justify-between gap-1 overflow-x-auto scrollbar-thin py-2">
+            <div className="mx-auto max-w-[1100px] px-3 md:px-4">
+              <div className="flex items-center justify-between gap-0.5 md:gap-1 overflow-x-auto scrollbar-thin py-1.5 md:py-2">
                 <Link href="/models" className="shrink-0 flex items-center gap-1 text-muted-dark no-underline text-[0.875rem] hover:text-fg transition-colors">
-                  <ChevronLeft size={16} />
-                  <span className="hidden sm:inline text-[0.8125rem]">Back to Library</span>
-                  <span className="sm:hidden text-[0.8125rem]">Back</span>
+                  <ChevronLeft size={14} className="md:size-4" />
+                  <span className="hidden sm:inline text-[0.75rem] md:text-[0.8125rem]">Back to Library</span>
+                  <span className="sm:hidden text-[0.75rem]">Back</span>
                 </Link>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0.5 md:gap-1">
                 {modelTabs.map((tab) => {
                   const isActive = pathname === tab.path;
                   return (
                     <Link
                       key={tab.path}
                       href={tab.path}
-                      className={`shrink-0 px-3 py-1.5 no-underline text-[0.8125rem] rounded-lg transition-all ${
+                      className={`shrink-0 px-2 md:px-3 py-1 md:py-1.5 no-underline text-[0.7rem] md:text-[0.8125rem] rounded-lg transition-all ${
                         isActive ? 'text-fg bg-bg-elevated' : 'text-muted-dark hover:text-fg hover:bg-bg-elevated'
                       }`}
                     >
