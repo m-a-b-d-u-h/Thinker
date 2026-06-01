@@ -14,7 +14,6 @@ async function main() {
 
   // Clean existing data
   await prisma.quizAttempt.deleteMany();
-  await prisma.completedGraphNode.deleteMany();
   await prisma.userProgress.deleteMany();
   await prisma.highlight.deleteMany();
   await prisma.reflection.deleteMany();
