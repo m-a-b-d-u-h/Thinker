@@ -80,6 +80,23 @@ async function main() {
   });
   console.log(`Created demo user: ${demoUser.email}`);
 
+  // Seed demo payments
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  await prisma.payment.createMany({
+    data: [
+      {
+        userId: demoUser.id,
+        lsOrderId: "demo-order-monthly",
+        amount: 1000,
+        currency: "USD",
+        status: "SUCCEEDED",
+        planType: "MONTHLY",
+        createdAt: thirtyDaysAgo,
+      },
+    ],
+  });
+  console.log("Seeded demo payments");
+
   // Create admin user
   const adminPassword = await bcrypt.hash("mabduh", 12);
   const adminUser = await prisma.user.create({
