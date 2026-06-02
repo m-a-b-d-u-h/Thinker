@@ -128,6 +128,26 @@ export namespace PaymentsService {
           break;
         }
 
+        case "subscription_expired": {
+          await prisma.user.update({
+            where: { id: userId },
+            data: { subscriptionStatus: "FREE", subscriptionEnd: null },
+          });
+          sendToUser(userId, {
+            type: "subscription_updated",
+            data: { subscriptionStatus: "FREE" },
+          });
+          break;
+        }
+
+        case "subscription_payment_failed": {
+          sendToUser(userId, {
+            type: "payment_failed",
+            data: { message: "Subscription payment failed" },
+          });
+          break;
+        }
+
         case "order_created": {
           if (attrs.status === "paid") {
             const variantId = String(attrs.first_subscription_item?.variant_id || "");
