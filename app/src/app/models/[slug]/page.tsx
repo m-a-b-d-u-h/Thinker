@@ -105,6 +105,9 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const currentVoiceRef = useRef(selectedVoice);
   const currentCharIndexRef = useRef(currentCharIndex);
   const currentProgressRef = useRef(progress);
+  const speechStartTimeRef = useRef(0);
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const speechTextLenRef = useRef(0);
 
   currentTextRef.current = unifiedCleanText;
   currentVolumeRef.current = volume;
@@ -382,6 +385,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   useEffect(() => {
     return () => {
       window.speechSynthesis?.cancel();
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
     };
   }, []);
 
@@ -454,6 +458,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const startSpeech = (startIndex: number, text: string, vol: number, spd: number, voiceName: string) => {
     if (!synth) return;
     synth.cancel();
+    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
 
     const utterance = new SpeechSynthesisUtterance(text.slice(startIndex));
     utterance.lang = 'en-US';
@@ -462,19 +467,34 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     utterance.volume = vol;
     utterance.rate = spd;
 
+    speechStartTimeRef.current = Date.now();
+    speechTextLenRef.current = text.length;
+
+    progressTimerRef.current = setInterval(() => {
+      const elapsed = Date.now() - speechStartTimeRef.current;
+      const estimatedProgress = elapsed / (durationInfo.totalSeconds * 1000) * 100;
+      if (estimatedProgress > currentProgressRef.current + 0.5) {
+        const idx = Math.floor((estimatedProgress / 100) * text.length);
+        setCurrentCharIndex(startIndex + Math.min(idx, text.length - 1));
+        setProgress(Math.min(estimatedProgress, 99));
+      }
+    }, 150);
+
     utterance.onboundary = (event) => {
-      if (event.name === 'word') {
-        const globalIdx = startIndex + event.charIndex;
+      const globalIdx = startIndex + (event.charIndex || 0);
+      if (globalIdx > currentCharIndexRef.current) {
         setCurrentCharIndex(globalIdx);
         setProgress((globalIdx / text.length) * 100);
       }
     };
     utterance.onend = () => {
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
       setCurrentCharIndex(0);
       setProgress(0);
       setIsPlaying(false);
     };
     utterance.onerror = (event) => {
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
       if (event.error !== 'canceled' && event.error !== 'interrupted') {
         setIsPlaying(false);
         toast.error("Speech not available on this device. Please try a different voice or browser.");
