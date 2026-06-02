@@ -104,31 +104,6 @@ export default function DashboardPage() {
 
 
 
-      {user.subscriptionStatus === "FREE" && !paymentVerified && !verifyingPayment && (
-        <div className="mb-8 p-4 bg-premium/5 border border-premium/20 rounded-xl flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Crown size={18} className="text-premium flex-shrink-0" />
-            <p className="text-[0.875rem] text-muted">
-              Already paid?{" "}
-              <button
-                onClick={async () => {
-                  try {
-                    const sub = await paymentsApi.getSubscription();
-                    if (sub.subscriptionStatus !== "FREE") {
-                      const me = await authApi.getMe();
-                      setUser(me);
-                    }
-                  } catch {}
-                }}
-                className="text-premium font-bold hover:underline bg-transparent border-none cursor-pointer"
-              >
-                Check subscription status
-              </button>
-            </p>
-          </div>
-        </div>
-      )}
-
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
           <div className="flex items-center gap-2 text-muted mb-3">
