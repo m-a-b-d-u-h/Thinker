@@ -35,4 +35,7 @@ export const paymentsApi = {
 
   createCustomerPortal: () =>
     api.post<{ url: string }>("/payments/customer-portal").then(r => r.data),
+
+  cancelSubscription: () =>
+    api.post<{ cancelled: boolean }>("/payments/cancel").then(r => r.data),
 };

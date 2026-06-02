@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Settings, LogOut, X, Crown, PencilLine, Sun, Moon } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth-context";
-import { paymentsApi } from "@/lib/api/payments";
 import { progressApi } from "@/lib/api/progress";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
 
 const ALL_CATEGORIES = [
   "mindset", "clarity", "habit", "focus",
@@ -176,27 +175,13 @@ export default function UserPopup() {
                         {user.subscriptionStatus === "LIFETIME" ? "Lifetime" : user.subscriptionStatus === "YEARLY" ? "Yearly" : "Monthly"}
                       </span>
                     </div>
-                    {user.subscriptionStatus === "LIFETIME" ? (
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            const { url } = await paymentsApi.createCustomerPortal();
-                            if (url) window.open(url, "_blank");
-                          } catch {}
-                        }}
-                        className="text-[0.625rem] text-muted hover:text-fg bg-transparent border border-border hover:border-border-light rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0"
-                      >
-                        Receipt
-                      </button>
-                    ) : (
-                      <button
-                        onClick={async (e) => { e.stopPropagation(); try { const { url } = await paymentsApi.createCustomerPortal(); window.location.href = url; } catch {} }}
-                        className="text-[0.625rem] text-muted hover:text-fg bg-transparent border border-border hover:border-border-light rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0"
-                      >
-                        Manage
-                      </button>
-                    )}
+                    <Link
+                      href="/manage"
+                      onClick={(e) => e.stopPropagation()}
+                      className="text-[0.625rem] text-muted hover:text-fg bg-transparent border border-border hover:border-border-light rounded-md px-2 py-1 cursor-pointer transition-colors shrink-0 no-underline"
+                    >
+                      Manage
+                    </Link>
                   </div>
                 )}
                 <button

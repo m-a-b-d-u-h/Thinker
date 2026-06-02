@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, ArrowRight, Sparkles, RefreshCw, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { paymentsApi } from "@/lib/api/payments";
 import { useAuth } from "@/lib/auth-context";
 import { paymentWs } from "@/lib/websocket";
@@ -35,11 +36,15 @@ export default function PaymentSuccessPage() {
       wsConnected.current = true;
       const unsub1 = paymentWs.on("payment_success", onActive);
       const unsub2 = paymentWs.on("subscription_updated", onActive);
+      const unsub3 = paymentWs.on("payment_error", (data) => {
+        toast.error(data.message as string || "Payment error. Please contact support.");
+      });
       paymentWs.connect(user.id);
       return () => {
         mountedRef.current = false;
         unsub1();
         unsub2();
+        unsub3();
       };
     }
     return () => { mountedRef.current = false; };

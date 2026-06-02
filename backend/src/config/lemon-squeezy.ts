@@ -105,16 +105,8 @@ export namespace LemonSqueezy {
   }
 
   export async function getCustomerPortalUrl(customerId: string) {
-    const result = await api(`/customers/${customerId}/redirect`, {
-      method: "POST",
-      body: JSON.stringify({
-        data: {
-          type: "customer_redirects",
-          attributes: {},
-        },
-      }),
-    });
-    return result.data.attributes.url as string;
+    const result = await api(`/customers/${customerId}`);
+    return result.data.attributes.urls.customer_portal as string;
   }
 
   export async function listProducts() {

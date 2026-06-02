@@ -34,6 +34,10 @@ export namespace PaymentsService {
     const variantId = VARIANT_MAP[input.planType];
     if (!variantId) throw new AppError("Invalid plan type", 400);
 
+    if (user.subscriptionStatus && user.subscriptionStatus !== "FREE") {
+      throw new AppError("You already have an active subscription. Cancel it first via Manage.", 400);
+    }
+
     const successUrl = input.successUrl || `${env.clientUrl}/payment/success`;
     const cancelUrl = input.cancelUrl || `${env.clientUrl}/#pricing`;
 
@@ -80,7 +84,11 @@ export namespace PaymentsService {
         case "subscription_created":
         case "subscription_updated": {
           const variantId = String(attrs.variant_id || "");
-          const planType = resolvePlanType(variantId) || customData.planType || "MONTHLY";
+          const planType = resolvePlanType(variantId);
+          if (!planType) {
+            console.error(`Unknown variant ID in ${eventName}: ${variantId}`);
+            return;
+          }
           const status = attrs.status === "cancelled" ? "FREE" : planType;
           const endDate = attrs.ends_at ? new Date(attrs.ends_at) : calcEndDate(planType);
 
@@ -151,7 +159,15 @@ export namespace PaymentsService {
         case "order_created": {
           if (attrs.status === "paid") {
             const variantId = String(attrs.first_subscription_item?.variant_id || "");
-            const planType = resolvePlanType(variantId) || "LIFETIME";
+            const planType = resolvePlanType(variantId);
+            if (!planType) {
+              console.error(`Unknown variant ID in order_created: ${variantId}`);
+              sendToUser(userId, {
+                type: "payment_error",
+                data: { message: "Payment received but could not activate subscription. Contact support." },
+              });
+              return;
+            }
 
             await prisma.user.update({
               where: { id: userId },
