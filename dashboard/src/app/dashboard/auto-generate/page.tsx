@@ -51,6 +51,7 @@ function buildCron(interval: number, unit: "minutes" | "hours" | "days", time?: 
 export default function AutoGeneratePage() {
   const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [scheduleCategory, setScheduleCategory] = useState<string>("");
   const [frequency, setFrequency] = useState("0 */6 * * *");
   const [customMode, setCustomMode] = useState(false);
   const [intervalVal, setIntervalVal] = useState(6);
@@ -101,7 +102,10 @@ export default function AutoGeneratePage() {
 
   const saveSchedule = useMutation({
     mutationFn: async (expression: string) => {
-      const { data } = await api.post("/ai/schedule", { expression });
+      const { data } = await api.post("/ai/schedule", {
+        expression,
+        category: scheduleCategory || undefined,
+      });
       return data;
     },
     onSuccess: () => {
@@ -351,6 +355,24 @@ export default function AutoGeneratePage() {
                   </div>
                 </div>
               )}
+
+              <div>
+                <label className="text-xs text-[#666] font-medium mb-1.5 block">
+                  Category (optional)
+                </label>
+                <select
+                  value={scheduleCategory}
+                  onChange={(e) => setScheduleCategory(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:outline-none focus:border-white/20 appearance-none"
+                >
+                  <option value="">Auto-detect (fewest modules)</option>
+                  {categories.map((cat: any) => (
+                    <option key={cat.name} value={cat.name}>
+                      {cat.name} ({cat.count} modules)
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               <button
                 onClick={() => {
