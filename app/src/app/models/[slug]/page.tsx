@@ -2,6 +2,7 @@
 
 import { notFound } from "next/navigation";
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { useTTS } from "@/hooks/useTTS";
 
 import { Play, ArrowRight, RotateCcw, CheckCircle2, Highlighter, X, Crown, Lock, Sparkles, Star } from "lucide-react";
 import { toast } from "sonner";
@@ -23,13 +24,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const { data: recommendations = [] } = useRecommended(slug);
   const { data: savedProgress } = useProgress(slug);
 
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [voices, setVoices] = useState<any[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState<string>("");
-  const [progress, setProgress] = useState(0);
-  const [currentCharIndex, setCurrentCharIndex] = useState(0);
-  const [volume, setVolume] = useState(1);
-  const [rate, setRate] = useState(1);
   const [showSettings, setShowSettings] = useState(false);
   const [savedListeningProgress, setSavedListeningProgress] = useState<number | null>(null);
   const [savedReadingProgress, setSavedReadingProgress] = useState<number | null>(null);
@@ -69,52 +63,14 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     }
   };
 
-  const synthRef = useRef<SpeechSynthesis | null>(null);
-  if (typeof window !== 'undefined' && !synthRef.current) {
-    synthRef.current = window.speechSynthesis;
-  }
-  const synth = synthRef.current;
-
   const unifiedCleanText = useMemo(() => {
     if (!module) return "";
     const cleanBody = (module.content || '').replace(/[#*`~_]/g, ' ');
     return `${module.title}. ${module.description}. ${cleanBody}`;
   }, [module]);
 
-  const durationInfo = useMemo(() => {
-    const words = unifiedCleanText.split(/\s+/).length;
-    const wordsPerSecond = 2.5 * rate;
-    const totalSeconds = Math.ceil(words / wordsPerSecond);
-
-    const formatTime = (s: number) => {
-      const mins = Math.floor(s / 60);
-      const secs = s % 60;
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    return {
-      totalSeconds,
-      totalFormatted: formatTime(totalSeconds),
-      currentFormatted: (p: number) => formatTime(Math.floor((p / 100) * totalSeconds))
-    };
-  }, [unifiedCleanText, rate]);
-
-  const currentTextRef = useRef(unifiedCleanText);
-  const currentVolumeRef = useRef(volume);
-  const currentRateRef = useRef(rate);
-  const currentVoiceRef = useRef(selectedVoice);
-  const currentCharIndexRef = useRef(currentCharIndex);
-  const currentProgressRef = useRef(progress);
-  const speechStartTimeRef = useRef(0);
-  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const speechTextLenRef = useRef(0);
-
-  currentTextRef.current = unifiedCleanText;
-  currentVolumeRef.current = volume;
-  currentRateRef.current = rate;
-  currentVoiceRef.current = selectedVoice;
-  currentCharIndexRef.current = currentCharIndex;
-  currentProgressRef.current = progress;
+  const tts = useTTS(unifiedCleanText);
+  const { getSnapshot, durationInfo, isPlaying, progress, currentCharIndex, voices, selectedVoice, volume, rate, togglePlay, seek, seekEnd, setRate, setVolume, setVoice } = tts;
 
   const contentBlocks = useMemo(() => {
     if (!module) return [];
@@ -161,57 +117,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   }, [module]);
 
   useEffect(() => {
-    const s = window.speechSynthesis;
-    const loadVoices = () => {
-      const v = s.getVoices();
-
-      const priority: { name: string; display: string }[] = [
-        { name: 'William', display: 'William' },
-        { name: 'Aria', display: 'Aria' },
-        { name: 'Guy', display: 'Guy' },
-        { name: 'Jenny', display: 'Jenny' },
-        { name: 'Ryan', display: 'Ryan' },
-        { name: 'Sonia', display: 'Sonia' },
-        { name: 'Andrew', display: 'Andrew' },
-        { name: 'Ava', display: 'Ava' },
-      ];
-
-      const matched: { voice: SpeechSynthesisVoice; display: string }[] = [];
-
-      for (const p of priority) {
-        const found = v.find(voice =>
-          voice.lang.startsWith('en') &&
-          voice.name.includes(p.name)
-        );
-        if (found) matched.push({ voice: found, display: p.display });
-      }
-
-      let filteredVoices = matched.map(({ voice, display }) => ({
-        original: voice,
-        name: voice.name,
-        displayName: display,
-      }));
-
-      if (filteredVoices.length === 0) {
-        const firstEnglish = v.find(voice => voice.lang.startsWith('en'));
-        if (firstEnglish) {
-          filteredVoices = [{
-            original: firstEnglish,
-            name: firstEnglish.name,
-            displayName: firstEnglish.name,
-          }];
-        }
-      }
-
-      setVoices(filteredVoices);
-      if (filteredVoices.length > 0) setSelectedVoice(filteredVoices[0].name);
-    };
-    loadVoices();
-    s.addEventListener('voiceschanged', loadVoices);
-    return () => s.removeEventListener('voiceschanged', loadVoices);
-  }, []);
-
-  useEffect(() => {
     if (!module || !user || !savedProgress) return;
     const completed = savedProgress.listeningProgress >= 100 || savedProgress.readingProgress >= 100;
     setIsCompleted(completed);
@@ -222,8 +127,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     completedRef.current = completed;
     if (hasListen) {
       setSavedListeningProgress(savedProgress.listeningProgress);
-      setProgress(savedProgress.listeningProgress);
-      setCurrentCharIndex(savedProgress.currentCharIndex);
+      seek(savedProgress.listeningProgress);
       setRate(savedProgress.audioRate);
     }
     if (hasRead) {
@@ -235,7 +139,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       }
     }
     setShowResume(true);
-  }, [module, user, savedProgress]);
+  }, [module, user, savedProgress, seek, setRate]);
 
   useEffect(() => {
     if (!module) return;
@@ -352,10 +256,11 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const saveOnLeave = useCallback(() => {
     if (completedRef.current) return;
     const data: Record<string, any> = {};
-    if (currentProgressRef.current > 0) {
-      data.listeningProgress = currentProgressRef.current;
-      data.currentCharIndex = currentCharIndexRef.current;
-      data.audioRate = currentRateRef.current;
+    const snap = getSnapshot();
+    if (snap.progress > 0) {
+      data.listeningProgress = snap.progress;
+      data.currentCharIndex = snap.currentCharIndex;
+      data.audioRate = snap.rate;
     }
     const article = articleRef.current;
     if (article) {
@@ -370,7 +275,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     }
     if (Object.keys(data).length === 0) return;
     saveProgress(data);
-  }, [slug, saveProgress]);
+  }, [slug, saveProgress, getSnapshot]);
 
   useEffect(() => {
     window.addEventListener("beforeunload", saveOnLeave);
@@ -381,13 +286,6 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       saveOnLeave();
     };
   }, [saveOnLeave]);
-
-  useEffect(() => {
-    return () => {
-      window.speechSynthesis?.cancel();
-      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-    };
-  }, []);
 
   useEffect(() => {
     const handleSelection = () => {
@@ -433,10 +331,8 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
 
   const handleResumeListening = () => {
     setShowResume(false);
-    const idx = savedListeningProgress !== null
-      ? Math.floor((savedListeningProgress / 100) * unifiedCleanText.length)
-      : 0;
-    startSpeech(idx, unifiedCleanText, volume, rate, selectedVoice);
+    seek(savedListeningProgress ?? 0);
+    togglePlay();
   };
 
   const handleResumeReading = () => {
@@ -450,110 +346,9 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     setShowResume(false);
     setSavedListeningProgress(null);
     setSavedReadingProgress(null);
-    setProgress(0);
-    setCurrentCharIndex(0);
+    if (isPlaying) togglePlay();
+    seek(0);
     await saveProgress({ listeningProgress: 0, readingProgress: 0, currentCharIndex: 0, scrollPosition: 0 });
-  };
-
-  const startSpeech = (startIndex: number, text: string, vol: number, spd: number, voiceName: string) => {
-    if (!synth) return;
-    synth.cancel();
-    if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-
-    const utterance = new SpeechSynthesisUtterance(text.slice(startIndex));
-    utterance.lang = 'en-US';
-    const voiceWrapper = voices.find((v: any) => v.name === voiceName);
-    if (voiceWrapper) utterance.voice = voiceWrapper.original;
-    utterance.volume = vol;
-    utterance.rate = spd;
-
-    speechStartTimeRef.current = Date.now();
-    speechTextLenRef.current = text.length;
-
-    progressTimerRef.current = setInterval(() => {
-      const elapsed = Date.now() - speechStartTimeRef.current;
-      const estimatedProgress = elapsed / (durationInfo.totalSeconds * 1000) * 100;
-      if (estimatedProgress > currentProgressRef.current + 0.5) {
-        const idx = Math.floor((estimatedProgress / 100) * text.length);
-        setCurrentCharIndex(startIndex + Math.min(idx, text.length - 1));
-        setProgress(Math.min(estimatedProgress, 99));
-      }
-    }, 150);
-
-    utterance.onboundary = (event) => {
-      const globalIdx = startIndex + (event.charIndex || 0);
-      if (globalIdx > currentCharIndexRef.current) {
-        setCurrentCharIndex(globalIdx);
-        setProgress((globalIdx / text.length) * 100);
-      }
-    };
-    utterance.onend = () => {
-      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-      setCurrentCharIndex(0);
-      setProgress(0);
-      setIsPlaying(false);
-    };
-    utterance.onerror = (event) => {
-      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-      if (event.error !== 'canceled' && event.error !== 'interrupted') {
-        setIsPlaying(false);
-        toast.error("Speech not available on this device. Please try a different voice or browser.");
-      }
-    };
-    synth.speak(utterance);
-    setIsPlaying(true);
-  };
-
-  const updateSpeechSettings = () => {
-    if (!isPlaying) return;
-    const currentIndex = Math.floor((currentProgressRef.current / 100) * currentTextRef.current.length);
-    startSpeech(currentIndex, currentTextRef.current, currentVolumeRef.current, currentRateRef.current, currentVoiceRef.current);
-  };
-
-  const updateRate = (newRate: number) => {
-    setRate(newRate);
-    currentRateRef.current = newRate;
-    if (isPlaying) {
-      const currentIndex = Math.floor((currentProgressRef.current / 100) * currentTextRef.current.length);
-      startSpeech(currentIndex, currentTextRef.current, currentVolumeRef.current, newRate, currentVoiceRef.current);
-    }
-  };
-
-  const updateVolume = (newVolume: number) => {
-    setVolume(newVolume);
-    currentVolumeRef.current = newVolume;
-    if (isPlaying) {
-      const currentIndex = Math.floor((currentProgressRef.current / 100) * currentTextRef.current.length);
-      startSpeech(currentIndex, currentTextRef.current, newVolume, currentRateRef.current, currentVoiceRef.current);
-    }
-  };
-
-  const updateVoice = (newVoice: string) => {
-    setSelectedVoice(newVoice);
-    currentVoiceRef.current = newVoice;
-    if (isPlaying) {
-      const currentIndex = Math.floor((currentProgressRef.current / 100) * currentTextRef.current.length);
-      startSpeech(currentIndex, currentTextRef.current, currentVolumeRef.current, currentRateRef.current, newVoice);
-    }
-  };
-
-  const toggleSpeech = () => {
-    if (isPlaying) { synth?.cancel(); setIsPlaying(false); }
-    else { startSpeech(Math.floor((progress / 100) * unifiedCleanText.length), unifiedCleanText, volume, rate, selectedVoice); }
-  };
-
-  const handleSeeking = (pct: number) => {
-    const idx = Math.floor((pct / 100) * currentTextRef.current.length);
-    setCurrentCharIndex(idx);
-    setProgress(pct);
-  };
-
-  const handleSeekEnd = () => {
-    if (isPlaying) {
-      synth?.cancel();
-      const idx = Math.floor((currentProgressRef.current / 100) * currentTextRef.current.length);
-      startSpeech(idx, currentTextRef.current, currentVolumeRef.current, currentRateRef.current, currentVoiceRef.current);
-    }
   };
 
   const toggleFavorite = async () => {
@@ -580,11 +375,12 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
     if (newCompleted) {
       setSavedListeningProgress(100);
       setSavedReadingProgress(100);
-      setProgress(100);
+      if (isPlaying) togglePlay();
+      seek(100);
     } else {
       setSavedListeningProgress(null);
       setSavedReadingProgress(null);
-      setProgress(0);
+      seek(0);
       setShowResume(false);
     }
   };
@@ -978,20 +774,20 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
 
       <ModuleFloatingBar
         isPlaying={isPlaying}
-        onTogglePlay={toggleSpeech}
+        onTogglePlay={togglePlay}
         progress={progress}
         durationInfo={durationInfo}
         voices={voices}
         selectedVoice={selectedVoice}
-        onVoiceChange={updateVoice}
+        onVoiceChange={setVoice}
         rate={rate}
-        onRateChange={updateRate}
+        onRateChange={setRate}
         volume={volume}
-        onVolumeChange={updateVolume}
+        onVolumeChange={setVolume}
         isFavorited={isFavorited}
         onToggleFavorite={toggleFavorite}
-        onSeeking={handleSeeking}
-        onSeekEnd={handleSeekEnd}
+        onSeeking={seek}
+        onSeekEnd={() => { if (isPlaying) seekEnd(); }}
       />
 
       <TableOfContents
