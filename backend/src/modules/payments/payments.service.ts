@@ -5,15 +5,12 @@ import { env } from "../../config/env";
 import { sendToUser } from "../../lib/websocket";
 import type { CreateCheckoutInput } from "./payments.schema";
 
-const VARIANT_MAP: Record<string, string> = {
-  MONTHLY: env.lemonSqueezy.variantIds.monthly,
-  YEARLY: env.lemonSqueezy.variantIds.yearly,
-  LIFETIME: env.lemonSqueezy.variantIds.lifetime,
-};
-
-function resolvePlanType(variantId: string): string | null {
-  const entry = Object.entries(VARIANT_MAP).find(([, v]) => v === variantId);
-  return entry ? entry[0] : null;
+async function resolvePlanType(variantId: string): Promise<string | null> {
+  const plan = await prisma.subscriptionPlan.findFirst({
+    where: { lsVariantId: variantId },
+    select: { planType: true },
+  });
+  return plan?.planType || null;
 }
 
 function calcEndDate(planType: string): Date | null {
@@ -31,7 +28,11 @@ export namespace PaymentsService {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError("User not found", 404);
 
-    const variantId = VARIANT_MAP[input.planType];
+    const plan = await prisma.subscriptionPlan.findUnique({
+      where: { planType: input.planType },
+      select: { lsVariantId: true },
+    });
+    const variantId = plan?.lsVariantId;
     if (!variantId) throw new AppError("Invalid plan type", 400);
 
     if (user.subscriptionStatus && user.subscriptionStatus !== "FREE") {
@@ -84,7 +85,7 @@ export namespace PaymentsService {
         case "subscription_created":
         case "subscription_updated": {
           const variantId = String(attrs.variant_id || "");
-          const planType = resolvePlanType(variantId);
+          const planType = await resolvePlanType(variantId);
           if (!planType) {
             console.error(`Unknown variant ID in ${eventName}: ${variantId}`);
             return;
@@ -159,7 +160,7 @@ export namespace PaymentsService {
         case "order_created": {
           if (attrs.status === "paid") {
             const variantId = String(attrs.first_subscription_item?.variant_id || "");
-            const planType = resolvePlanType(variantId);
+            const planType = await resolvePlanType(variantId);
             if (!planType) {
               console.error(`Unknown variant ID in order_created: ${variantId}`);
               sendToUser(userId, {

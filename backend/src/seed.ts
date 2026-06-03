@@ -25,14 +25,15 @@ async function main() {
   await prisma.module.deleteMany();
   await prisma.user.deleteMany();
 
-  // Seed subscription plans
+  // Seed subscription plans (lsVariantId optional — set via env, otherwise null)
   const plans = [
     {
       planType: "MONTHLY" as const,
       name: "Thinker Monthly",
       slug: "monthly",
       description: "Full access for one month",
-      price: 1000,
+      price: 1000,        // $10.00
+      lsVariantId: process.env.LS_VARIANT_MONTHLY || null,
       features: ["Full module access", "Premium content", "Advanced analytics", "Priority support"],
       sortOrder: 1,
     },
@@ -41,7 +42,8 @@ async function main() {
       name: "Thinker Yearly",
       slug: "yearly",
       description: "Full access for one year",
-      price: 5000,
+      price: 5000,        // $50.00
+      lsVariantId: process.env.LS_VARIANT_YEARLY || null,
       features: ["Everything in Monthly", "2 months free", "Early access features", "Exclusive community"],
       sortOrder: 2,
     },
@@ -50,17 +52,14 @@ async function main() {
       name: "Thinker Lifetime",
       slug: "lifetime",
       description: "Full access forever",
-      price: 10000,
+      price: 10000,       // $100.00
+      lsVariantId: process.env.LS_VARIANT_LIFETIME || null,
       features: ["Everything in Yearly", "No recurring payments", "Lifetime upgrades", "Founder badge"],
       sortOrder: 3,
     },
   ];
+
   for (const plan of plans) {
-    const variantIds: Record<string, string> = {
-      MONTHLY: "1727361",
-      YEARLY: "1727397",
-      LIFETIME: "1727400",
-    };
     await prisma.subscriptionPlan.upsert({
       where: { planType: plan.planType },
       update: { ...plan },

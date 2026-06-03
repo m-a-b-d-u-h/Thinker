@@ -215,16 +215,17 @@ model Review {
 }
 
 model SubscriptionPlan {
-  id        String   @id @default(cuid())
-  planType  PlanType @unique
-  name      String
-  slug      String   @unique
-  description String
-  price     Int      // in cents
-  features  String[] // feature list
-  sortOrder Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  planType     PlanType @unique
+  name         String
+  slug         String   @unique
+  description  String
+  price        Int      // in cents
+  lsVariantId  String?  // Lemon Squeezy variant ID
+  features     String[] // feature list
+  sortOrder    Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model LemonSqueezyEvent {

@@ -14,6 +14,7 @@ interface PlanForm {
   slug: string;
   description: string;
   price: number;
+  lsVariantId: string;
   features: string[];
   sortOrder: number;
 }
@@ -31,6 +32,7 @@ export default function SubscriptionPlanDetailPage() {
     slug: "",
     description: "",
     price: 0,
+    lsVariantId: "",
     features: [],
     sortOrder: 0,
   });
@@ -53,6 +55,7 @@ export default function SubscriptionPlanDetailPage() {
         slug: plan.slug,
         description: plan.description,
         price: plan.price,
+        lsVariantId: plan.lsVariantId || "",
         features: plan.features || [],
         sortOrder: plan.sortOrder,
       });
@@ -186,6 +189,15 @@ export default function SubscriptionPlanDetailPage() {
               value={form.sortOrder}
               onChange={(e) => updateField("sortOrder", parseInt(e.target.value) || 0)}
               className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-white/20 transition-all"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-white/40">LS Variant ID</label>
+            <input
+              value={form.lsVariantId}
+              onChange={(e) => updateField("lsVariantId", e.target.value)}
+              placeholder="null (set via env)"
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-white/20 transition-all placeholder:text-white/20 font-mono"
             />
           </div>
         </div>
