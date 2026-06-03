@@ -8,7 +8,7 @@ export interface ModuleProgress {
   lastReadAt: number;
 }
 
-const STORAGE_KEY = "thinker_progress_v3";
+const STORAGE_KEY = "1section_progress_v3";
 
 function getAllProgress(): Record<string, ModuleProgress> {
   if (typeof window === "undefined") return {};
