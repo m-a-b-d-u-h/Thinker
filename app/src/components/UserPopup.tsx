@@ -8,6 +8,7 @@ import { useTheme } from "next-themes";
 import { useAuth } from "@/lib/auth-context";
 import { progressApi } from "@/lib/api/progress";
 import { useQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 const ALL_CATEGORIES = [
   "mindset", "clarity", "habit", "focus",
