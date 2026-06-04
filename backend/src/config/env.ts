@@ -26,6 +26,9 @@ export const env = {
     apiKey: process.env.GEMINI_API_KEY || "",
   },
 
+  bufferApiKey: process.env.BUFFER_API_KEY || "",
+  publicUrl: process.env.PUBLIC_URL || "http://localhost:4000",
+
   redis: {
     url: process.env.REDIS_URL || "",
   },
