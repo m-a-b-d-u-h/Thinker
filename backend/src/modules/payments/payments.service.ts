@@ -5,12 +5,23 @@ import { env } from "../../config/env";
 import { sendToUser } from "../../lib/websocket";
 import type { CreateCheckoutInput } from "./payments.schema";
 
+const VARIANT_MAP: Record<string, string> = {
+  MONTHLY: env.lemonSqueezy.variants.MONTHLY,
+  YEARLY: env.lemonSqueezy.variants.YEARLY,
+  LIFETIME: env.lemonSqueezy.variants.LIFETIME,
+};
+
+function buildReverseVariantMap(): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (const [plan, id] of Object.entries(VARIANT_MAP)) {
+    if (id) map[id] = plan;
+  }
+  return map;
+}
+
 async function resolvePlanType(variantId: string): Promise<string | null> {
-  const plan = await prisma.subscriptionPlan.findFirst({
-    where: { lsVariantId: variantId },
-    select: { planType: true },
-  });
-  return plan?.planType || null;
+  const map = buildReverseVariantMap();
+  return map[variantId] || null;
 }
 
 function calcEndDate(planType: string): Date | null {
@@ -28,11 +39,7 @@ export namespace PaymentsService {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError("User not found", 404);
 
-    const plan = await prisma.subscriptionPlan.findUnique({
-      where: { planType: input.planType },
-      select: { lsVariantId: true },
-    });
-    const variantId = plan?.lsVariantId;
+    const variantId = VARIANT_MAP[input.planType];
     if (!variantId) throw new AppError("Invalid plan type", 400);
 
     if (user.subscriptionStatus && user.subscriptionStatus !== "FREE") {

@@ -15,6 +15,11 @@ export const env = {
     apiKey: process.env.LEMONSQUEEZY_API_KEY || "",
     storeId: process.env.LEMONSQUEEZY_STORE_ID || "",
     webhookSecret: process.env.LEMONSQUEEZY_WEBHOOK_SECRET || "",
+    variants: {
+      MONTHLY: process.env.LS_VARIANT_MONTHLY || "",
+      YEARLY: process.env.LS_VARIANT_YEARLY || "",
+      LIFETIME: process.env.LS_VARIANT_LIFETIME || "",
+    },
   },
 
   google: {
