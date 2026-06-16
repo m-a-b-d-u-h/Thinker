@@ -26,6 +26,8 @@ import bufferRoutes from "./modules/buffer/buffer.routes";
 
 const app = express();
 
+app.set("trust proxy", 1);
+
 // Security — relaxed for Google OAuth popup
 app.use(
   helmet({
