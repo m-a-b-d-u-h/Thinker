@@ -321,7 +321,7 @@ export default function ProductsPage() {
           <p className="text-[0.875rem] text-muted">
             Unlock all modules with a subscription.{" "}
             <Link href="/#pricing" className="text-premium font-bold no-underline hover:underline">
-              View Plans
+              Subscribe
             </Link>
           </p>
         </div>

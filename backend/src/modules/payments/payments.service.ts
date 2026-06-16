@@ -1,58 +1,29 @@
 import { prisma } from "../../lib/prisma";
 import { AppError } from "../../lib/errors";
 import { LemonSqueezy } from "../../config/lemon-squeezy";
-import { env } from "../../config/env";
 import { sendToUser } from "../../lib/websocket";
-import type { CreateCheckoutInput } from "./payments.schema";
 
-const VARIANT_MAP: Record<string, string> = {
-  MONTHLY: env.lemonSqueezy.variants.MONTHLY,
-  YEARLY: env.lemonSqueezy.variants.YEARLY,
-  LIFETIME: env.lemonSqueezy.variants.LIFETIME,
-};
-
-function buildReverseVariantMap(): Record<string, string> {
-  const map: Record<string, string> = {};
-  for (const [plan, id] of Object.entries(VARIANT_MAP)) {
-    if (id) map[id] = plan;
-  }
-  return map;
-}
-
-async function resolvePlanType(variantId: string): Promise<string | null> {
-  const map = buildReverseVariantMap();
-  return map[variantId] || null;
-}
-
-function calcEndDate(planType: string): Date | null {
-  const now = new Date();
-  switch (planType) {
-    case "MONTHLY": return new Date(now.setMonth(now.getMonth() + 1));
-    case "YEARLY": return new Date(now.setFullYear(now.getFullYear() + 1));
-    case "LIFETIME": return null;
-    default: return null;
-  }
+function resolvePlanType(variantName: string): string {
+  const name = variantName.toLowerCase();
+  if (name.includes("lifetime") || name.includes("life")) return "LIFETIME";
+  if (name.includes("year")) return "YEARLY";
+  if (name.includes("month")) return "MONTHLY";
+  return "MONTHLY";
 }
 
 export namespace PaymentsService {
-  export async function createCheckout(userId: string, input: CreateCheckoutInput) {
+  export async function createCheckout(userId: string) {
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) throw new AppError("User not found", 404);
 
-    const variantId = VARIANT_MAP[input.planType];
-    if (!variantId) throw new AppError("Invalid plan type", 400);
-
     if (user.subscriptionStatus && user.subscriptionStatus !== "FREE") {
-      throw new AppError("You already have an active subscription. Cancel it first via Manage.", 400);
+      throw new AppError("You already have an active subscription. Cancel it first.", 400);
     }
 
-    const successUrl = input.successUrl || `${env.clientUrl}/payment/success`;
-    const cancelUrl = input.cancelUrl || `${env.clientUrl}/#pricing`;
-
+    const variantId = await LemonSqueezy.getFirstVariantId();
     const checkout = await LemonSqueezy.createCheckout(variantId, {
       email: user.email || undefined,
-      custom: { userId: user.id, planType: input.planType },
-      redirectUrl: successUrl,
+      custom: { userId: user.id },
     });
 
     return { url: checkout.url, id: checkout.id };
@@ -88,17 +59,22 @@ export namespace PaymentsService {
       const data = body?.data;
       const attrs = data?.attributes || {};
 
+      const getPlanType = (): string | null => {
+        const vName = attrs.variant_name || attrs.first_subscription_item?.variant_name || "";
+        if (!vName) return null;
+        return resolvePlanType(vName);
+      };
+
       switch (eventName) {
         case "subscription_created":
         case "subscription_updated": {
-          const variantId = String(attrs.variant_id || "");
-          const planType = await resolvePlanType(variantId);
+          const planType = getPlanType();
           if (!planType) {
-            console.error(`Unknown variant ID in ${eventName}: ${variantId}`);
+            console.error(`Unknown variant in ${eventName}`);
             return;
           }
           const status = attrs.status === "cancelled" ? "FREE" : planType;
-          const endDate = attrs.ends_at ? new Date(attrs.ends_at) : calcEndDate(planType);
+          const endDate = attrs.ends_at ? new Date(attrs.ends_at) : null;
 
           await prisma.user.update({
             where: { id: userId },
@@ -166,10 +142,10 @@ export namespace PaymentsService {
 
         case "order_created": {
           if (attrs.status === "paid") {
-            const variantId = String(attrs.first_subscription_item?.variant_id || "");
-            const planType = await resolvePlanType(variantId);
-            if (!planType) {
-              console.error(`Unknown variant ID in order_created: ${variantId}`);
+            const vName = attrs.first_subscription_item?.variant_name || "";
+            const planType = resolvePlanType(vName);
+            if (!vName) {
+              console.error("No variant name in order_created");
               sendToUser(userId, {
                 type: "payment_error",
                 data: { message: "Payment received but could not activate subscription. Contact support." },

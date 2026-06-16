@@ -1,13 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import { PaymentsService } from "./payments.service";
 import type { AuthRequest } from "../../types";
-import type { CreateCheckoutInput } from "./payments.schema";
 
 export namespace PaymentsController {
   export async function createCheckout(req: AuthRequest, res: Response, next: NextFunction) {
     try {
-      const body = req.body as CreateCheckoutInput;
-      const result = await PaymentsService.createCheckout(req.user!.userId, body);
+      const result = await PaymentsService.createCheckout(req.user!.userId);
       res.json(result);
     } catch (err) {
       next(err);

@@ -12,8 +12,6 @@ import {
   Zap,
   LogOut,
   X,
-  Radio,
-  TrendingUp,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -29,8 +27,6 @@ const links = [
   { href: "/dashboard/modules", label: "Modules", icon: BookOpen },
   { href: "/dashboard/categories", label: "Categories", icon: Tag },
   { href: "/dashboard/payments", label: "Payments", icon: CreditCard },
-  { href: "/dashboard/subscription-plans", label: "Plans", icon: Radio },
-  { href: "/dashboard/marketing", label: "Marketing", icon: TrendingUp },
   { href: "/dashboard/feedback", label: "Feedback", icon: MessageSquare },
   { href: "/dashboard/auto-generate", label: "Auto Generate", icon: Zap },
 ];

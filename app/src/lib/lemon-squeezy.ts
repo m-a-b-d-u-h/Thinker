@@ -1,5 +1,3 @@
-let pendingUrl: string | null = null;
-
 declare global {
   interface Window {
     LemonSqueezy?: {
@@ -9,22 +7,15 @@ declare global {
       };
       Refresh: () => void;
     };
-    createLemonSqueezy?: () => void;
   }
 }
 
 export function openCheckout(url: string) {
   if (window.LemonSqueezy?.Url) {
-    window.LemonSqueezy.Url.Open(url);
-    return;
+    try {
+      window.LemonSqueezy.Url.Open(url);
+      return;
+    } catch {}
   }
-  pendingUrl = url;
-  const check = setInterval(() => {
-    if (window.LemonSqueezy?.Url) {
-      window.LemonSqueezy.Url.Open(pendingUrl!);
-      pendingUrl = null;
-      clearInterval(check);
-    }
-  }, 200);
-  setTimeout(() => clearInterval(check), 10000);
+  window.open(url, "_blank");
 }

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { ReactFlow, Background, Handle, Position, useReactFlow, ReactFlowProvider } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import React from "react";
-import { CheckCircle2, Zap, Crown, ShieldCheck, Infinity, Library, Play, ArrowRight, Sparkles, Network, Clock, BookOpen, Star, Quote } from "lucide-react";
+import { CheckCircle2, Zap, Crown, ShieldCheck, Library, Play, ArrowRight, Sparkles, Network, Clock, BookOpen, Star, Quote } from "lucide-react";
 import Marquee from "react-fast-marquee";
 import Navbar from "@/components/Navbar";
 import { ModuleCard } from "@/components/ModuleCard";
@@ -141,14 +141,14 @@ export default function Home() {
     economics: { icon: Crown, desc: "Understand market forces" },
   };
 
-  const handleSubscribe = async (planType: "MONTHLY" | "YEARLY" | "LIFETIME") => {
+  const handleSubscribe = async () => {
     if (!user) {
       router.push("/login");
       return;
     }
-    setSubscribing(planType);
+    setSubscribing("loading");
     try {
-      const result = await paymentsApi.createCheckout(planType);
+      const result = await paymentsApi.createCheckout();
       if (result.url) {
         openCheckout(result.url);
       }
@@ -158,29 +158,6 @@ export default function Home() {
       setSubscribing(null);
     }
   };
-
-  const plans = [
-    {
-      name: "Free", price: "$0", period: "/ forever", desc: "Start your journey with basic access.", icon: Zap,
-      features: ["1 Free theory per day", "Basic community access", "Standard progress tracking", "Ad-supported platform"],
-      buttonText: "Start Free", popular: false, color: "#888", discount: null
-    },
-    {
-      name: "1 Month", price: "$10", period: "/ month", desc: "Full access for short-term goals.", icon: CheckCircle2,
-      features: ["Unlimited theory access", "TTS & Highlighter mode", "Interactive Implementation Path", "Ad-free experience"],
-      buttonText: "Subscribe Now", popular: false, color: "#0070f3", discount: null
-    },
-    {
-      name: "1 Year", price: "$50", period: "/ year", desc: "Commit to your growth and save.", icon: Crown,
-      features: ["Everything in 1 Month", "Completion certificates", "Offline downloads", "Early access to features"],
-      buttonText: "Choose Popular", popular: true, color: "#ffb800", discount: "Save 58%"
-    },
-    {
-      name: "Lifetime", price: "$100", period: "one-time", desc: "A lifelong investment in knowledge.", icon: Infinity,
-      features: ["Everything in 1 Year", "Exclusive mentor access", "Free digital pocketbooks", "24/7 priority support"],
-      buttonText: "Get Lifetime", popular: false, color: "#ff5f00", discount: "Best Value"
-    }
-  ];
 
   const calculateTime = (content?: string) => {
     if (!content) return "0:00";
@@ -409,91 +386,29 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Pricing Section */}
+        {/* Upgrade CTA */}
         {(!user || user.subscriptionStatus === "FREE") && (
-        <section id="pricing" className="py-32">
-          <header className="mb-16 text-center">
+        <section id="pricing" className="py-32 text-center">
+          <header className="mb-12">
             <div className="inline-flex items-center gap-1.5 text-[#ffb800] bg-[#ffb8001a] px-4 py-2 rounded-full mb-6">
               <Crown size={14} />
-              <span className="text-[0.75rem] font-bold uppercase tracking-wider">Upgrade Your Journey</span>
+              <span className="text-[0.75rem] font-bold uppercase tracking-wider">Unlock Full Access</span>
             </div>
-            <h2 className="text-6xl font-black mb-4 tracking-[-0.04em]">Invest in your <span className="text-white">Mind</span></h2>
-            <p className="text-muted text-xl max-w-[600px] mx-auto">Choose a plan that fits your goals. Cancel anytime.</p>
+            <h2 className="text-6xl font-black mb-4 tracking-[-0.04em]">Upgrade Your <span className="text-white">Mind</span></h2>
+            <p className="text-muted text-xl max-w-[600px] mx-auto">Get unlimited access to every mental model, tool, and feature.</p>
           </header>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto justify-items-center">
-              {(() => {
-                return plans.map((plan, idx) => {
-                  const Icon = plan.icon;
-
-                  return (
-                    <motion.div
-                      key={plan.name}
-                      initial={{ opacity: 0, y: 5 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: idx * 0.1 }}
-                      className={`relative flex flex-col bg-[#080808] border rounded-2xl p-6 transition-all duration-300 w-[280px] ${
-                        plan.popular
-                          ? 'bg-gradient-to-b from-[#111] to-[#050505] border-[#ffb8004d] shadow-lg shadow-[#ffb8000d] scale-[1.02] z-10'
-                          : 'border-white/5 hover:-translate-y-1.5'
-                      }`}
-                    >
-                      {plan.popular && (
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#ffb800] to-[#ff8a00] text-black text-[0.625rem] font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">
-                          Popular
-                        </div>
-                      )}
-
-                      <div className="mb-8">
-                        <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center mb-6" style={{ color: plan.color }}>
-                          <Icon size={24} />
-                        </div>
-                        <h3 className="text-2xl font-black text-white mb-2">{plan.name}</h3>
-                        <p className="text-[0.875rem] text-[#666] leading-relaxed">{plan.desc}</p>
-                      </div>
-
-                      <div className="mb-10 flex flex-col gap-1">
-                        <div className="flex items-center gap-3">
-                          <span className="text-5xl font-black text-white tracking-[-0.05em]">{plan.price}</span>
-                          {plan.discount && <span className="bg-[#00ff801a] text-[#00ff80] border border-[#00ff8033] px-2.5 py-1 rounded-full text-[0.625rem] font-bold uppercase tracking-wider">{plan.discount}</span>}
-                        </div>
-                        <span className="text-[0.875rem] text-[#555] font-semibold">{plan.period}</span>
-                      </div>
-
-                      <ul className="list-none p-0 m-0 mb-10 flex flex-col gap-4 flex-grow">
-                        {plan.features.map((feat, fIdx) => (
-                          <li key={fIdx} className="flex items-start gap-3 text-[0.875rem] text-[#888] leading-relaxed">
-                            <ShieldCheck size={16} className={`${plan.popular ? 'text-[#ffb800]' : 'text-white'} opacity-80 flex-shrink-0 mt-0.5`} />
-                            <span>{feat}</span>
-                          </li>
-                        ))}
-                      </ul>
-
-                      <button
-                        onClick={() => {
-                          if (plan.name === "Free") {
-                            router.push("/login");
-                            return;
-                          }
-                          const planTypes: Record<string, "MONTHLY" | "YEARLY" | "LIFETIME"> = {
-                            "1 Month": "MONTHLY",
-                            "1 Year": "YEARLY",
-                            Lifetime: "LIFETIME",
-                          };
-                          const mapped = planTypes[plan.name];
-                          if (mapped) handleSubscribe(mapped);
-                        }}
-                        disabled={subscribing !== null}
-                        className={`w-full py-4 border-none rounded-xl text-[0.875rem] font-bold cursor-pointer transition-all duration-200 hover:opacity-90 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed ${plan.popular ? 'bg-white text-black' : 'bg-white/5 text-white'}`}
-                      >
-                        {subscribing ? "Loading..." : plan.buttonText}
-                      </button>
-                    </motion.div>
-                  );
-                });
-              })()}
-          </div>
+          <button
+            onClick={handleSubscribe}
+            disabled={subscribing !== null}
+            className="inline-flex items-center gap-3 px-10 py-5 bg-white text-black rounded-2xl text-lg font-bold hover:opacity-90 transition-all disabled:opacity-50 shadow-lg shadow-white/10"
+          >
+            {subscribing ? (
+              <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+            ) : (
+              <><Crown size={20} />Subscribe Now</>
+            )}
+          </button>
+          <p className="text-[0.75rem] text-[#555] mt-4">Choose Monthly, Yearly, or Lifetime — cancel anytime.</p>
         </section>
         )}
 

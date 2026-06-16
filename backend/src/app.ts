@@ -4,8 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
-import multer from "multer";
-import path from "path";
+
 import { env } from "./config/env";
 import { errorHandler } from "./middleware/error-handler";
 
@@ -21,7 +20,6 @@ import actionsRoutes from "./modules/actions/actions.routes";
 import paymentsRoutes from "./modules/payments/payments.routes";
 import reviewsRoutes from "./modules/reviews/reviews.routes";
 import aiRoutes from "./modules/ai/ai.routes";
-import bufferRoutes from "./modules/buffer/buffer.routes";
 
 const app = express();
 
@@ -92,40 +90,6 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-// Static files (uploaded media)
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
-
-// Multer upload config
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, "..", "uploads"),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`);
-  },
-});
-const upload = multer({
-  storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
-  fileFilter: (_req, file, cb) => {
-    const allowed = /\.(jpg|jpeg|png|gif|webp|mp4|mov|avi|webm|mkv)$/i;
-    if (allowed.test(path.extname(file.originalname))) {
-      cb(null, true);
-    } else {
-      cb(new Error("File type not supported"));
-    }
-  },
-});
-
-// Upload endpoint
-app.post("/api/upload", upload.single("file"), (req, res) => {
-  if (!req.file) {
-    res.status(400).json({ error: { message: "No file uploaded" } });
-    return;
-  }
-  const url = `${env.publicUrl}/uploads/${req.file.filename}`;
-  res.json({ url, filename: req.file.filename });
-});
-
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoriesRoutes);
@@ -139,7 +103,6 @@ app.use("/api/actions", actionsRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/reviews", reviewsRoutes);
 app.use("/api/ai", aiRoutes);
-app.use("/api/buffer", bufferRoutes);
 
 // 404 handler
 app.use((_req, res) => {

@@ -131,6 +131,18 @@ export namespace LemonSqueezy {
     }>;
   }
 
+  let cachedFirstVariantId: string | null = null;
+
+  export async function getFirstVariantId(): Promise<string> {
+    if (cachedFirstVariantId) return cachedFirstVariantId;
+    const products = await listProducts();
+    if (products.length === 0) throw new Error("No products found");
+    const variants = await listVariants(products[0].id);
+    if (variants.length === 0) throw new Error("No variants found for product");
+    cachedFirstVariantId = variants[0].id;
+    return cachedFirstVariantId;
+  }
+
   export async function listAllVariants() {
     const products = await listProducts();
     const all: any[] = [];

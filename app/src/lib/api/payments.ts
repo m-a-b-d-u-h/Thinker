@@ -24,8 +24,8 @@ export interface PaymentHistory {
 }
 
 export const paymentsApi = {
-  createCheckout: (planType: "MONTHLY" | "YEARLY" | "LIFETIME") =>
-    api.post<CheckoutResponse>("/payments/create-checkout", { planType }).then(r => r.data),
+  createCheckout: () =>
+    api.post<CheckoutResponse>("/payments/create-checkout", {}).then(r => r.data),
 
   getSubscription: () =>
     api.get<SubscriptionInfo>("/payments/subscription").then(r => r.data),
