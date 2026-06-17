@@ -36,7 +36,8 @@ app.use(
 
 // CORS
 const allowedOrigins = [
-  env.clientUrl,
+  "https://1section.com",
+  "https://dashboard.1section.com",
   "http://localhost:3000",
   "http://localhost:3001",
   "http://127.0.0.1:3000",
