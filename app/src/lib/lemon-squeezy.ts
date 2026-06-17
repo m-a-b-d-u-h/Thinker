@@ -14,7 +14,22 @@ declare global {
 export function openCheckout(url: string) {
   if (window.LemonSqueezy?.Url) {
     try {
-      window.LemonSqueezy.Url.Open(url);
+      const u = new URL(url);
+      u.searchParams.set("dark", "1");
+      window.LemonSqueezy.Url.Open(u.toString());
+
+      const observer = new MutationObserver(() => {
+        const iframes = document.querySelectorAll<HTMLIFrameElement>(
+          'iframe[src*="lemonsqueezy"]',
+        );
+        iframes.forEach((iframe) => {
+          iframe.setAttribute("allowtransparency", "true");
+          iframe.style.background = "transparent";
+        });
+        if (iframes.length > 0) observer.disconnect();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
       return;
     } catch {}
   }
