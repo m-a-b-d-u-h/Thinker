@@ -14,9 +14,7 @@ declare global {
 export function openCheckout(url: string) {
   if (window.LemonSqueezy?.Url) {
     try {
-      const u = new URL(url);
-      u.searchParams.set("dark", "1");
-      window.LemonSqueezy.Url.Open(u.toString());
+      window.LemonSqueezy.Url.Open(url);
 
       const observer = new MutationObserver(() => {
         const iframes = document.querySelectorAll<HTMLIFrameElement>(
