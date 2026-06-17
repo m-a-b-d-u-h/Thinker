@@ -39,6 +39,7 @@ export namespace LemonSqueezy {
           },
           checkout_options: {
             embed: options.embed !== false,
+            background_color: "#00000000",
           },
           ...(options.redirectUrl ? {
             product_options: { redirect_url: options.redirectUrl },
