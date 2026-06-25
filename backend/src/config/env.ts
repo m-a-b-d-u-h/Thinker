@@ -12,7 +12,9 @@ export const env = {
   },
 
   lemonSqueezy: {
-    apiKey: process.env.LEMONSQUEEZY_API_KEY || "",
+    apiKey: process.env.NODE_ENV === "production"
+      ? (process.env.LEMONSQUEEZY_API_KEY_PROD || "")
+      : (process.env.LEMONSQUEEZY_API_KEY_DEV || process.env.LEMONSQUEEZY_API_KEY || ""),
     storeId: process.env.LEMONSQUEEZY_STORE_ID || "",
     webhookSecret: process.env.LEMONSQUEEZY_WEBHOOK_SECRET || "",
   },
