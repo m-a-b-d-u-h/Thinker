@@ -1,5 +1,10 @@
 import crypto from "crypto";
 import { env } from "./env";
+import { getLsMode } from "./ls-mode";
+
+function getApiKey() {
+  return getLsMode() === "prod" ? env.lemonSqueezy.prodApiKey : env.lemonSqueezy.devApiKey;
+}
 
 const BASE_URL = "https://api.lemonsqueezy.com/v1";
 
@@ -9,7 +14,7 @@ async function api(path: string, options: RequestInit = {}): Promise<any> {
     headers: {
       Accept: "application/vnd.api+json",
       "Content-Type": "application/vnd.api+json",
-      Authorization: `Bearer ${env.lemonSqueezy.apiKey}`,
+      Authorization: `Bearer ${getApiKey()}`,
       ...options.headers,
     },
   });

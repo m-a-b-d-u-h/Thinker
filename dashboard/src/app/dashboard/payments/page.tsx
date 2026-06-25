@@ -1,11 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import DataTable from "@/components/DataTable";
 import { RefreshCw } from "lucide-react";
 
 export default function PaymentsPage() {
+  const queryClient = useQueryClient();
+
   const { data: payments, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["admin", "payments"],
     queryFn: async () => {
@@ -13,6 +15,25 @@ export default function PaymentsPage() {
       return Array.isArray(data) ? data : data.data || [];
     },
     refetchInterval: false,
+  });
+
+  const { data: lsMode } = useQuery({
+    queryKey: ["admin", "ls-mode"],
+    queryFn: async () => {
+      const { data } = await api.get("/admin/ls-mode");
+      return data;
+    },
+    refetchInterval: false,
+  });
+
+  const toggleLs = useMutation({
+    mutationFn: async (mode: "dev" | "prod") => {
+      const { data } = await api.post("/admin/ls-mode", { mode });
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "ls-mode"] });
+    },
   });
 
   const columns = [
@@ -99,6 +120,8 @@ export default function PaymentsPage() {
     );
   }
 
+  const currentMode = lsMode?.mode || "dev";
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -106,14 +129,32 @@ export default function PaymentsPage() {
           <h2 className="text-2xl font-black text-white">Payments</h2>
           <p className="text-sm text-[#666] mt-1">View transaction history and subscription revenue.</p>
         </div>
-        <button
-          onClick={() => refetch()}
-          disabled={isFetching}
-          className="flex items-center gap-2 bg-white/5 text-sm text-[#888] px-3 py-2 rounded-xl hover:bg-white/10 transition-all disabled:opacity-50"
-        >
-          <RefreshCw size={14} className={isFetching ? "animate-spin" : ""} />
-          Refresh
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => toggleLs.mutate(currentMode === "dev" ? "prod" : "dev")}
+            disabled={toggleLs.isPending}
+            className={`flex items-center gap-2 text-sm px-3 py-2 rounded-xl transition-all disabled:opacity-50 ${
+              currentMode === "prod"
+                ? "bg-[#a855f71a] text-[#a855f7] hover:bg-[#a855f733]"
+                : "bg-[#34d3991a] text-[#34d399] hover:bg-[#34d39933]"
+            }`}
+          >
+            {toggleLs.isPending ? (
+              <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <span className="text-xs font-mono font-bold">{currentMode === "prod" ? "PROD" : "DEV"}</span>
+            )}
+            <span className="text-[10px] uppercase tracking-wider opacity-60">LS</span>
+          </button>
+          <button
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="flex items-center gap-2 bg-white/5 text-sm text-[#888] px-3 py-2 rounded-xl hover:bg-white/10 transition-all disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={isFetching ? "animate-spin" : ""} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       <DataTable
