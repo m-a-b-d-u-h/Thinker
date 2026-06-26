@@ -16,7 +16,7 @@ import { authApi } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth-context";
 import { paymentWs } from "@/lib/websocket";
 import { useModulesList } from "@/lib/query-hooks";
-import { openCheckout } from "@/lib/lemon-squeezy";
+import { openCheckout, initLemonSqueezy } from "@/lib/lemon-squeezy";
 
 // Custom Node Component for MiniPreview
 const CustomNode = ({ data }: { data: any }) => (
@@ -108,6 +108,8 @@ export default function Home() {
     paymentWs.connect(user.id);
     return () => { unsub1(); unsub2(); };
   }, [user?.id]);
+
+  useEffect(() => { initLemonSqueezy(); }, []);
 
   const { data: modulesData } = useModulesList({ limit: "4" });
 

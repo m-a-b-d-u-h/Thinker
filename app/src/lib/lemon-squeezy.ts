@@ -2,6 +2,7 @@ declare global {
   interface Window {
     createLemonSqueezy?: () => void;
     LemonSqueezy?: {
+      Setup: (options: { eventHandler: (event: { event: string; data?: any }) => void }) => void;
       Url: {
         Open: (url: string) => void;
         Close: () => void;
@@ -9,6 +10,36 @@ declare global {
       Refresh: () => void;
     };
   }
+}
+
+let initialized = false;
+
+function setupEventHandler() {
+  if (initialized) return;
+  initialized = true;
+  window.LemonSqueezy?.Setup({
+    eventHandler: (event) => {
+      if (event.event === "Checkout.Success") {
+        window.LemonSqueezy?.Url.Close();
+        window.location.href = "/payment/success";
+      }
+    },
+  });
+}
+
+export function initLemonSqueezy() {
+  if (typeof window === "undefined") return;
+
+  if (window.LemonSqueezy) {
+    setupEventHandler();
+    return;
+  }
+
+  const originalCreate = window.createLemonSqueezy;
+  window.createLemonSqueezy = () => {
+    originalCreate?.();
+    setupEventHandler();
+  };
 }
 
 export function openCheckout(url: string) {
