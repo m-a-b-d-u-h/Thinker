@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, ArrowRight, Sparkles, RefreshCw, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -14,10 +13,8 @@ const POLL_INTERVAL = 2000;
 const MAX_RETRIES = 15; // 30 seconds before showing retry
 
 export default function PaymentSuccessPage() {
-  const router = useRouter();
   const { setUser, user } = useAuth();
   const [status, setStatus] = useState<"polling" | "active" | "timeout">("polling");
-  const [countdown, setCountdown] = useState(5);
   const mountedRef = useRef(true);
   const retriesRef = useRef(0);
   const wsConnected = useRef(false);
@@ -85,16 +82,6 @@ export default function PaymentSuccessPage() {
     return () => { mountedRef.current = false; };
   }, [setUser]);
 
-  useEffect(() => {
-    if (status !== "active") return;
-    if (countdown <= 0) {
-      router.push("/models");
-      return;
-    }
-    const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [countdown, status, router]);
-
   return (
     <div className="mx-auto w-full max-w-[500px] px-6 py-24 min-h-[90vh] flex flex-col items-center justify-center text-center">
       {status === "polling" && (
@@ -126,7 +113,6 @@ export default function PaymentSuccessPage() {
               <ArrowRight size={14} />
             </Link>
           </div>
-          <p className="mt-8 text-[0.75rem] text-muted-dark">Redirecting in {countdown}s&hellip;</p>
         </>
       )}
 

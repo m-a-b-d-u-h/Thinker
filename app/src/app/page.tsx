@@ -101,8 +101,9 @@ export default function Home() {
     if (!user?.id) return;
     if (wsConnected.current === user.id) return;
     wsConnected.current = user.id;
+    const onPaymentSuccess = () => router.push("/payment/success");
     const refresh = () => authApi.getMe().then((u) => setUser(u)).catch(() => {});
-    const unsub1 = paymentWs.on("payment_success", refresh);
+    const unsub1 = paymentWs.on("payment_success", onPaymentSuccess);
     const unsub2 = paymentWs.on("subscription_updated", refresh);
     paymentWs.connect(user.id);
     return () => { unsub1(); unsub2(); };
