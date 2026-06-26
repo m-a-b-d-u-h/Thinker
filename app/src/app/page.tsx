@@ -15,7 +15,7 @@ import { paymentsApi } from "@/lib/api/payments";
 import { authApi } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth-context";
 import { paymentWs } from "@/lib/websocket";
-import { useModulesList, useCategories } from "@/lib/query-hooks";
+import { useModulesList } from "@/lib/query-hooks";
 import { openCheckout } from "@/lib/lemon-squeezy";
 
 // Custom Node Component for MiniPreview
@@ -109,7 +109,6 @@ export default function Home() {
   }, [user?.id]);
 
   const { data: modulesData } = useModulesList({ limit: "4" });
-  const { data: collections } = useCategories();
 
   const sampleProducts = modulesData?.data || [];
 
@@ -252,30 +251,6 @@ export default function Home() {
             <Link href="/models" className="inline-flex items-center gap-2 bg-transparent border border-[#222] text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/5 transition-all">
               View All Frameworks <ArrowRight size={16} />
             </Link>
-          </div>
-        </section>
-
-        {/* Browse by Collection Section */}
-        <section className="py-24">
-          <header className="mb-16 text-center">
-            <h2 className="text-5xl font-black mb-4 tracking-[-0.04em]">Browse by <span className="text-[#444]">Categories</span></h2>
-            <p className="text-muted text-lg max-w-[600px] mx-auto">Explore mental models organized by topic and field.</p>
-          </header>
-
-          <div className="flex flex-wrap justify-center gap-2">
-            {(collections || []).sort((a, b) => b.count - a.count).map((collection, idx) => (
-              <motion.span
-                key={collection.name}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.03 }}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/5 border border-white/5 text-sm text-[#888] cursor-pointer transition-all hover:bg-white/10 hover:text-white hover:border-white/10 no-underline"
-              >
-                <span className="font-semibold">{collection.name ? collection.name.charAt(0).toUpperCase() + collection.name.slice(1).replace(/-/g, ' ') : ''}</span>
-                <span className="text-[0.6875rem] text-[#555]">{collection.count}</span>
-              </motion.span>
-            ))}
           </div>
         </section>
 
