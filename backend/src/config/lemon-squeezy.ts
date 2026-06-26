@@ -28,12 +28,18 @@ async function api(path: string, options: RequestInit = {}): Promise<any> {
 }
 
 export namespace LemonSqueezy {
-  export async function createCheckout(variantId: string, options: {
+  export async function createCheckout(options: {
     email?: string;
     custom?: Record<string, string>;
     redirectUrl?: string;
     embed?: boolean;
   }) {
+    const products = await api(`/products?filter[store_id]=${env.lemonSqueezy.storeId}`);
+    const productList = products.data as any[];
+    const firstProduct = productList[0];
+    const variants = await api(`/variants?filter[product_id]=${firstProduct.id}`);
+    const variantList = variants.data as any[];
+    const variantId = variantList[0].id;
     const body: Record<string, any> = {
       data: {
         type: "checkouts",
@@ -135,18 +141,6 @@ export namespace LemonSqueezy {
         status: string;
       };
     }>;
-  }
-
-  let cachedFirstVariantId: string | null = null;
-
-  export async function getFirstVariantId(): Promise<string> {
-    if (cachedFirstVariantId) return cachedFirstVariantId;
-    const products = await listProducts();
-    if (products.length === 0) throw new Error("No products found");
-    const variants = await listVariants(products[0].id);
-    if (variants.length === 0) throw new Error("No variants found for product");
-    cachedFirstVariantId = variants[0].id;
-    return cachedFirstVariantId;
   }
 
   export async function listAllVariants() {

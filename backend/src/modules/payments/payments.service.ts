@@ -20,8 +20,7 @@ export namespace PaymentsService {
       throw new AppError("You already have an active subscription. Cancel it first.", 400);
     }
 
-    const variantId = await LemonSqueezy.getFirstVariantId();
-    const checkout = await LemonSqueezy.createCheckout(variantId, {
+    const checkout = await LemonSqueezy.createCheckout({
       email: user.email || undefined,
       custom: { userId: user.id },
     });
