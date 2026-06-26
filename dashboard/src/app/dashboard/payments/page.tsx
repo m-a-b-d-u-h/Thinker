@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import DataTable from "@/components/DataTable";
@@ -7,6 +8,7 @@ import { RefreshCw } from "lucide-react";
 
 export default function PaymentsPage() {
   const queryClient = useQueryClient();
+  const [confirmMode, setConfirmMode] = useState<"dev" | "prod" | null>(null);
 
   const { data: payments, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["admin", "payments"],
@@ -131,7 +133,7 @@ export default function PaymentsPage() {
         </div>
         <div className="flex items-center gap-3">
           <button
-            onClick={() => toggleLs.mutate(currentMode === "dev" ? "prod" : "dev")}
+            onClick={() => setConfirmMode(currentMode === "dev" ? "prod" : "dev")}
             disabled={toggleLs.isPending}
             className={`flex items-center gap-2 text-sm px-3 py-2 rounded-xl transition-all disabled:opacity-50 ${
               currentMode === "prod"
@@ -162,6 +164,44 @@ export default function PaymentsPage() {
         data={payments || []}
         searchKeys={["description", "lsOrderId", "planType", "status", "user.email", "user.name"]}
       />
+
+      {confirmMode && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className="text-lg font-bold text-white mb-2">Switch LS Environment</h3>
+            <p className="text-sm text-[#888] mb-6">
+              Are you sure you want to switch to <span className="font-bold text-white uppercase">{confirmMode}</span>?
+              {confirmMode === "prod" && (
+                <span className="block mt-2 text-[#ffb800] text-xs">This will use the production payment token.</span>
+              )}
+              {confirmMode === "dev" && (
+                <span className="block mt-2 text-[#34d399] text-xs">This will use the development/test payment token.</span>
+              )}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmMode(null)}
+                className="flex-1 px-4 py-2.5 bg-white/5 text-[#888] rounded-xl text-sm font-semibold hover:bg-white/10 transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  toggleLs.mutate(confirmMode);
+                  setConfirmMode(null);
+                }}
+                className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  confirmMode === "prod"
+                    ? "bg-[#a855f7] text-white hover:bg-[#9333ea]"
+                    : "bg-[#34d399] text-black hover:bg-[#2dd4bf]"
+                }`}
+              >
+                Switch
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
