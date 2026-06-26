@@ -170,7 +170,7 @@ export namespace PaymentsService {
               data: {
                 userId,
                 lsOrderId: String(data.id),
-                amount: attrs.total_usd ? Math.round(attrs.total_usd * 100) : 0,
+                amount: attrs.total || 0,
                 status: "SUCCEEDED",
                 planType: planType as any,
               },
