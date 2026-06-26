@@ -98,7 +98,7 @@ export namespace PaymentsService {
                 userId,
                 lsOrderId: String(data.id),
                 lsSubscriptionId: String(data.id),
-                amount: attrs.total || 0,
+                amount: attrs.first_subscription_item?.unit_price || 0,
                 status: "SUCCEEDED",
                 planType: planType as any,
               },
