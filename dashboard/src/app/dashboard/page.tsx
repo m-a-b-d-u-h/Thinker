@@ -82,27 +82,36 @@ export default function DashboardPage() {
 
   const userGrowthData = useMemo(() => {
     if (!allUsers || allUsers.length === 0) return [];
+    const sorted = [...allUsers].sort(
+      (a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
     const days: Record<string, { total: number; premium: number }> = {};
+    const dateKeys: string[] = [];
     for (let i = userGrowthDays - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const key = d.toISOString().slice(0, 10);
       days[key] = { total: 0, premium: 0 };
+      dateKeys.push(key);
     }
-    allUsers.forEach((u: any) => {
-      const d = new Date(u.createdAt);
-      const key = d.toISOString().slice(0, 10);
-      if (days[key]) {
-        days[key].total++;
-        if (u.subscriptionStatus && u.subscriptionStatus !== "FREE") {
-          days[key].premium++;
+    let runningTotal = 0;
+    let runningPremium = 0;
+    let idx = 0;
+    for (const key of dateKeys) {
+      const cutoff = new Date(key + "T23:59:59.999Z");
+      while (idx < sorted.length && new Date(sorted[idx].createdAt) <= cutoff) {
+        runningTotal++;
+        if (sorted[idx].subscriptionStatus && sorted[idx].subscriptionStatus !== "FREE") {
+          runningPremium++;
         }
+        idx++;
       }
-    });
-    return Object.entries(days).map(([date, data]) => ({
+      days[key] = { total: runningTotal, premium: runningPremium };
+    }
+    return dateKeys.map((date) => ({
       date,
-      free: data.total - data.premium,
-      premium: data.premium,
+      free: days[date].total - days[date].premium,
+      premium: days[date].premium,
     }));
   }, [allUsers, userGrowthDays]);
 
