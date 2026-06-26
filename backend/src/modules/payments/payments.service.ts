@@ -90,20 +90,6 @@ export namespace PaymentsService {
             data: { subscriptionStatus: status },
           });
 
-          if (eventName === "subscription_created") {
-            await prisma.payment.upsert({
-              where: { lsOrderId: String(data.id) },
-              update: { status: "SUCCEEDED" },
-              create: {
-                userId,
-                lsOrderId: String(data.id),
-                lsSubscriptionId: String(data.id),
-                amount: attrs.first_subscription_item?.unit_price || 0,
-                status: "SUCCEEDED",
-                planType: planType as any,
-              },
-            });
-          }
           break;
         }
 
@@ -141,7 +127,7 @@ export namespace PaymentsService {
 
         case "order_created": {
           if (attrs.status === "paid") {
-            const vName = attrs.first_subscription_item?.variant_name || "";
+            const vName = attrs.first_order_item?.variant_name || attrs.variant_name || "";
             const planType = resolvePlanType(vName);
             if (!vName) {
               console.error("No variant name in order_created");
@@ -170,7 +156,7 @@ export namespace PaymentsService {
               data: {
                 userId,
                 lsOrderId: String(data.id),
-                amount: attrs.total || 0,
+                amount: attrs.total_usd || 0,
                 status: "SUCCEEDED",
                 planType: planType as any,
               },
