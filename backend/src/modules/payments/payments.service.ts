@@ -78,12 +78,20 @@ export namespace PaymentsService {
           await prisma.user.update({
             where: { id: userId },
             data: {
-              lsCustomerId: String(attrs.customer_id || ""),
               lsSubscriptionId: String(data.id || ""),
               subscriptionStatus: status as any,
               subscriptionEnd: endDate,
             },
           });
+
+          try {
+            await prisma.user.update({
+              where: { id: userId },
+              data: { lsCustomerId: String(attrs.customer_id || "") },
+            });
+          } catch (e: any) {
+            if (e?.code !== "P2002") throw e;
+          }
 
           sendToUser(userId, {
             type: "subscription_updated",
@@ -141,11 +149,19 @@ export namespace PaymentsService {
             await prisma.user.update({
               where: { id: userId },
               data: {
-                lsCustomerId: String(attrs.customer_id || ""),
                 subscriptionStatus: planType as any,
                 subscriptionEnd: null,
               },
             });
+
+            try {
+              await prisma.user.update({
+                where: { id: userId },
+                data: { lsCustomerId: String(attrs.customer_id || "") },
+              });
+            } catch (e: any) {
+              if (e?.code !== "P2002") throw e;
+            }
 
             sendToUser(userId, {
               type: "payment_success",
