@@ -4,7 +4,6 @@ dotenv.config();
 export const env = {
   port: parseInt(process.env.PORT || "4000", 10),
   nodeEnv: process.env.NODE_ENV || "development",
-  clientUrl: process.env.CLIENT_URL || "http://localhost:3000",
 
   jwt: {
     secret: process.env.JWT_SECRET || "dev-secret-change-in-production",
