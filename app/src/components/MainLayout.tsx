@@ -16,11 +16,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         {children}
       </main>
 
-       <footer className="border-t border-border-subtle mt-auto py-8 pb-14 md:pb-8">
-          <div className="mx-auto w-full max-w-[1200px] px-6 text-center text-[0.875rem] text-muted-dark">
-            1section.com
-          </div>
-       </footer>
+        {isLanding && (
+          <footer className="border-t border-border-subtle mt-auto py-8 pb-14 md:pb-8">
+            <div className="mx-auto w-full max-w-[1200px] px-6 text-center text-[0.875rem] text-muted-dark">
+              1section.com
+            </div>
+          </footer>
+        )}
     </div>
   );
 }
