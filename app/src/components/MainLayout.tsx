@@ -9,10 +9,10 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const isLanding = pathname === "/";
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex h-dvh flex-col">
       {!isLanding && <Navbar />}
       
-       <main className="flex-1 w-full pb-14 md:pb-0">
+       <main className="flex-1 w-full pb-14 md:pb-0 overflow-y-auto">
         {children}
       </main>
 

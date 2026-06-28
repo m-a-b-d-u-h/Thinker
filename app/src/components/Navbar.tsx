@@ -11,7 +11,6 @@ import {
   BookOpen,
   Target,
   User,
-  ChevronLeft,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import UserPopup from "@/components/UserPopup";
@@ -32,15 +31,6 @@ export default function Navbar() {
   const pathSegments = pathname.split("/").filter(Boolean);
   const isModelPage = pathname.startsWith("/models/") && pathSegments.length >= 2;
   const isModelDetailPage = isModelPage && pathSegments.length === 2;
-  const slug = pathSegments.length >= 2 ? pathSegments[1] : "";
-
-  const modelTabs = [
-    { name: "Learning", path: `/models/${slug}` },
-    { name: "Path", path: `/models/${slug}/path` },
-    { name: "Reflection", path: `/models/${slug}/reflection` },
-    { name: "Action", path: `/models/${slug}/action` },
-    { name: "Quiz", path: `/models/${slug}/quiz` },
-  ];
 
   return (
     <>
@@ -82,35 +72,7 @@ export default function Navbar() {
           </div>
         </div>
 
-        {isModelPage && (
-          <div className="border-t border-border-subtle">
-            <div className="mx-auto max-w-[1100px] px-3 md:px-4">
-              <div className="flex items-center justify-between gap-0.5 md:gap-1 overflow-x-auto scrollbar-thin py-1.5 md:py-2">
-                <Link href="/models" className="shrink-0 flex items-center gap-1 text-muted-dark no-underline text-[0.875rem] hover:text-fg transition-colors">
-                  <ChevronLeft size={14} className="md:size-4" />
-                  <span className="hidden sm:inline text-[0.75rem] md:text-[0.8125rem]">Back to Library</span>
-                  <span className="sm:hidden text-[0.75rem]">Back</span>
-                </Link>
-                <div className="flex items-center gap-0.5 md:gap-1">
-                {modelTabs.map((tab) => {
-                  const isActive = pathname === tab.path;
-                  return (
-                    <Link
-                      key={tab.path}
-                      href={tab.path}
-                      className={`shrink-0 px-2 md:px-3 py-1 md:py-1.5 no-underline text-[0.7rem] md:text-[0.8125rem] rounded-lg transition-all ${
-                        isActive ? 'text-fg bg-bg-elevated' : 'text-muted-dark hover:text-fg hover:bg-bg-elevated'
-                      }`}
-                    >
-                      {tab.name}
-                    </Link>
-                  );
-                })}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+
       </nav>
 
       {!isModelDetailPage && (

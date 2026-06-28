@@ -84,7 +84,20 @@ export namespace PaymentsService {
         }
 
         default: {
-          if (!userId) break;
+          // subscription lifecycle events (cancelled/expired/updated) may not carry
+          // custom_data.userId — look up by lsSubscriptionId from data.id instead
+          let effectiveUserId = userId;
+          if (!effectiveUserId) {
+            const subId = String(attrs.first_subscription?.id || body?.data?.id || "");
+            if (subId) {
+              const subUser = await prisma.user.findFirst({
+                where: { lsSubscriptionId: subId },
+                select: { id: true },
+              });
+              if (subUser) effectiveUserId = subUser.id;
+            }
+          }
+          if (!effectiveUserId) break;
 
           const getPlanType = (): string | null => {
             const vName = attrs.variant_name || "";
@@ -100,11 +113,12 @@ export namespace PaymentsService {
                 console.error(`Unknown variant in ${eventName}`);
                 break;
               }
-              const status = attrs.status === "cancelled" ? "FREE" : planType;
+              const isExpiredOrCancelled = attrs.status === "cancelled" || attrs.status === "expired";
+              const status = isExpiredOrCancelled ? "FREE" : planType;
               const endDate = attrs.ends_at ? new Date(attrs.ends_at) : null;
 
               await prisma.user.update({
-                where: { id: userId },
+                where: { id: effectiveUserId },
                 data: {
                   lsSubscriptionId: String(data.id || ""),
                   subscriptionStatus: status as any,
@@ -112,16 +126,7 @@ export namespace PaymentsService {
                 },
               });
 
-              try {
-                await prisma.user.update({
-                  where: { id: userId },
-                  data: { lsCustomerId: String(attrs.customer_id || "") },
-                });
-              } catch (e: any) {
-                if (e?.code !== "P2002") throw e;
-              }
-
-              sendToUser(userId, {
+              sendToUser(effectiveUserId, {
                 type: "subscription_updated",
                 data: { subscriptionStatus: status },
               });
@@ -131,10 +136,10 @@ export namespace PaymentsService {
 
             case "subscription_cancelled": {
               await prisma.user.update({
-                where: { id: userId },
+                where: { id: effectiveUserId },
                 data: { subscriptionStatus: "FREE", subscriptionEnd: null },
               });
-              sendToUser(userId, {
+              sendToUser(effectiveUserId, {
                 type: "subscription_updated",
                 data: { subscriptionStatus: "FREE" },
               });
@@ -143,10 +148,10 @@ export namespace PaymentsService {
 
             case "subscription_expired": {
               await prisma.user.update({
-                where: { id: userId },
+                where: { id: effectiveUserId },
                 data: { subscriptionStatus: "FREE", subscriptionEnd: null },
               });
-              sendToUser(userId, {
+              sendToUser(effectiveUserId, {
                 type: "subscription_updated",
                 data: { subscriptionStatus: "FREE" },
               });
@@ -154,7 +159,7 @@ export namespace PaymentsService {
             }
 
             case "subscription_payment_failed": {
-              sendToUser(userId, {
+              sendToUser(effectiveUserId, {
                 type: "payment_failed",
                 data: { message: "Subscription payment failed" },
               });
@@ -167,31 +172,41 @@ export namespace PaymentsService {
                 const planType = resolvePlanType(vName);
                 if (!vName) {
                   console.error("No variant name in order_created");
-                  sendToUser(userId, {
+                  sendToUser(effectiveUserId, {
                     type: "payment_error",
                     data: { message: "Payment received but could not activate subscription. Contact support." },
                   });
                   break;
                 }
 
+                const subId = String(attrs.first_subscription?.id || "");
+
                 await prisma.user.update({
-                  where: { id: userId },
+                  where: { id: effectiveUserId },
                   data: {
                     subscriptionStatus: planType as any,
                     subscriptionEnd: null,
+                    lsSubscriptionId: subId,
                   },
                 });
 
-                try {
-                  await prisma.user.update({
-                    where: { id: userId },
-                    data: { lsCustomerId: String(attrs.customer_id || "") },
+                if (attrs.customer_id) {
+                  const cid = String(attrs.customer_id);
+                  const user = await prisma.user.findUnique({
+                    where: { id: effectiveUserId },
+                    select: { lsCustomerId: true },
                   });
-                } catch (e: any) {
-                  if (e?.code !== "P2002") throw e;
+                  if (!user?.lsCustomerId) {
+                    await prisma.user.update({
+                      where: { id: effectiveUserId },
+                      data: { lsCustomerId: cid },
+                    }).catch((e: any) => {
+                      if (e?.code !== "P2002") throw e;
+                    });
+                  }
                 }
 
-                sendToUser(userId, {
+                sendToUser(effectiveUserId, {
                   type: "payment_success",
                   data: { subscriptionStatus: planType },
                 });
@@ -200,7 +215,7 @@ export namespace PaymentsService {
                   where: { lsOrderId: String(data.id) },
                   update: { status: "SUCCEEDED" },
                   create: {
-                    userId,
+                    userId: effectiveUserId,
                     lsOrderId: String(data.id),
                     amount: attrs.total_usd || 0,
                     status: "SUCCEEDED",

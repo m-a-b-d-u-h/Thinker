@@ -201,7 +201,7 @@ export default function ProductsPage() {
       {historyModules.length === 0 && (
         <header className="mb-16 max-w-[800px]">
           <h1 className="text-6xl font-black mb-4 tracking-[-0.04em] leading-none">
-            Master Your <span className="text-muted-dark">Thinking Library</span>
+            Master Your <span className="text-muted-light">Thinking Library</span>
           </h1>
           <p className="text-muted text-lg leading-relaxed">
             Visual mental models and immersive audio narration for deep learning.
@@ -216,7 +216,7 @@ export default function ProductsPage() {
               <Clock size={14} />
               <span className="text-[0.75rem] font-bold uppercase tracking-[0.05em]">Continue Learning</span>
             </div>
-            <h2 className="text-3xl font-black tracking-[-0.04em]">Your Learning <span className="text-muted-dark">History</span></h2>
+            <h2 className="text-3xl font-black tracking-[-0.04em]">Your Learning <span className="text-muted-light">History</span></h2>
           </div>
 
           <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-5">
@@ -277,7 +277,7 @@ export default function ProductsPage() {
 
       <div className="mb-12">
         <div className="mb-5">
-          <p className="text-[0.6875rem] font-bold text-muted-dark uppercase tracking-[0.1em] mb-3">Categories</p>
+          <p className="text-[0.6875rem] font-bold text-muted uppercase tracking-[0.1em] mb-3">Categories</p>
 
           <div className="flex items-center gap-2 flex-wrap">
             {categories.map(cat => (

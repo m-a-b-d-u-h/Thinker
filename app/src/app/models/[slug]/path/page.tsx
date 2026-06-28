@@ -1,34 +1,87 @@
 "use client";
 
 import { useRef, useEffect, useState, useMemo, useCallback } from "react";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import React from "react";
 import { ReactFlow, Handle, Position } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useModule } from "@/lib/query-hooks";
+import { BookOpen, Headphones, HelpCircle, CheckCircle2, MessageSquare } from "lucide-react";
 
-const CustomNode = ({ data }: { data: any }) => (
-  <div className="relative">
-    <div className={`rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap transition-all duration-200 ${
-      data.isCompleted
-        ? 'bg-green-950 border border-green-500 text-green-400'
-        : data.highlighted
-          ? 'bg-bg/90 text-fg border border-fg/40 shadow-[0_0_14px_rgba(255,255,255,0.2)]'
-          : data.dimmed
-            ? 'bg-bg/40 text-muted-dark border border-border opacity-25'
-            : 'bg-bg/90 text-fg border border-border backdrop-blur-sm'
-    }`}>
-      <Handle type="target" position={Position.Top} className="!bg-muted-dark !border-0 !w-1.5 !h-1.5" isConnectable={false} />
-      {data.label}
-      <Handle type="source" position={Position.Bottom} className="!bg-muted-dark !border-0 !w-1.5 !h-1.5" isConnectable={false} />
+const CustomNode = ({ data, id }: { data: any; id: string }) => {
+  const router = useRouter();
+
+  return (
+    <div className="relative">
+      {/* Description popup above node */}
+      <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-bg-elevated/10 backdrop-blur-[3px] border border-border/60 shadow-lg shadow-black/20 transition-opacity duration-150 w-[180px] sm:w-[220px] ${
+        data.showTooltip ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+      }`}>
+        <div className="text-[10px] text-muted/90 leading-[1.6]">{data.description || "This section covers the key concepts and practical steps needed to understand and apply this topic."}</div>
+        <div className="absolute top-full left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-bg-elevated/10 border-r border-b border-border/60 rotate-45 -mt-[3px]" />
+      </div>
+
+      {/* Node */}
+      <div className={`rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap transition-all duration-200 ${
+        data.isCompleted
+          ? 'bg-green-950 border border-green-500 text-green-400'
+          : data.highlighted
+            ? 'bg-bg/90 text-fg border border-fg/40 shadow-[0_0_14px_rgba(255,255,255,0.2)]'
+            : data.dimmed
+              ? 'bg-bg/40 text-muted-dark border border-border opacity-25'
+              : 'bg-bg/90 text-fg border border-border backdrop-blur-[3px]'
+      }`}>
+        <Handle type="target" position={Position.Top} className="!bg-muted-dark !border-0 !w-1.5 !h-1.5" isConnectable={false} />
+        {data.label}
+        <Handle type="source" position={Position.Bottom} className="!bg-muted-dark !border-0 !w-1.5 !h-1.5" isConnectable={false} />
+      </div>
+
+      {/* Buttons below node */}
+      <div className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-2 rounded-lg bg-bg-elevated/10 backdrop-blur-[3px] border border-border/60 shadow-lg shadow-black/20 transition-opacity duration-150 w-[180px] sm:w-[220px] ${
+        data.showTooltip ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+      }`}>
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-bg-elevated/10 border-l border-t border-border/60 rotate-45 -mb-[3px]" />
+        <div className="grid grid-cols-2 gap-1">
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push(`/models/${data.slug}/path/read/${id}`); }}
+            className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-medium text-muted/80 bg-bg/20 border border-border/50 hover:text-fg hover:bg-bg/40 hover:border-border transition-all cursor-pointer"
+          >
+            <BookOpen className="w-3 h-3" />
+            Read
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push(`/models/${data.slug}/path/audio/${id}`); }}
+            className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-medium text-muted/80 bg-bg/20 border border-border/50 hover:text-fg hover:bg-bg/40 hover:border-border transition-all cursor-pointer"
+          >
+            <Headphones className="w-3 h-3" />
+            Audio
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push(`/models/${data.slug}/path/quiz/${id}`); }}
+            className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-medium text-muted/80 bg-bg/20 border border-border/50 hover:text-fg hover:bg-bg/40 hover:border-border transition-all cursor-pointer"
+          >
+            <HelpCircle className="w-3 h-3" />
+            Quiz
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push(`/models/${data.slug}/path/reflection/${id}`); }}
+            className="flex items-center justify-center gap-1 px-2 py-1.5 rounded-md text-[10px] font-medium text-muted/80 bg-bg/20 border border-border/50 hover:text-fg hover:bg-bg/40 hover:border-border transition-all cursor-pointer"
+          >
+            <MessageSquare className="w-3 h-3" />
+            Reflect
+          </button>
+        </div>
+        <button
+          onClick={(e) => { e.stopPropagation(); data.onComplete?.(); }}
+          className="w-full mt-1.5 flex items-center justify-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold text-green-400/90 bg-green-950/20 border border-green-500/40 hover:bg-green-950/40 hover:border-green-500/60 transition-all cursor-pointer"
+        >
+          <CheckCircle2 className="w-3 h-3" />
+          Done
+        </button>
+      </div>
     </div>
-    <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-bg-elevated/50 backdrop-blur-md border border-border shadow-lg shadow-black/40 transition-opacity duration-150 pointer-events-none w-[260px] sm:w-[360px] ${
-      data.showTooltip ? 'opacity-100' : 'opacity-0'
-    }`}>
-      <div className="text-[10px] text-muted leading-relaxed">{data.description || "This section covers the key concepts and practical steps needed to understand and apply this topic."}</div>
-    </div>
-  </div>
-);
+  );
+};
 
 const nodeTypes = { custom: CustomNode };
 
@@ -85,9 +138,32 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
     if (!module) return [];
     return module.nodes.map((n: any) => ({
       ...n,
-      data: { ...n.data },
+      data: {
+        ...n.data,
+        slug: module.slug,
+        onAudio: () => {
+          const title = n.data?.label || '';
+          const desc = n.data?.description || '';
+          speakText(`${title}. ${desc}`);
+        },
+        onComplete: () => {
+          const instance = rf.current;
+          if (!instance) return;
+          instance.setNodes((nds: any[]) =>
+            nds.map((nd: any) => {
+              if (nd.id === n.id) {
+                return {
+                  ...nd,
+                  data: { ...nd.data, isCompleted: !nd.data.isCompleted },
+                };
+              }
+              return nd;
+            })
+          );
+        },
+      },
     }));
-  }, [module]);
+  }, [module, speakText]);
 
   const defaultEdges = useMemo(() => {
     if (!module) return [];
@@ -131,18 +207,15 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
     }
 
     instance.setNodes((nds: any[]) =>
-      nds.map((n) => {
-        const original = module.nodes.find((mn: any) => mn.id === n.id);
-        return {
-          ...n,
-          data: {
-            ...(original?.data || n.data),
-            highlighted: cNodes ? cNodes.has(n.id) : false,
-            dimmed: cNodes ? !cNodes.has(n.id) : false,
-            showTooltip: nodeId === n.id,
-          },
-        };
-      })
+      nds.map((n) => ({
+        ...n,
+        data: {
+          ...n.data,
+          highlighted: cNodes ? cNodes.has(n.id) : false,
+          dimmed: cNodes ? !cNodes.has(n.id) : false,
+          showTooltip: nodeId === n.id,
+        },
+      }))
     );
 
     instance.setEdges((eds: any[]) =>
@@ -190,7 +263,7 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
   if (!module) notFound();
 
   return (
-    <div className="w-full h-dvh bg-bg relative overflow-hidden">
+    <div className="w-full h-full bg-bg relative overflow-hidden">
       <div className="absolute inset-0">
         <ReactFlow
           defaultNodes={defaultNodes}
@@ -206,7 +279,7 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
       </div>
 
       <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-bg via-bg/80 to-transparent pt-2 pb-2 px-6 text-center pointer-events-none">
-        <h1 className="text-3xl font-bold text-fg mt-6 leading-tight pointer-events-auto">Implementation Path: {module.title}</h1>
+        <h1 className="text-3xl font-bold text-fg mt-6 leading-tight pointer-events-auto">{module.title}</h1>
         <p className="text-base text-muted mt-2 pointer-events-auto">Click a node to explore connections</p>
       </div>
     </div>
