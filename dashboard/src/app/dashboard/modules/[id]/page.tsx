@@ -17,15 +17,13 @@ import ModuleContent from "@/components/ModuleContent";
 import ModuleForm, { type ModuleFormData } from "@/components/ModuleForm";
 
 function toNodeForm(n: any) {
-  if (n.positionX != null) {
-    return { id: n.id, positionX: n.positionX, positionY: n.positionY, label: n.label, description: n.description || n.data?.description, type: n.type || "custom" };
-  }
+  const base = n.positionX != null
+    ? { positionX: n.positionX, positionY: n.positionY, label: n.label, description: n.description || n.data?.description }
+    : { positionX: n.position?.x ?? 0, positionY: n.position?.y ?? 0, label: n.data?.label ?? n.label ?? "", description: n.data?.description || n.description };
   return {
     id: n.id,
-    positionX: n.position?.x ?? 0,
-    positionY: n.position?.y ?? 0,
-    label: n.data?.label ?? n.label ?? "",
-    description: n.data?.description || n.description,
+    ...base,
+    content: n.data?.content || n.content,
     type: n.type || "custom",
   };
 }
@@ -42,7 +40,7 @@ export default function ModuleDetailPage() {
   const [aiLoading, setAiLoading] = useState<string | null>(null);
 
   const [form, setForm] = useState<ModuleFormData>({
-    title: "", slug: "", description: "", category: "", content: "",
+    title: "", slug: "", description: "", category: "",
     isPremium: true, isDraft: true, nodes: [], edges: [], questions: [],
   });
 
@@ -62,7 +60,6 @@ export default function ModuleDetailPage() {
         slug: mod.slug || "",
         description: mod.description || "",
         category: mod.category || "",
-        content: mod.content || "",
         isPremium: mod.isPremium || false,
         isDraft: mod.isDraft ?? false,
         nodes: (mod.nodes || []).map(toNodeForm),
@@ -80,7 +77,7 @@ export default function ModuleDetailPage() {
     mutationFn: async (data: ModuleFormData) => {
       const { data: res } = await api.post("/modules", {
         title: data.title, slug: data.slug, description: data.description,
-        category: data.category, content: data.content, isPremium: data.isPremium, isDraft: data.isDraft,
+        category: data.category, isPremium: data.isPremium, isDraft: data.isDraft,
         nodes: data.nodes, edges: data.edges, questions: data.questions,
       });
       return res;
@@ -100,7 +97,7 @@ export default function ModuleDetailPage() {
     mutationFn: async (data: ModuleFormData) => {
       const { data: res } = await api.patch(`/modules/${slug}`, {
         title: data.title, slug: data.slug, description: data.description,
-        category: data.category, content: data.content, isPremium: data.isPremium, isDraft: data.isDraft,
+        category: data.category, isPremium: data.isPremium, isDraft: data.isDraft,
         nodes: data.nodes, edges: data.edges, questions: data.questions,
       });
       return res;
@@ -147,20 +144,16 @@ export default function ModuleDetailPage() {
     else { updateMutation.mutate(form); }
   };
 
-  const handleAiGenerate = useCallback(async (mode: "content" | "questions" | "graph") => {
+  const handleAiGenerate = useCallback(async (mode: "questions" | "graph") => {
     setAiLoading(mode);
     try {
       const { data } = await api.post("/ai/generate", {
         mode,
         title: form.title,
         description: form.description,
-        content: form.content,
       });
 
-      if (mode === "content" && data.content) {
-        updateField("content", data.content);
-        toast.success("Content generated");
-      } else if (mode === "questions" && data.questions) {
+      if (mode === "questions" && data.questions) {
         updateField("questions", data.questions);
         toast.success(`${data.questions.length} questions generated`);
       } else if (mode === "graph") {
@@ -174,7 +167,7 @@ export default function ModuleDetailPage() {
     } finally {
       setAiLoading(null);
     }
-  }, [form.title, form.description, form.content, updateField]);
+  }, [form.title, form.description, updateField]);
 
   if (isLoading) {
     return (
@@ -199,11 +192,9 @@ export default function ModuleDetailPage() {
   const viewNodes = isNew ? [] : sourceNodes.map((n: any) => ({
     id: n.id,
     position: n.position || { x: n.positionX, y: n.positionY },
-    data: { label: n.data?.label || n.label, description: n.data?.description || n.description },
+    data: { label: n.data?.label || n.label, description: n.data?.description || n.description, content: n.data?.content || n.content },
     type: n.type || "custom",
   }));
-
-  const graphEnabled = viewNodes.length > 0;
 
   return (
     <div className="max-w-[960px] space-y-6">
@@ -291,27 +282,25 @@ export default function ModuleDetailPage() {
           </div>
 
           <article>
-            <ModuleContent title={mod.title} description={mod.description} content={mod.content || ""} />
+            <ModuleContent title={mod.title} description={mod.description} nodes={mod.nodes || []} />
           </article>
 
-          {graphEnabled && (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-sm font-bold text-white">Knowledge Graph</h3>
-                  <p className="text-xs text-white/30 mt-0.5">Visual overview of module structure</p>
-                </div>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-white">Knowledge Graph</h3>
+                <p className="text-xs text-white/30 mt-0.5">Visual overview of module structure</p>
               </div>
-              <ModuleGraph
-                nodes={viewNodes}
-                edges={mod.edges || []}
-                nodeList={form.nodes}
-                onNodesChange={(nodes) => updateField("nodes", nodes)}
-                edgeList={form.edges}
-                onEdgesChange={(edges) => updateField("edges", edges)}
-              />
             </div>
-          )}
+            <ModuleGraph
+              nodes={viewNodes}
+              edges={mod.edges || []}
+              nodeList={form.nodes}
+              onNodesChange={(nodes) => updateField("nodes", nodes)}
+              edgeList={form.edges}
+              onEdgesChange={(edges) => updateField("edges", edges)}
+            />
+          </div>
 
           {mod.questions && mod.questions.length > 0 && (
             <div>

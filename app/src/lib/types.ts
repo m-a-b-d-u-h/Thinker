@@ -9,7 +9,7 @@ export type Category =
 export interface ReactFlowNode {
   id: string;
   position: { x: number; y: number };
-  data: { label: string; description?: string };
+  data: { label: string; nodeSlug?: string; description?: string; content?: string[]; isCompleted?: boolean };
   type?: string;
   style?: Record<string, string>;
 }
@@ -43,7 +43,6 @@ export interface Module {
   title: string;
   description: string;
   category: string;
-  content?: string;
   isPremium: boolean;
   createdAt: string;
   updatedAt: string;
@@ -60,7 +59,6 @@ export interface ModuleListItem {
   title: string;
   description: string;
   category: string;
-  content?: string;
   isPremium: boolean;
   createdAt: string;
   updatedAt: string;
@@ -149,7 +147,6 @@ export interface FavoriteItem {
   title: string;
   description: string;
   category: string;
-  content?: string;
   isPremium?: boolean;
   nodes: ReactFlowNode[];
   edges: ReactFlowEdge[];

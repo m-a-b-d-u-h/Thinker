@@ -158,7 +158,11 @@ export namespace ModulesService {
 
     const result = {
       data: modules.map((m: any) => {
-        const words = (m.content || "").split(/\s+/).filter(Boolean).length;
+        const nodeWords = m.nodes.reduce((sum: number, n: any) => {
+          const content = n.content ? (JSON.parse(n.content) as string[]).join(" ") : "";
+          return sum + content.split(/\s+/).filter(Boolean).length;
+        }, 0);
+        const words = nodeWords || 0;
         return {
           id: m.id,
           slug: m.slug,
@@ -175,7 +179,6 @@ export namespace ModulesService {
           isFavorited: query.userId ? m.favorites?.length > 0 : false,
           isDailyFree: m.slug === dailyFreeSlug,
           favorites: undefined,
-          content: undefined,
           listenMin: Math.max(1, Math.ceil(words / 150)),
           readMin: Math.max(1, Math.ceil(words / 240)),
         };
@@ -251,10 +254,24 @@ export namespace ModulesService {
       });
       if (!fullModule) throw new NotFoundError("Module");
 
+      const nodeProgress = userId
+        ? await prisma.userProgress.findMany({
+            where: { userId, moduleId: module.id, completed: true },
+            select: { nodeId: true },
+          })
+        : [];
+      const completedNodeIds = new Set(nodeProgress.map((p) => p.nodeId));
+
       return {
         ...fullModule,
         isPremium: module.isPremium,
-        nodes: fullModule.nodes.map(transformNode),
+        nodes: fullModule.nodes.map((n) => {
+          const transformed = transformNode(n);
+          return {
+            ...transformed,
+            data: { ...transformed.data, isCompleted: completedNodeIds.has(transformed.data.nodeSlug || n.id) },
+          };
+        }),
         edges: fullModule.edges.map(transformEdge),
       };
     }
@@ -273,7 +290,6 @@ export namespace ModulesService {
       edges: module.edges.map(transformEdge),
       _count: { questions: module._count?.questions || 0 },
       locked: true,
-      content: undefined,
       questions: undefined,
     };
   }
@@ -330,10 +346,9 @@ export namespace ModulesService {
     title: string;
     description: string;
     category: string;
-    content: string;
     isPremium?: boolean;
     isDraft?: boolean;
-    nodes?: { id: string; positionX: number; positionY: number; label: string; description?: string; type?: string; style?: any }[];
+    nodes?: { id: string; positionX: number; positionY: number; label: string; slug?: string; description?: string; content?: string[]; type?: string; style?: any }[];
     edges?: { id: string; source: string; target: string; label?: string; animated?: boolean }[];
     questions?: { question: string; options: string[]; correctAnswer: number; explanation?: string }[];
   }) {
@@ -348,11 +363,10 @@ export namespace ModulesService {
         title: data.title,
         description: data.description,
         category: data.category,
-        content: data.content,
         isPremium: data.isPremium ?? true,
         isDraft: data.isDraft ?? true,
         nodes: data.nodes?.length
-          ? { create: data.nodes.map((n) => ({ id: n.id, positionX: n.positionX, positionY: n.positionY, label: n.label, description: n.description, type: n.type ?? "custom", style: n.style })) }
+          ? { create: data.nodes.map((n) => ({ id: n.id, positionX: n.positionX, positionY: n.positionY, label: n.label, slug: n.slug, description: n.description, content: n.content ? JSON.stringify(n.content) : undefined, type: n.type ?? "custom", style: n.style })) }
           : undefined,
         edges: data.edges?.length
           ? { create: data.edges.map((e) => ({ id: e.id, source: e.source, target: e.target, label: e.label, animated: e.animated ?? true })) }
@@ -375,7 +389,7 @@ export namespace ModulesService {
       content?: string;
       isPremium?: boolean;
       isDraft?: boolean;
-      nodes?: { id: string; positionX: number; positionY: number; label: string; description?: string; type?: string; style?: any }[];
+      nodes?: { id: string; positionX: number; positionY: number; label: string; slug?: string; description?: string; content?: string[]; type?: string; style?: any }[];
       edges?: { id: string; source: string; target: string; label?: string; animated?: boolean }[];
       questions?: { question: string; options: string[]; correctAnswer: number; explanation?: string }[];
     }
@@ -388,7 +402,6 @@ export namespace ModulesService {
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.category !== undefined) updateData.category = data.category;
-    if (data.content !== undefined) updateData.content = data.content;
     if (data.isPremium !== undefined) updateData.isPremium = data.isPremium;
     if (data.isDraft !== undefined) updateData.isDraft = data.isDraft;
     if (data.slug !== undefined) {
@@ -407,7 +420,9 @@ export namespace ModulesService {
             positionX: n.positionX,
             positionY: n.positionY,
             label: n.label,
+            slug: n.slug,
             description: n.description,
+            content: n.content ? JSON.stringify(n.content) : undefined,
             type: n.type ?? "custom",
             style: n.style,
           })),

@@ -64,7 +64,6 @@ model Module {
   title       String
   description String
   category    String
-  content     String
   isPremium   Boolean  @default(true)
   isDraft     Boolean  @default(true)
   createdAt   DateTime @default(now())
@@ -88,7 +87,9 @@ model ModuleNode {
   positionX Float
   positionY Float
   label     String
+  slug      String?
   description String?
+  content   String?
   type      String @default("custom")
   style     Json?
 
@@ -121,6 +122,7 @@ model UserProgress {
   id                String   @id @default(cuid())
   userId            String
   moduleId          String
+  nodeId            String
   listeningProgress Float    @default(0)
   readingProgress   Float    @default(0)
   scrollPosition    Float    @default(0)
@@ -132,7 +134,7 @@ model UserProgress {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, moduleId])
+  @@unique([userId, moduleId, nodeId])
 }
 
 model Reflection {

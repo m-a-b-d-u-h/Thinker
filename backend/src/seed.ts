@@ -79,6 +79,21 @@ async function main() {
     }));
   }
 
+  function toSlug(text: string): string {
+    return text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+  }
+
+  function ensureUniqueSlugs(items: { label: string }[]): { slug: string }[] {
+    const seen = new Map<string, number>();
+    return items.map((item) => {
+      const base = toSlug(item.label);
+      if (!base) return { slug: "node" };
+      const count = seen.get(base) || 0;
+      seen.set(base, count + 1);
+      return { slug: count === 0 ? base : `${base}-${count}` };
+    });
+  }
+
   function nodeDescription(label: string): string {
     const templates = [
       `This section covers ${label.toLowerCase()} and the key ideas you need to understand.`,
@@ -88,8 +103,38 @@ async function main() {
     return templates[label.length % templates.length];
   }
 
-  function generateGraph(title: string, content: string) {
-    const headings = content.split('\n').filter(l => l.trim().startsWith('### ')).map(l => l.trim().replace(/^### /, ''));
+  function generateNodeContent(label: string, moduleTitle: string): string[] {
+    const hash = (label + moduleTitle).split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+    const intros = [
+      `When you think about "${label}", the key is to understand how it fits into ${moduleTitle.toLowerCase()}. This concept helps you see the bigger picture more clearly.`,
+      `"${label}" is a crucial piece of the puzzle in ${moduleTitle.toLowerCase()}. Let's break down what it actually means in practice.`,
+      `The idea of "${label}" often gets misunderstood. In the context of ${moduleTitle.toLowerCase()}, it takes on a specific meaning that we need to explore.`,
+      `To master ${moduleTitle.toLowerCase()}, you need to internalize "${label}". This is where the real transformation begins.`,
+      `Most people skip over "${label}" when learning about ${moduleTitle.toLowerCase()}, but that's a mistake. This concept is where the depth lies.`,
+      `Let's zoom in on "${label}". This concept acts as a lever that amplifies everything else in ${moduleTitle.toLowerCase()}.`,
+    ];
+    const bodies = [
+      `Think about how this applies to your daily life. When have you encountered a situation where understanding "${label.toLowerCase()}" would have changed your approach? The gap between knowing and applying is where growth happens.`,
+      `Here's the thing about "${label.toLowerCase()}": it's not just theoretical. Every time you face a decision in this area, you're either applying this concept or ignoring it. There's no neutral.`,
+      `The most successful people in any field have an intuitive grasp of "${label.toLowerCase()}". They may not articulate it, but their actions reflect this understanding consistently.`,
+      `A common mistake people make with "${label.toLowerCase()}" is treating it as a one-time thing. In reality, it's a practice you need to return to again and again as circumstances change.`,
+      `If you only take one thing from this section, let it be this: "${label.toLowerCase()}" is not about knowing—it's about doing. The insight is useless until it changes your behavior.`,
+    ];
+    const outros = [
+      `As you move through the rest of this module, keep "${label.toLowerCase()}" in mind. It connects to nearly everything that follows.`,
+      `Take a moment to reflect: how would your approach change if you fully embraced "${label.toLowerCase()}" starting today?`,
+      `This concept doesn't exist in isolation. Pay attention to how "${label.toLowerCase()}" shows up in the other nodes of this module.`,
+      `The real test isn't whether you understand "${label.toLowerCase()}"—it's whether you'll remember to apply it when it matters most.`,
+    ];
+    const i = Math.abs(hash);
+    return [
+      intros[i % intros.length],
+      bodies[(i + 3) % bodies.length],
+      outros[(i + 7) % outros.length],
+    ];
+  }
+
+  function generateGraph(title: string) {
     const fallback = [
       `The ${title} Framework`,
       "Core Principles",
@@ -97,7 +142,7 @@ async function main() {
       "Common Challenges",
       "Results & Mastery",
     ];
-    const labels = headings.length >= 3 ? headings : fallback;
+    const labels = fallback;
     const hash = title.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
     const layouts = [
       [
@@ -123,9 +168,13 @@ async function main() {
         { id: "5", positionX: 250, positionY: 450, label: labels[4] || "Mastery" },
       ],
     ];
-    const nodes = layouts[hash % layouts.length].map((n: any) => ({
+    const layoutNodes = layouts[hash % layouts.length];
+    const layoutSlugs = ensureUniqueSlugs(layoutNodes.map((n: any) => ({ label: n.label })));
+    const nodes = layoutNodes.map((n: any, i: number) => ({
       ...n,
       description: nodeDescription(n.label),
+      content: generateNodeContent(n.label, title),
+      slug: layoutSlugs[i].slug,
     }));
 
     const edgeSets = [
@@ -155,11 +204,9 @@ async function main() {
     return { nodes, edges };
   }
 
-  function generateQuestions(title: string, content: string, slug: string) {
-    const clean = content.replace(/[#*_`~]/g, '');
-    const sentences = clean.split(/[.!?]+/).map(s => s.trim()).filter(s => s.split(' ').length > 8);
-    const text = sentences[0] || `${title} is a powerful concept in personal development.`;
-    const text2 = sentences[1] || sentences[0] || `Applying ${title} leads to better outcomes.`;
+  function generateQuestions(title: string) {
+    const text = `${title} is a powerful concept in personal development. It helps you understand how to approach challenges and make better decisions in your daily life.`;
+    const text2 = `Applying ${title} leads to better outcomes by giving you a framework to think through problems more effectively.`;
 
     return [
       {
@@ -1136,13 +1183,33 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
 
 ### The Power of "Yet"
 "I can't do this" becomes "I can't do this yet." The word "yet" creates space for growth. It transforms failure from a verdict into data. Every master was once a beginner who refused to stop trying.` },
+    { slug: "signaling-theory", title: "Signaling Theory", description: "How costly signals convey hidden qualities and shape strategic interactions.", category: "game-theory", content: `Signaling theory explains how one party credibly conveys information about themselves to another party when there is asymmetric information.
+ 
+### The Job Market Signal
+Michael Spence's Nobel-winning model: Employers can't observe a candidate's true productivity. A degree is a costly signal—it requires time, money, and effort. High-productivity workers find signaling easier (or more worthwhile) than low-productivity ones, so the signal separates them.
+ 
+### Costly vs Cheap Talk
+A signal only works if it's costly to fake. Saying "I'm a hard worker" is cheap talk—anyone can say it. Working 80-hour weeks for a month is a costly signal. The cost is what makes the signal credible.
+ 
+### Conspicuous Consumption
+Thorstein Veblen observed that people buy luxury goods not just for utility, but to signal wealth and status. A Rolex tells people "I have enough money that I can waste $10,000 on a watch." The waste itself is the point.
+ 
+### Honest Signaling in Nature
+Peacock tails are a biological signal: the larger and brighter the tail, the more fit the peacock must be (since the tail is heavy and attracts predators). Only the fittest peacocks can afford such a handicap. This is the "handicap principle."
+ 
+### Applying Signaling Theory
+In negotiations, making the first aggressive move signals strength but risks escalation. In dating, investing time and attention signals genuine interest. In business, expensive advertising signals commitment to a market. Always ask: "What is this action signaling, and is the cost high enough to make it credible?"` },
   ];
 
   // Insert full modules
   for (const mod of modulesData) {
-    const uniqueNodes = makeNodes(mod.slug, mod.nodes).map((n) => ({
+    const rawNodes = makeNodes(mod.slug, mod.nodes);
+    const nodeSlugs = ensureUniqueSlugs(rawNodes.map((n) => ({ label: n.label })));
+    const uniqueNodes = rawNodes.map((n, i) => ({
       ...n,
       description: n.description || nodeDescription(n.label),
+      content: n.content || generateNodeContent(n.label, mod.title),
+      slug: nodeSlugs[i].slug,
     }));
     const uniqueEdges = makeEdges(mod.slug, mod.edges);
     const created = await prisma.module.create({
@@ -1151,7 +1218,6 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
         title: mod.title,
         description: mod.description,
         category: mod.category,
-        content: mod.content,
         isPremium: true,
         isDraft: false,
         nodes: {
@@ -1160,7 +1226,9 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
             positionX: n.positionX,
             positionY: n.positionY,
             label: n.label,
+            slug: n.slug,
             description: n.description,
+            content: JSON.stringify(n.content),
           })),
         },
         edges: {
@@ -1186,17 +1254,16 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
 
   // Insert stub modules
   for (const mod of stubModules) {
-    const graph = generateGraph(mod.title, mod.content);
+    const graph = generateGraph(mod.title);
     const uniqueNodes = makeNodes(mod.slug, graph.nodes);
     const uniqueEdges = makeEdges(mod.slug, graph.edges);
-    const questions = generateQuestions(mod.title, mod.content, mod.slug);
+    const questions = generateQuestions(mod.title);
     const created = await prisma.module.create({
       data: {
         slug: mod.slug,
         title: mod.title,
         description: mod.description,
         category: mod.category,
-        content: mod.content,
         isPremium: true,
         isDraft: false,
         nodes: {
@@ -1205,7 +1272,9 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
             positionX: n.positionX,
             positionY: n.positionY,
             label: n.label,
+            slug: n.slug,
             description: n.description,
+            content: n.content ? JSON.stringify(n.content) : null,
           })),
         },
         edges: {
@@ -1238,6 +1307,10 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
 
   for (let i = 0; i < progressMods.length; i++) {
     const mod = progressMods[i];
+    const firstNode = await prisma.moduleNode.findFirst({
+      where: { moduleId: mod.id },
+    });
+    if (!firstNode) continue;
     const listening = [25, 50, 75, 100, 10, 40, 60, 90][i];
     const reading = [30, 60, 100, 80, 20, 50, 70, 100][i];
     const completed = listening >= 100 || reading >= 100;
@@ -1247,6 +1320,7 @@ Fixed mindset: Intelligence is static, so effort is pointless (you're either goo
       data: {
         userId: demoUser.id,
         moduleId: mod.id,
+        nodeId: firstNode.id,
         listeningProgress: listening,
         readingProgress: reading,
         scrollPosition: 0,

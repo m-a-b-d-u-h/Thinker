@@ -1,10 +1,10 @@
 "use client";
 
 import { notFound, useRouter } from "next/navigation";
-import React, { useMemo, useRef, useEffect } from "react";
-import { ArrowLeft, Headphones, Play, Pause, SkipBack, SkipForward, HelpCircle, MessageSquare } from "lucide-react";
+import React, { useMemo, useRef, useEffect, useCallback } from "react";
+import { ArrowLeft, Headphones, Play, Pause, SkipBack, SkipForward, HelpCircle, MessageSquare, Lock } from "lucide-react";
 
-import { useModule } from "@/lib/query-hooks";
+import { useModule, useSaveProgress } from "@/lib/query-hooks";
 import { useTTS } from "@/hooks/useTTS";
 import { getSlides, Slide } from "@/lib/course-content";
 
@@ -49,10 +49,33 @@ export default function AudioPage({ params }: { params: Promise<{ slug: string; 
 
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
+  const saveProgress = useSaveProgress();
+  const handleDone = useCallback(async () => {
+    await saveProgress.mutateAsync({ slug, nodeId, listeningProgress: 100, completed: true });
+    router.push(`/models/${slug}`);
+  }, [slug, nodeId, saveProgress, router]);
+
   if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-bg">
         <div className="w-6 h-6 border-2 border-border border-t-fg rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (module?.locked) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-bg">
+        <div className="text-center">
+          <Lock size={32} className="mx-auto text-muted-dark mb-4" />
+          <p className="text-sm text-muted">Subscribe to access this audio content.</p>
+          <button
+            onClick={() => router.push(`/models/${slug}`)}
+            className="mt-4 px-4 py-2 text-xs font-medium rounded-lg bg-bg-elevated border border-border text-muted hover:text-fg transition-all cursor-pointer"
+          >
+            Back to path
+          </button>
+        </div>
       </div>
     );
   }
@@ -209,7 +232,7 @@ export default function AudioPage({ params }: { params: Promise<{ slug: string; 
               Reflect
             </button>
             <button
-              onClick={() => router.push(`/models/${slug}`)}
+              onClick={handleDone}
               className="px-5 py-2 text-xs font-medium rounded-lg bg-green-600 text-white hover:opacity-90 transition-all cursor-pointer"
             >
               Done

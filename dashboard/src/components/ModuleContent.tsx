@@ -1,106 +1,44 @@
 "use client";
 
-import { useMemo } from "react";
-
-interface Block {
-  type: "h1" | "h2" | "h3" | "li" | "p" | "desc";
-  text: string;
-}
-
 export default function ModuleContent({
   title,
   description,
-  content,
+  nodes,
 }: {
   title: string;
   description: string;
-  content: string;
+  nodes: any[];
 }) {
-  const blocks = useMemo(() => {
-    const blocks: Block[] = [];
-
-    if (title) {
-      blocks.push({ type: "h1", text: title });
-    }
-
-    if (description) {
-      blocks.push({ type: "desc", text: description });
-    }
-
-    if (!content) return blocks;
-
-    const lines = content.split("\n");
-
-    for (const line of lines) {
-      if (line.trim() === "") continue;
-
-      if (line.startsWith("# ")) {
-        blocks.push({ type: "h1", text: line.replace(/^#\s+/, "") });
-      } else if (line.startsWith("## ")) {
-        blocks.push({ type: "h2", text: line.replace(/^##\s+/, "") });
-      } else if (line.startsWith("### ")) {
-        blocks.push({ type: "h3", text: line.replace(/^###\s+/, "") });
-      } else if (line.startsWith("- ") || line.match(/^\d+\.\s/)) {
-        blocks.push({ type: "li", text: line.replace(/^[-•]?\s*|\d+\.\s*/, "") });
-      } else {
-        blocks.push({ type: "p", text: line });
-      }
-    }
-
-    return blocks;
-  }, [title, description, content]);
-
-  if (blocks.length === 0) return null;
+  if (!nodes || nodes.length === 0) return null;
 
   return (
-    <div className="max-w-[65ch]">
-      {blocks.map((block, idx) => {
-        if (block.type === "h1")
-          return (
-            <h1
-              key={idx}
-              className="text-5xl font-black text-white mb-4 tracking-[-0.03em] leading-[1.1]"
-            >
-              {block.text}
-            </h1>
-          );
-        if (block.type === "desc")
-          return (
-            <p
-              key={idx}
-              className="text-xl text-[#aaa] mb-12 leading-relaxed"
-            >
-              {block.text}
-            </p>
-          );
-        if (block.type === "h2")
-          return (
-            <h2
-              key={idx}
-              className="text-3xl font-bold text-white mb-6 mt-12 pb-3 border-b border-white/10"
-            >
-              {block.text}
-            </h2>
-          );
-        if (block.type === "h3")
-          return (
-            <h3 key={idx} className="text-xl font-semibold text-white/70 mb-4 mt-8">
-              {block.text}
-            </h3>
-          );
-        if (block.type === "li")
-          return (
-            <li
-              key={idx}
-              className="text-lg text-white/70 mb-3 ml-6 list-disc marker:text-white/30"
-            >
-              {block.text}
-            </li>
-          );
+    <div className="space-y-8">
+      {nodes.map((n: any, i: number) => {
+        const label = n.data?.label || n.label || `Node ${i + 1}`;
+        const content = n.data?.content || n.content;
+        const paragraphs: string[] = content
+          ? (typeof content === "string" ? JSON.parse(content) : content)
+          : [];
         return (
-          <p key={idx} className="text-lg text-white/70 mb-6 leading-[1.8]">
-            {block.text}
-          </p>
+          <div key={n.id || i} className="border border-white/[0.06] rounded-xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-bold text-white/40 bg-white/[0.04] px-2 py-0.5 rounded">
+                {i + 1}
+              </span>
+              <h3 className="text-sm font-bold text-white">{label}</h3>
+            </div>
+            {paragraphs.length > 0 ? (
+              <div className="space-y-2">
+                {paragraphs.map((p: string, pi: number) => (
+                  <p key={pi} className="text-sm text-white/60 leading-relaxed">
+                    {p}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-white/20 italic">No content</p>
+            )}
+          </div>
         );
       })}
     </div>

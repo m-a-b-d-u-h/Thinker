@@ -2,10 +2,10 @@
 
 import { notFound, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useCallback, useState } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, MessageSquare, Type, CaseSensitive, ArrowUpDown, ArrowLeftRight, Maximize } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, MessageSquare, Type, CaseSensitive, ArrowUpDown, ArrowLeftRight, Maximize, Lock } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
-import { useModule } from "@/lib/query-hooks";
+import { useModule, useSaveProgress } from "@/lib/query-hooks";
 import { getSlides } from "@/lib/course-content";
 
 type FontSize = "sm" | "md" | "lg" | "xl";
@@ -164,10 +164,33 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
     return () => { emblaApi.off("select", onSelect); };
   }, [emblaApi, onSelect]);
 
+  const saveProgress = useSaveProgress();
+  const handleDone = useCallback(async () => {
+    await saveProgress.mutateAsync({ slug, nodeId, readingProgress: 100, completed: true });
+    router.push(`/models/${slug}`);
+  }, [slug, nodeId, saveProgress, router]);
+
   if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-bg">
         <div className="w-6 h-6 border-2 border-border border-t-fg rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (module?.locked) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-bg">
+        <div className="text-center">
+          <Lock size={32} className="mx-auto text-muted-dark mb-4" />
+          <p className="text-sm text-muted">Subscribe to access this reading content.</p>
+          <button
+            onClick={() => router.push(`/models/${slug}`)}
+            className="mt-4 px-4 py-2 text-xs font-medium rounded-lg bg-bg-elevated border border-border text-muted hover:text-fg transition-all cursor-pointer"
+          >
+            Back to path
+          </button>
+        </div>
       </div>
     );
   }
@@ -272,7 +295,7 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
                                 Reflect
                               </button>
                               <button
-                                onClick={() => router.push(`/models/${slug}`)}
+                                onClick={handleDone}
                                 className="px-3 py-1 text-[10px] font-medium rounded-lg bg-fg text-bg hover:opacity-90 transition-all cursor-pointer"
                               >
                                 Done

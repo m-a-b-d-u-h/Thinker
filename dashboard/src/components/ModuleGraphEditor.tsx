@@ -25,6 +25,7 @@ export interface NodeForm {
   positionY: number;
   label: string;
   description?: string;
+  content?: string[];
   type: string;
 }
 
@@ -48,7 +49,7 @@ function toFlowNode(n: NodeForm): Node {
   return {
     id: n.id,
     position: { x: n.positionX, y: n.positionY },
-    data: { label: n.label, description: n.description },
+    data: { label: n.label, description: n.description, content: n.content },
     type: "editor",
   };
 }
@@ -106,6 +107,7 @@ function Flow({ nodes: parentNodes, edges: parentEdges, onNodesChange: notifyNod
         positionY: n.position.y,
         label: (n.data?.label as string) || "",
         description: (n.data?.description as string) || undefined,
+        content: (n.data?.content as string[] | undefined) || undefined,
         type: "custom",
       }))
     );
@@ -188,6 +190,14 @@ function Flow({ nodes: parentNodes, edges: parentEdges, onNodesChange: notifyNod
   const updateNodeDescription = useCallback((id: string, description: string) => {
     const next = nodesRef.current.map((n) =>
       n.id === id ? { ...n, data: { ...n.data, description } } : n
+    );
+    setNodes(next);
+    syncNodes(next);
+  }, [syncNodes]);
+
+  const updateNodeField = useCallback((id: string, key: string, value: any) => {
+    const next = nodesRef.current.map((n) =>
+      n.id === id ? { ...n, data: { ...n.data, [key]: value } } : n
     );
     setNodes(next);
     syncNodes(next);
@@ -293,6 +303,42 @@ function Flow({ nodes: parentNodes, edges: parentEdges, onNodesChange: notifyNod
               placeholder="Node description"
               className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white/70 outline-none focus:border-white/20 transition-all placeholder:text-white/20"
             />
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Content (paragraphs)</label>
+              {((selectedNode.data?.content as string[]) || [""]).map((p, pi) => (
+                <div key={pi} className="flex gap-1.5">
+                  <textarea
+                    value={p}
+                    onChange={(e) => {
+                      const next = [...((selectedNode.data?.content as string[]) || [""])];
+                      next[pi] = e.target.value;
+                      updateNodeField(selectedNode.id, "content", next);
+                    }}
+                    placeholder="Paragraph text..."
+                    rows={2}
+                    className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/70 outline-none focus:border-white/20 transition-all placeholder:text-white/20 resize-y"
+                  />
+                  <button
+                    onClick={() => {
+                      const next = ((selectedNode.data?.content as string[]) || []).filter((_, j) => j !== pi);
+                      updateNodeField(selectedNode.id, "content", next.length > 0 ? next : undefined);
+                    }}
+                    className="text-white/20 hover:text-red-400 transition-all self-start mt-1.5"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => {
+                  const next = [...((selectedNode.data?.content as string[]) || []), ""];
+                  updateNodeField(selectedNode.id, "content", next);
+                }}
+                className="text-xs text-white/30 hover:text-white transition-all"
+              >
+                + Add paragraph
+              </button>
+            </div>
           </div>
           {connectedEdges.length > 0 && (
             <div className="pt-2 border-t border-white/[0.06] space-y-2">

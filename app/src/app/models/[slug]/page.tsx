@@ -7,7 +7,7 @@ import React from "react";
 import { ReactFlow, Handle, Position } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useModule } from "@/lib/query-hooks";
-import { BookOpen, Headphones, HelpCircle, CheckCircle2, MessageSquare } from "lucide-react";
+import { BookOpen, Headphones, HelpCircle, MessageSquare } from "lucide-react";
 
 const CustomNode = ({ data }: { data: any; id: string }) => {
   return (
@@ -100,21 +100,6 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
           const title = n.data?.label || '';
           const desc = n.data?.description || '';
           speakText(`${title}. ${desc}`);
-        },
-        onComplete: () => {
-          const instance = rf.current;
-          if (!instance) return;
-          instance.setNodes((nds: any[]) =>
-            nds.map((nd: any) => {
-              if (nd.id === n.id) {
-                return {
-                  ...nd,
-                  data: { ...nd.data, isCompleted: !nd.data.isCompleted },
-                };
-              }
-              return nd;
-            })
-          );
         },
       },
     }));
@@ -246,67 +231,73 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
             initial="hidden"
             animate="visible"
             exit="hidden"
-            className="fixed bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center gap-2">
-            <motion.button
-              variants={{
-                hidden: { y: 20, opacity: 0, scale: 0.9 },
-                visible: { y: 0, opacity: 1, scale: 1 }
-              }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              onClick={() => router.push(`/models/${selectedNode.data.slug}/read/${selectedNode.id}`)}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
-            >
-              <BookOpen className="w-3.5 h-3.5 shrink-0" />
-              <span>Read</span>
-            </motion.button>
-            <motion.button
-              variants={{
-                hidden: { y: 20, opacity: 0, scale: 0.9 },
-                visible: { y: 0, opacity: 1, scale: 1 }
-              }}
-              transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.1 }}
-              onClick={() => router.push(`/models/${selectedNode.data.slug}/audio/${selectedNode.id}`)}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
-            >
-              <Headphones className="w-3.5 h-3.5 shrink-0" />
-              <span>Audio</span>
-            </motion.button>
-            <motion.button
-              variants={{
-                hidden: { y: 20, opacity: 0, scale: 0.9 },
-                visible: { y: 0, opacity: 1, scale: 1 }
-              }}
-              transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.2 }}
-              onClick={() => router.push(`/models/${selectedNode.data.slug}/quiz/${selectedNode.id}`)}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
-            >
-              <HelpCircle className="w-3.5 h-3.5 shrink-0" />
-              <span>Quiz</span>
-            </motion.button>
-            <motion.button
-              variants={{
-                hidden: { y: 20, opacity: 0, scale: 0.9 },
-                visible: { y: 0, opacity: 1, scale: 1 }
-              }}
-              transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.3 }}
-              onClick={() => router.push(`/models/${selectedNode.data.slug}/reflection/${selectedNode.id}`)}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
-            >
-              <MessageSquare className="w-3.5 h-3.5 shrink-0" />
-              <span>Reflect</span>
-            </motion.button>
-            <motion.button
-              variants={{
-                hidden: { y: 20, opacity: 0, scale: 0.9 },
-                visible: { y: 0, opacity: 1, scale: 1 }
-              }}
-              transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.4 }}
-              onClick={() => selectedNode.data.onComplete?.()}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-green-400 border border-green-500/60 bg-green-950/20 transition-all"
-            >
-              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-              <span>Done</span>
-            </motion.button>
+            className="fixed bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-3"
+          >
+            {/* Node content preview */}
+            {selectedNode.data.content && selectedNode.data.content.length > 0 && (
+              <motion.div
+                variants={{
+                  hidden: { y: 20, opacity: 0, scale: 0.9 },
+                  visible: { y: 0, opacity: 1, scale: 1 }
+                }}
+                className="max-w-[400px] bg-bg/80 backdrop-blur-md border border-border/60 rounded-xl px-4 py-3 shadow-lg"
+              >
+                <p className="text-[11px] text-muted leading-relaxed line-clamp-3">
+                  {selectedNode.data.content[0]}
+                </p>
+              </motion.div>
+            )}
+
+            <div className="flex items-center justify-center gap-2">
+              <motion.button
+                variants={{
+                  hidden: { y: 20, opacity: 0, scale: 0.9 },
+                  visible: { y: 0, opacity: 1, scale: 1 }
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                onClick={() => router.push(`/models/${slug}/read/${selectedNode.data.nodeSlug}`)}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
+              >
+                <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                <span>Read</span>
+              </motion.button>
+              <motion.button
+                variants={{
+                  hidden: { y: 20, opacity: 0, scale: 0.9 },
+                  visible: { y: 0, opacity: 1, scale: 1 }
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.1 }}
+                onClick={() => router.push(`/models/${slug}/audio/${selectedNode.data.nodeSlug}`)}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
+              >
+                <Headphones className="w-3.5 h-3.5 shrink-0" />
+                <span>Audio</span>
+              </motion.button>
+              <motion.button
+                variants={{
+                  hidden: { y: 20, opacity: 0, scale: 0.9 },
+                  visible: { y: 0, opacity: 1, scale: 1 }
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.2 }}
+                onClick={() => router.push(`/models/${slug}/reflection/${selectedNode.data.nodeSlug}`)}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
+              >
+                <MessageSquare className="w-3.5 h-3.5 shrink-0" />
+                <span>Reflect</span>
+              </motion.button>
+              <motion.button
+                variants={{
+                  hidden: { y: 20, opacity: 0, scale: 0.9 },
+                  visible: { y: 0, opacity: 1, scale: 1 }
+                }}
+                transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.3 }}
+                onClick={() => router.push(`/models/${slug}/quiz/${selectedNode.data.nodeSlug}`)}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
+              >
+                <HelpCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>Quiz</span>
+              </motion.button>
+            </div>
           </motion.div>
       )}
       </AnimatePresence>

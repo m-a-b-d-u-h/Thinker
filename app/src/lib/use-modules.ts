@@ -11,6 +11,8 @@ interface HistoryModule extends ModuleListItem {
     listeningProgress: number;
     readingProgress: number;
     completed: boolean;
+    totalNodes: number;
+    completedNodes: number;
     lastReadAt: number;
   };
 }
@@ -48,7 +50,6 @@ export function useModules(page: number, category: string | null, search: string
     title: p.title,
     description: p.description,
     category: p.category,
-    content: p.content || "",
     isPremium: p.isPremium,
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
@@ -58,6 +59,8 @@ export function useModules(page: number, category: string | null, search: string
       listeningProgress: p.listeningProgress,
       readingProgress: p.readingProgress,
       completed: p.completed,
+      totalNodes: p.totalNodes,
+      completedNodes: p.completedNodes,
       lastReadAt: p.lastReadAt,
     },
   }));

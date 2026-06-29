@@ -161,7 +161,7 @@ export default function ProductsPage() {
             <h2 className="text-3xl font-black tracking-[-0.04em]">Your Learning <span className="text-muted-light">History</span></h2>
           </div>
 
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-4 md:gap-5">
+          <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-3 md:gap-5">
             {historyModules.map((module, idx) => (
               <motion.div
                 key={module.id}
@@ -169,44 +169,29 @@ export default function ProductsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.1 }}
               >
-                <Link href={`/models/${module.slug}`} className="group flex flex-col bg-bg-card border border-border-subtle rounded-2xl p-6 no-underline transition-all duration-300 hover:bg-bg hover:border-border hover:-translate-y-1">
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-bg-elevated text-muted border border-border">{module.category ? module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ') : ''}</span>
+                <Link href={`/models/${module.slug}`} className="group flex flex-col bg-bg-card border border-border-subtle rounded-xl md:rounded-2xl p-4 md:p-6 no-underline transition-all duration-300 hover:bg-bg hover:border-border hover:-translate-y-1">
+                  <div className="flex items-center gap-2 mb-2 md:mb-4">
+                    <span className="shrink-0 px-2 md:px-3 py-0.5 md:py-1 rounded-full text-[0.5625rem] md:text-[0.625rem] font-semibold bg-bg-elevated text-muted border border-border">{module.category ? module.category.charAt(0).toUpperCase() + module.category.slice(1).replace(/-/g, ' ') : ''}</span>
                   </div>
-                  <h3 className="text-lg font-bold mb-2 text-fg">{module.title}</h3>
-                  <p className="text-[0.875rem] text-muted-light leading-relaxed mb-4">{module.description}</p>
+                  <h3 className="text-sm md:text-lg font-bold mb-1 md:mb-2 text-fg">{module.title}</h3>
+                  <p className="text-[0.75rem] md:text-[0.875rem] text-muted-light leading-relaxed mb-3 md:mb-4 line-clamp-2 md:line-clamp-none">{module.description}</p>
                   {module.progress && (
-                    <div className="mb-4 space-y-2.5">
-                      {module.progress.listeningProgress > 0 && (
-                        <div>
-                          <div className="flex items-center justify-between text-[0.625rem] text-muted-dark mb-1">
-                            <span className="flex items-center gap-1"><Play size={10} /> Listening</span>
-                            <span>{Math.round(module.progress.listeningProgress)}%</span>
-                          </div>
-                          <div className="h-1 bg-bg-elevated rounded-full overflow-hidden">
-                            <div className="h-full bg-fg rounded-full" style={{ width: `${module.progress.listeningProgress}%` }} />
-                          </div>
-                        </div>
-                      )}
-                      {module.progress.readingProgress > 0 && (
-                        <div>
-                          <div className="flex items-center justify-between text-[0.625rem] text-muted-dark mb-1">
-                            <span>Reading</span>
-                            <span>{Math.round(module.progress.readingProgress)}%</span>
-                          </div>
-                          <div className="h-1 bg-bg-elevated rounded-full overflow-hidden">
-                            <div className="h-full bg-fg/60 rounded-full" style={{ width: `${module.progress.readingProgress}%` }} />
-                          </div>
-                        </div>
-                      )}
+                    <div className="mb-3 md:mb-4 space-y-1 md:space-y-1.5">
+                      <div className="flex items-center justify-between text-[0.625rem] md:text-[0.75rem] text-muted-dark">
+                        <span>{module.progress.completedNodes}/{module.progress.totalNodes} nodes</span>
+                        <span className="font-semibold text-fg">{Math.round((module.progress.completedNodes / module.progress.totalNodes) * 100)}%</span>
+                      </div>
+                      <div className="h-1 md:h-1.5 bg-bg-elevated rounded-full overflow-hidden">
+                        <div className="h-full bg-fg rounded-full" style={{ width: `${(module.progress.completedNodes / module.progress.totalNodes) * 100}%` }} />
+                      </div>
                     </div>
                   )}
-                  <div className="flex items-center justify-between border-t border-border-subtle pt-4 mt-auto">
-                    <div className="flex items-center gap-2 text-[0.75rem] font-semibold text-muted group-hover:text-fg transition-colors">
-                      <Play size={12} fill="currentColor" />
+                  <div className="flex items-center justify-between border-t border-border-subtle pt-3 md:pt-4 mt-auto">
+                    <div className="flex items-center gap-1.5 md:gap-2 text-[0.6875rem] md:text-[0.75rem] font-semibold text-muted group-hover:text-fg transition-colors">
+                      <Play size={10} className="md:w-3 md:h-3" fill="currentColor" />
                       {module.progress ? "Continue" : "Start"}
                     </div>
-                    <span className="text-[0.75rem] text-muted-dark">
+                    <span className="text-[0.6875rem] md:text-[0.75rem] text-muted-dark">
                       {module.progress ? "Last read recently" : "New"}
                     </span>
                   </div>

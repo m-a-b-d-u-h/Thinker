@@ -33,7 +33,6 @@ export interface ModuleFormData {
   slug: string;
   description: string;
   category: string;
-  content: string;
   isPremium: boolean;
   isDraft: boolean;
   nodes: NodeForm[];
@@ -52,7 +51,7 @@ interface Props {
   onDelete?: () => void;
   deleting?: boolean;
   setDeleting?: (v: boolean) => void;
-  onAiGenerate?: (mode: "content" | "questions" | "graph") => void;
+  onAiGenerate?: (mode: "questions" | "graph") => void;
   aiLoading?: string | null;
 }
 
@@ -129,28 +128,6 @@ export default function ModuleForm({
             value={form.description}
             onChange={(e) => updateField("description", e.target.value)}
             className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-white/20 transition-all"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-medium text-white/40">Content (Markdown)</label>
-            {onAiGenerate && (
-              <button
-                type="button"
-                onClick={() => onAiGenerate("content")}
-                disabled={aiLoading === "content"}
-                className="flex items-center gap-1.5 text-xs font-medium text-purple-400 hover:text-purple-300 transition-all disabled:opacity-50"
-              >
-                <Sparkles size={12} />
-                {aiLoading === "content" ? "Generating..." : "AI Generate"}
-              </button>
-            )}
-          </div>
-          <textarea
-            value={form.content}
-            onChange={(e) => updateField("content", e.target.value)}
-            rows={12}
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-white/20 transition-all font-mono resize-y"
           />
         </div>
       </div>

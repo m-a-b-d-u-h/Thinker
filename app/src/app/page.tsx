@@ -161,15 +161,6 @@ export default function Home() {
     }
   };
 
-  const calculateTime = (content?: string) => {
-    if (!content) return "0:00";
-    const words = content.split(/\s+/).length;
-    const totalSeconds = Math.ceil(words / 2.5);
-    const mins = Math.floor(totalSeconds / 60);
-    const secs = totalSeconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   const [openFaq, setOpenFaq] = useState<string | null>(null);
 
   return (

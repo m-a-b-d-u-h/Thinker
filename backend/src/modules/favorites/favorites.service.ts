@@ -25,7 +25,6 @@ export namespace FavoritesService {
       title: f.module.title,
       description: f.module.description,
       category: f.module.category,
-      content: f.module.isPremium ? "" : f.module.content,
       isPremium: f.module.isPremium,
       nodes: f.module.nodes.map(transformNode),
       edges: f.module.edges.map(transformEdge),

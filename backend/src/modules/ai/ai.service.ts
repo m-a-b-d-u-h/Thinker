@@ -211,7 +211,8 @@ CRITICAL — You MUST follow this exact format STRICTLY. Every single marker (##
 [Full markdown content, 5000-10000 characters. Use ## for sections, ### for subsections, - for bullet points. NO greetings, NO welcome, DO NOT repeat the title. Dive straight in. Every concept MUST have a real-life example.]
 
 ###NODES###
-[Valid JSON array of 3-7 nodes: [{"id":"topic-1","label":"Word","type":"start|process|end","positionX":0,"positionY":0}]]
+[Valid JSON array of 3-7 nodes: [{"id":"topic-1","label":"Word","type":"start|process|end","positionX":0,"positionY":0,"content":["Paragraph 1","Paragraph 2","Paragraph 3"]}]]
+Each node must include "content": an array of 2-3 short paragraphs explaining that step's concept.
 Structure: EXACTLY 1 node with type "start" → 1-5 nodes with type "process" (can branch) → EXACTLY 1 node with type "end".
 Spacing rules:
 - START node: positionX = 0, positionY = 0
@@ -271,17 +272,31 @@ REQUIREMENTS:
         title: parsed.title,
         description: parsed.description || "",
         category,
-        content: parsed.content,
         isPremium: true,
         isDraft: true,
         nodes: (parsed.nodes || []).length > 0
-          ? { create: (parsed.nodes as any[]).map((n: any) => ({
-              id: `${n.id || "node"}-${idSuffix}`,
-              positionX: n.positionX ?? 250,
-              positionY: n.positionY ?? 150,
-              label: n.label || "Node",
-              type: "custom",
-            }))}
+          ? (() => {
+              const nodeList = parsed.nodes as any[];
+              const slugs = new Map<string, number>();
+              const slugFrom = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+              return {
+                create: nodeList.map((n: any) => {
+                  const base = slugFrom(n.label || "node");
+                  const count = slugs.get(base) || 0;
+                  slugs.set(base, count + 1);
+                  const slug = count === 0 ? base : `${base}-${count}`;
+                  return {
+                    id: `${n.id || "node"}-${idSuffix}`,
+                    positionX: n.positionX ?? 250,
+                    positionY: n.positionY ?? 150,
+                    label: n.label || "Node",
+                    type: "custom",
+                    slug,
+                    content: n.content ? JSON.stringify(n.content) : null,
+                  };
+                }),
+              };
+            })()
           : undefined,
         edges: (parsed.edges || []).length > 0
           ? { create: (parsed.edges as any[]).map((e: any) => ({
@@ -343,10 +358,10 @@ Structure: 1 START node → several PROCESS nodes (can branch) → 1 END node. A
 Return a valid JSON object ONLY (no markdown, no extra text):
 {
   "nodes": [
-    { "id": "slug-1", "label": "Start", "positionX": 100, "positionY": 100 },
-    { "id": "slug-2", "label": "Process", "positionX": 350, "positionY": 50 },
-    { "id": "slug-3", "label": "Branch", "positionX": 350, "positionY": 200 },
-    { "id": "slug-4", "label": "End", "positionX": 600, "positionY": 100 }
+    { "id": "slug-1", "label": "Start", "positionX": 100, "positionY": 100, "content": ["Paragraph 1 explaining this step", "Paragraph 2 with more detail", "Paragraph 3 for key insight"] },
+    { "id": "slug-2", "label": "Process", "positionX": 350, "positionY": 50, "content": ["Paragraph 1", "Paragraph 2"] },
+    { "id": "slug-3", "label": "Branch", "positionX": 350, "positionY": 200, "content": ["Paragraph 1", "Paragraph 2"] },
+    { "id": "slug-4", "label": "End", "positionX": 600, "positionY": 100, "content": ["Paragraph 1", "Paragraph 2"] }
   ],
   "edges": [
     { "source": "slug-1", "target": "slug-2", "label": "step", "animated": true },
@@ -354,6 +369,7 @@ Return a valid JSON object ONLY (no markdown, no extra text):
     { "source": "slug-3", "target": "slug-4", "label": "step", "animated": true }
   ]
 }
+Each node must include "content": an array of 2-3 short paragraph strings explaining that step's concept from the module.
 Create 3-7 nodes: 1 start, 1 end, rest are process nodes in between. Labels: 1-2 simple words. Edges can branch but ALL must lead to the end node. No cycles. No dead ends. Use "slug-" prefix for ids.`,
     };
 
@@ -371,14 +387,24 @@ Create 3-7 nodes: 1 start, 1 end, rest are process nodes in between. Labels: 1-2
       }
       case "graph": {
         const parsed = extractJson(text) || {};
+        const nodes = parsed.nodes || [];
+        const slugs = new Map<string, number>();
+        const slugFrom = (label: string) => label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
         return {
-          nodes: (parsed.nodes || []).map((n: any) => ({
-            id: n.id || `ai-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-            positionX: n.positionX ?? 250,
-            positionY: n.positionY ?? 150,
-            label: n.label || "Node",
-            type: "custom",
-          })),
+          nodes: nodes.map((n: any) => {
+            const base = slugFrom(n.label || "node");
+            const count = slugs.get(base) || 0;
+            slugs.set(base, count + 1);
+            return {
+              id: n.id || `ai-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              positionX: n.positionX ?? 250,
+              positionY: n.positionY ?? 150,
+              label: n.label || "Node",
+              type: "custom",
+              slug: count === 0 ? base : `${base}-${count}`,
+              content: n.content || undefined,
+            };
+          }),
           edges: (parsed.edges || []).map((e: any) => ({
             id: `edge-${e.source}-${e.target}`,
             source: e.source,

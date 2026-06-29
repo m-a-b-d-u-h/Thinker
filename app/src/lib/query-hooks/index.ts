@@ -260,6 +260,20 @@ export function useResetStreak() {
   });
 }
 
+export function useSaveProgress() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ slug, ...body }: { slug: string } & Parameters<typeof progressApi.upsert>[1]) =>
+      progressApi.upsert(slug, body),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["progress"] });
+      qc.invalidateQueries({ queryKey: ["continue-learning"] });
+      qc.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      qc.invalidateQueries({ queryKey: ["module", variables.slug] });
+    },
+  });
+}
+
 // ─── Quiz ───
 
 export function useQuizQuestions(slug: string) {

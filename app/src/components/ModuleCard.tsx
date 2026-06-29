@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ReactFlow, Handle, Position, ReactFlowProvider, useReactFlow } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
-import { calculateDurations } from "@/lib/calculate";
 import { favoritesApi } from "@/lib/api/favorites";
 import { useAuth } from "@/lib/auth-context";
 
@@ -16,7 +15,6 @@ interface ModuleData {
   title: string;
   description: string;
   category: string;
-  content?: string;
   nodes?: any[];
   edges?: any[];
   isFavorited?: boolean;
@@ -85,9 +83,7 @@ const MiniPreview = React.memo(({ nodes, edges }: { nodes: any[]; edges: any[] }
 export function ModuleCard({ module }: { module: ModuleData }) {
   const router = useRouter();
   const { user } = useAuth();
-  const durations = module.content
-    ? calculateDurations(module.content)
-    : { listenMin: module.listenMin ?? 0, readMin: module.readMin ?? 0 };
+  const durations = { listenMin: module.listenMin ?? 0, readMin: module.readMin ?? 0 };
   const [isFavorited, setIsFavorited] = useState(module.isFavorited ?? false);
 
   const isSubscribed = user && user.subscriptionStatus && user.subscriptionStatus !== "FREE";

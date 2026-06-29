@@ -2,10 +2,11 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Send, Check } from "lucide-react";
+import { ArrowLeft, Send, Check, Lock } from "lucide-react";
 import { use } from "react";
 import { useModule, useCreateReflection } from "@/lib/query-hooks";
 import { getSlides } from "@/lib/course-content";
+import { toast } from "sonner";
 
 export default function NodeReflectionPage({ params }: { params: Promise<{ slug: string; nodeId: string }> }) {
   const { slug, nodeId } = use(params);
@@ -46,8 +47,9 @@ export default function NodeReflectionPage({ params }: { params: Promise<{ slug:
       setContent("");
       setSaved(true);
       if (textareaRef.current) textareaRef.current.style.height = "auto";
-    } catch {
-      // silent
+    } catch (err: any) {
+      const msg = err?.response?.data?.error?.message || "Failed to save reflection. Please try again.";
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -75,6 +77,25 @@ export default function NodeReflectionPage({ params }: { params: Promise<{ slug:
       </div>
     );
   }
+
+  if (module?.locked) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-bg">
+        <div className="text-center">
+          <Lock size={32} className="mx-auto text-muted-dark mb-4" />
+          <p className="text-sm text-muted">Subscribe to access this reflection.</p>
+          <button
+            onClick={() => router.push(`/models/${slug}`)}
+            className="mt-4 px-4 py-2 text-xs font-medium rounded-lg bg-bg-elevated border border-border text-muted hover:text-fg transition-all cursor-pointer"
+          >
+            Back to path
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!module) return null;
 
   return (
     <div className="h-full bg-bg flex flex-col">

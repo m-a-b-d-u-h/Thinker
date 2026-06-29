@@ -7,13 +7,14 @@ export interface ContinueLearningItem {
   title: string;
   description: string;
   category: string;
-  content?: string;
   isPremium: boolean;
   createdAt: string;
   updatedAt: string;
   listeningProgress: number;
   readingProgress: number;
   completed: boolean;
+  totalNodes: number;
+  completedNodes: number;
   lastReadAt: number;
 }
 
@@ -25,6 +26,7 @@ export const progressApi = {
     api.get<UserProgress | null>(`/progress/${slug}`).then(r => r.data),
 
   upsert: (slug: string, body: Partial<{
+    nodeId: string;
     listeningProgress: number;
     readingProgress: number;
     scrollPosition: number;

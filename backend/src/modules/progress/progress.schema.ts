@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const updateProgressSchema = z.object({
+  nodeId: z.string().optional(),
   listeningProgress: z.number().min(0).max(100).optional(),
   readingProgress: z.number().min(0).max(100).optional(),
   scrollPosition: z.number().min(0).optional(),

@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { CheckCircle, XCircle, ArrowRight, RefreshCw, ArrowLeft } from "lucide-react";
+import { CheckCircle, XCircle, ArrowRight, RefreshCw, ArrowLeft, Lock } from "lucide-react";
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import { useModule, useQuizQuestions, useSubmitQuiz, useSaveQuizProgress, useQuizProgress } from "@/lib/query-hooks";
+import { useModule, useSubmitQuiz, useSaveQuizProgress, useQuizProgress } from "@/lib/query-hooks";
 import { getSlides } from "@/lib/course-content";
 import type { QuizSubmitResponse } from "@/lib/types";
 
@@ -15,7 +15,6 @@ export default function NodeQuizPage({ params }: { params: Promise<{ slug: strin
   const { slug, nodeId } = use(params);
   const router = useRouter();
   const { data: module, isLoading: moduleLoading } = useModule(slug);
-  const { data: questions = [], isLoading: questionsLoading } = useQuizQuestions(slug);
   const { data: savedProgress, isLoading: progressLoading } = useQuizProgress(slug);
   const submitMutation = useSubmitQuiz();
   const saveProgressMutation = useSaveQuizProgress();
@@ -23,6 +22,8 @@ export default function NodeQuizPage({ params }: { params: Promise<{ slug: strin
   const slides = getSlides(module?.nodes || []);
   const nodeSlides = slides.filter((s) => s.nodeId === nodeId);
   const nodeLabel = nodeSlides[0]?.nodeLabel || "Unknown Node";
+
+  const questions = module?.questions ?? [];
 
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -34,7 +35,7 @@ export default function NodeQuizPage({ params }: { params: Promise<{ slug: strin
   const [submitting, setSubmitting] = useState(false);
   const submittedRef = useRef(false);
 
-  const loading = moduleLoading || questionsLoading || progressLoading;
+  const loading = moduleLoading || progressLoading;
 
   const submitWithAnswers = async (submitAnswers: Answer[]) => {
     try {
@@ -110,11 +111,38 @@ export default function NodeQuizPage({ params }: { params: Promise<{ slug: strin
     );
   }
 
-  if (!module || questions.length === 0) {
+  if (!module) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-bg">
         <div className="text-center">
-          <p className="text-sm text-muted">No quiz questions available.</p>
+          <div className="w-6 h-6 border-2 border-border border-t-fg rounded-full animate-spin mx-auto" />
+        </div>
+      </div>
+    );
+  }
+
+  if (module?.locked) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-bg">
+        <div className="text-center">
+          <Lock size={32} className="mx-auto text-muted-dark mb-4" />
+          <p className="text-sm text-muted">Subscribe to access this quiz.</p>
+          <button
+            onClick={() => router.push(`/models/${slug}`)}
+            className="mt-4 px-4 py-2 text-xs font-medium rounded-lg bg-bg-elevated border border-border text-muted hover:text-fg transition-all cursor-pointer"
+          >
+            Back to path
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-bg">
+        <div className="text-center">
+          <p className="text-sm text-muted">No quiz questions available for this node.</p>
           <button
             onClick={() => router.push(`/models/${slug}`)}
             className="mt-4 px-4 py-2 text-xs font-medium rounded-lg bg-bg-elevated border border-border text-muted hover:text-fg transition-all cursor-pointer"
