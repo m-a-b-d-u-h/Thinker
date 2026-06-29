@@ -44,7 +44,7 @@ export function useModules(page: number, category: string | null, search: string
     staleTime: 30 * 1000,
   });
 
-  const historyModules: HistoryModule[] = (historyQuery.data || []).slice(0, 3).map((p) => ({
+  const historyModules: HistoryModule[] = (historyQuery.data || []).map((p) => ({
     id: p.id,
     slug: p.slug,
     title: p.title,

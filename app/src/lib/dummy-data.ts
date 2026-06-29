@@ -65,16 +65,6 @@ export interface Reflection {
   timestamp: number;
 }
 
-/** A saved quote / highlight from a module. */
-export interface Highlight {
-  id: string;
-  text: string;
-  note: string;
-  moduleSlug: string;
-  moduleTitle: string;
-  timestamp: number;
-}
-
 // ──────────────────────────────────────────
 // FULL MODULES (with complete content, nodes, edges, questions)
 // ──────────────────────────────────────────
@@ -1723,56 +1713,4 @@ export const reflections: Reflection[] = [
 ];
 
 // ──────────────────────────────────────────
-// HIGHLIGHTS
-// ──────────────────────────────────────────
 
-export const highlights: Highlight[] = [
-  {
-    id: "h1",
-    text: "Motivation follows action, not the other way around",
-    note: "This changes everything. Stop waiting for motivation - just do 5 minutes.",
-    moduleSlug: "stop-waiting",
-    moduleTitle: "Stop waiting to feel ready",
-    timestamp: Date.now() - 86400000 * 2,
-  },
-  {
-    id: "h2",
-    text: "Indecision is actually a decision for stagnation",
-    note: "The most powerful reframe. Not choosing IS a choice - the worst one.",
-    moduleSlug: "cost-of-not-deciding",
-    moduleTitle: "The cost of not deciding",
-    timestamp: Date.now() - 86400000 * 1,
-  },
-  {
-    id: "h3",
-    text: "Habit stacking formula: After [Current], I will [New]",
-    note: "Using this for my reading habit. After coffee → read 5 pages.",
-    moduleSlug: "building-habits",
-    moduleTitle: "Building habits that stick",
-    timestamp: Date.now() - 86400000 * 3,
-  },
-  {
-    id: "h4",
-    text: "The Goldilocks Rule: tasks should be just right",
-    note: "Not too hard, not too easy. The sweet spot is where growth happens.",
-    moduleSlug: "building-habits",
-    moduleTitle: "Building habits that stick",
-    timestamp: Date.now() - 86400000 * 4,
-  },
-  {
-    id: "h5",
-    text: "Deep Work is the ability to focus without distraction on a cognitively demanding task",
-    note: "This is what I'm building toward. 90-minute blocks with zero interruptions.",
-    moduleSlug: "deep-work",
-    moduleTitle: "Deep Work Mastery",
-    timestamp: Date.now() - 86400000 * 2,
-  },
-  {
-    id: "h6",
-    text: "Inversion: Solve problems backward by asking how you would fail",
-    note: "Great for decision-making. Ask 'what would guarantee failure?' then avoid those things.",
-    moduleSlug: "mental-models",
-    moduleTitle: "Mental Models 101",
-    timestamp: Date.now() - 86400000 * 5,
-  },
-];

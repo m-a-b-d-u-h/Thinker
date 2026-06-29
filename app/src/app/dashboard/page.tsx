@@ -139,14 +139,6 @@ export default function DashboardPage() {
         </div>
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
           <div className="flex items-center gap-2 text-muted mb-3">
-            <Sparkles size={14} />
-            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Highlights</span>
-          </div>
-          <p className="text-2xl font-black text-fg">{stats?.highlights || 0}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.highlightXp || 0} XP</span></p>
-          <p className="text-[0.6875rem] text-muted-dark mt-1">Total highlights</p>
-        </div>
-        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-muted mb-3">
             <HelpCircle size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Quizzes</span>
           </div>

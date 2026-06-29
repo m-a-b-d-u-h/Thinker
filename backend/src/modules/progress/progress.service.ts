@@ -99,11 +99,25 @@ export namespace ProgressService {
   }
 
   export async function getContinueLearning(userId: string) {
-    const allProgress = await prisma.userProgress.findMany({
+    const recentModuleIds = await prisma.userProgress.groupBy({
+      by: ["moduleId"],
       where: {
         userId,
         module: { isDraft: false },
         OR: [{ listeningProgress: { gt: 0 } }, { readingProgress: { gt: 0 } }],
+      },
+      _max: { lastReadAt: true },
+      orderBy: { _max: { lastReadAt: "desc" } },
+      take: 4,
+    });
+
+    if (recentModuleIds.length === 0) return [];
+
+    const moduleIds = recentModuleIds.map((r) => r.moduleId);
+    const allProgress = await prisma.userProgress.findMany({
+      where: {
+        userId,
+        moduleId: { in: moduleIds },
       },
       orderBy: { lastReadAt: "desc" },
       include: {
@@ -122,36 +136,34 @@ export namespace ProgressService {
       grouped.set(p.moduleId, arr);
     }
 
-    return Array.from(grouped.entries())
-      .slice(0, 10)
-      .map(([moduleId, entries]) => {
-        const latest = entries[0];
-        const totalNodes = latest.module._count.nodes;
-        const completed = totalNodes > 0 && entries.length >= totalNodes && entries.every((e) => e.completed);
-        const readingProgress = Math.max(...entries.map((e) => e.readingProgress));
-        const listeningProgress = Math.max(...entries.map((e) => e.listeningProgress));
-        const completedNodes = entries.filter((e) => e.completed).length;
-        return {
-          id: moduleId,
-          slug: latest.module.slug,
-          title: latest.module.title,
-          description: latest.module.description,
-          category: latest.module.category,
-          isPremium: latest.module.isPremium,
-          createdAt: latest.module.createdAt.toISOString(),
-          updatedAt: latest.module.updatedAt.toISOString(),
-          listeningProgress,
-          readingProgress,
-          completed,
-          totalNodes,
-          completedNodes,
-          lastReadAt: latest.lastReadAt.getTime(),
-        };
-      });
+    return Array.from(grouped.entries()).map(([moduleId, entries]) => {
+      const latest = entries[0];
+      const totalNodes = latest.module._count.nodes;
+      const completed = totalNodes > 0 && entries.length >= totalNodes && entries.every((e) => e.completed);
+      const readingProgress = Math.max(...entries.map((e) => e.readingProgress));
+      const listeningProgress = Math.max(...entries.map((e) => e.listeningProgress));
+      const completedNodes = entries.filter((e) => e.completed).length;
+      return {
+        id: moduleId,
+        slug: latest.module.slug,
+        title: latest.module.title,
+        description: latest.module.description,
+        category: latest.module.category,
+        isPremium: latest.module.isPremium,
+        createdAt: latest.module.createdAt.toISOString(),
+        updatedAt: latest.module.updatedAt.toISOString(),
+        listeningProgress,
+        readingProgress,
+        completed,
+        totalNodes,
+        completedNodes,
+        lastReadAt: latest.lastReadAt.getTime(),
+      };
+    });
   }
 
   export async function getStats(userId: string) {
-    const [allProgress, totalModules, reflections, highlights, user] = await Promise.all([
+    const [allProgress, totalModules, reflections, user] = await Promise.all([
       prisma.userProgress.findMany({
         where: { userId },
         include: {
@@ -169,7 +181,6 @@ export namespace ProgressService {
         select: { timestamp: true },
         orderBy: { timestamp: "desc" },
       }),
-      prisma.highlight.count({ where: { userId } }),
       prisma.user.findUnique({
         where: { id: userId },
         select: { streakCount: true, preferredCategories: true },
@@ -276,9 +287,8 @@ export namespace ProgressService {
     const readXp = readingMinutes * 10;
     const completedXp = completedCount * 50;
     const reflectionXp = reflectionCount * 150;
-    const highlightXp = highlights * 100;
     const streakXp = streak * 5;
-    const totalXp = listenXp + readXp + completedXp + reflectionXp + highlightXp + streakXp;
+    const totalXp = listenXp + readXp + completedXp + reflectionXp + streakXp;
 
     const ranks = [
       { level: 1, name: "Beginner", xp: 0 },
@@ -308,7 +318,6 @@ export namespace ProgressService {
       listeningMinutes,
       readingMinutes,
       inProgressCount,
-      highlights,
       historyCount: moduleProgressMap.size,
       categoryBreakdown,
       completedCategoryBreakdown,
@@ -319,7 +328,6 @@ export namespace ProgressService {
       readXp,
       completedXp,
       reflectionXp,
-      highlightXp,
       streakXp,
       totalXp,
       rank: currentRank.name,

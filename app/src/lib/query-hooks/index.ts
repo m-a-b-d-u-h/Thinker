@@ -3,7 +3,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { modulesApi } from "@/lib/api/modules";
 import { favoritesApi } from "@/lib/api/favorites";
-import { highlightsApi } from "@/lib/api/highlights";
 import { reflectionsApi } from "@/lib/api/reflections";
 import { actionsApi } from "@/lib/api/actions";
 import { progressApi } from "@/lib/api/progress";
@@ -104,35 +103,6 @@ export function useToggleFavorite() {
     onSettled: () => {
       qc.invalidateQueries({ queryKey: ["favorites"] });
     },
-  });
-}
-
-// ─── Highlights ───
-
-export function useHighlights(moduleSlug?: string) {
-  const token = useAuthStore((s) => s.token);
-  return useQuery({
-    queryKey: ["highlights", moduleSlug],
-    queryFn: () => highlightsApi.list(moduleSlug),
-    enabled: !!token,
-    staleTime: 2 * 60 * 1000,
-  });
-}
-
-export function useCreateHighlight() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: highlightsApi.create,
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["highlights"] }),
-  });
-}
-
-export function useUpdateHighlight() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, ...body }: { id: string; text?: string; note?: string }) =>
-      highlightsApi.update(id, body),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["highlights"] }),
   });
 }
 

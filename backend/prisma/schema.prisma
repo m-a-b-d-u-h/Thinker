@@ -50,7 +50,6 @@ model User {
 
   progress          UserProgress[]
   reflections       Reflection[]
-  highlights        Highlight[]
   favorites         Favorite[]
   quizAttempts      QuizAttempt[]
   actionPlans       ActionPlan[]
@@ -74,7 +73,6 @@ model Module {
   questions       Question[]
   progress        UserProgress[]
   reflections     Reflection[]
-  highlights      Highlight[]
   favorites       Favorite[]
   quizAttempts    QuizAttempt[]
   actionPlans     ActionPlan[]
@@ -144,18 +142,6 @@ model Reflection {
   title       String
   content     String
   timestamp   DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
-}
-
-model Highlight {
-  id        String @id @default(cuid())
-  userId    String
-  moduleId  String
-  text      String
-  note      String  @default("")
-  timestamp DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)

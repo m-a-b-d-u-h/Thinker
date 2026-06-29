@@ -7,7 +7,6 @@ import {
   Compass,
   LayoutDashboard,
   Library,
-  Highlighter,
   BookOpen,
   Target,
   User,
@@ -23,7 +22,6 @@ export default function Navbar() {
     { name: "Explore", href: "/models", icon: Compass },
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Favorites", href: "/favorites", icon: Library },
-    { name: "Highlights", href: "/highlights", icon: Highlighter },
     { name: "Reflections", href: "/reflections", icon: BookOpen },
   ];
 

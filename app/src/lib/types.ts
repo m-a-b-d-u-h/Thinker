@@ -164,16 +164,6 @@ export interface Reflection {
   module?: { slug: string; title: string; category: string };
 }
 
-export interface Highlight {
-  id: string;
-  userId: string;
-  moduleId: string;
-  text: string;
-  note: string;
-  timestamp: string;
-  module?: { slug: string; title: string; category: string };
-}
-
 export interface MatrixRow {
   id: number;
   type: string;
@@ -220,7 +210,6 @@ export interface ProgressStats {
   listeningMinutes: number;
   readingMinutes: number;
   inProgressCount: number;
-  highlights: number;
   reflectionCount: number;
   historyCount: number;
   categoryBreakdown: Record<string, number>;
@@ -231,7 +220,6 @@ export interface ProgressStats {
   readXp: number;
   completedXp: number;
   reflectionXp: number;
-  highlightXp: number;
   streakXp: number;
   totalXp: number;
   rank: string;
