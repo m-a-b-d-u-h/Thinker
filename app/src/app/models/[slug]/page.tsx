@@ -243,49 +243,71 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
       <AnimatePresence>
         {selectedNode && (
           <motion.div
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 z-50 w-max bg-bg/95 border border-border backdrop-blur-md rounded-xl px-4 py-3">
-          <div className="flex items-center justify-center gap-2">
-            <button
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            className="fixed bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center gap-2">
+            <motion.button
+              variants={{
+                hidden: { y: 20, opacity: 0, scale: 0.9 },
+                visible: { y: 0, opacity: 1, scale: 1 }
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
               onClick={() => router.push(`/models/${selectedNode.data.slug}/read/${selectedNode.id}`)}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-muted/80 bg-bg/20 border border-border/50 hover:text-fg hover:bg-bg/40 transition-all"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
             >
               <BookOpen className="w-3.5 h-3.5 shrink-0" />
               <span>Read</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              variants={{
+                hidden: { y: 20, opacity: 0, scale: 0.9 },
+                visible: { y: 0, opacity: 1, scale: 1 }
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.1 }}
               onClick={() => router.push(`/models/${selectedNode.data.slug}/audio/${selectedNode.id}`)}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-muted/80 bg-bg/20 border border-border/50 hover:text-fg hover:bg-bg/40 transition-all"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
             >
               <Headphones className="w-3.5 h-3.5 shrink-0" />
               <span>Audio</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              variants={{
+                hidden: { y: 20, opacity: 0, scale: 0.9 },
+                visible: { y: 0, opacity: 1, scale: 1 }
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.2 }}
               onClick={() => router.push(`/models/${selectedNode.data.slug}/quiz/${selectedNode.id}`)}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-muted/80 bg-bg/20 border border-border/50 hover:text-fg hover:bg-bg/40 transition-all"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
             >
               <HelpCircle className="w-3.5 h-3.5 shrink-0" />
               <span>Quiz</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              variants={{
+                hidden: { y: 20, opacity: 0, scale: 0.9 },
+                visible: { y: 0, opacity: 1, scale: 1 }
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.3 }}
               onClick={() => router.push(`/models/${selectedNode.data.slug}/reflection/${selectedNode.id}`)}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-muted/80 bg-bg/20 border border-border/50 hover:text-fg hover:bg-bg/40 transition-all"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-medium text-fg border border-border/60 bg-bg/40 transition-all"
             >
               <MessageSquare className="w-3.5 h-3.5 shrink-0" />
               <span>Reflect</span>
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              variants={{
+                hidden: { y: 20, opacity: 0, scale: 0.9 },
+                visible: { y: 0, opacity: 1, scale: 1 }
+              }}
+              transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.4 }}
               onClick={() => selectedNode.data.onComplete?.()}
-              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-green-400/90 bg-green-950/20 border border-green-500/40 hover:bg-green-950/40 transition-all"
+              className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs font-semibold text-green-400 border border-green-500/60 bg-green-950/20 transition-all"
             >
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
               <span>Done</span>
-            </button>
-          </div>
-        </motion.div>
+            </motion.button>
+          </motion.div>
       )}
       </AnimatePresence>
     </div>
