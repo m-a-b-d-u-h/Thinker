@@ -232,7 +232,7 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
                     <div className="pt-4 mt-auto">
                       <div className="flex items-center justify-between">
                         <button
-                          onClick={() => router.push(`/models/${slug}/path`)}
+                          onClick={() => router.push(`/models/${slug}`)}
                           className="text-[10px] text-muted-dark/50 hover:text-muted transition-colors flex items-center gap-1 cursor-pointer"
                         >
                           <ArrowLeft className="w-2.5 h-2.5" />
@@ -258,21 +258,21 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
                           {i === nodeSlides.length - 1 && (
                             <div className="flex items-center gap-1.5">
                               <button
-                                onClick={() => router.push(`/models/${slug}/path/quiz/${nodeId}`)}
+                                onClick={() => router.push(`/models/${slug}/quiz/${nodeId}`)}
                                 className="px-2 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer flex items-center gap-1"
                               >
                                 <HelpCircle className="w-2.5 h-2.5" />
                                 Quiz
                               </button>
                               <button
-                                onClick={() => router.push(`/models/${slug}/path/reflection/${nodeId}`)}
+                                onClick={() => router.push(`/models/${slug}/reflection/${nodeId}`)}
                                 className="px-2 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer flex items-center gap-1"
                               >
                                 <MessageSquare className="w-2.5 h-2.5" />
                                 Reflect
                               </button>
                               <button
-                                onClick={() => router.push(`/models/${slug}/path`)}
+                                onClick={() => router.push(`/models/${slug}`)}
                                 className="px-3 py-1 text-[10px] font-medium rounded-lg bg-fg text-bg hover:opacity-90 transition-all cursor-pointer"
                               >
                                 Done

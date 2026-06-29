@@ -25,12 +25,9 @@ export default function Navbar() {
     { name: "Favorites", href: "/favorites", icon: Library },
     { name: "Highlights", href: "/highlights", icon: Highlighter },
     { name: "Reflections", href: "/reflections", icon: BookOpen },
-    { name: "Actions", href: "/actions", icon: Target },
   ];
 
-  const pathSegments = pathname.split("/").filter(Boolean);
-  const isModelPage = pathname.startsWith("/models/") && pathSegments.length >= 2;
-  const isModelDetailPage = isModelPage && pathSegments.length === 2;
+
 
   return (
     <>
@@ -75,8 +72,7 @@ export default function Navbar() {
 
       </nav>
 
-      {!isModelDetailPage && (
-        <nav className="fixed bottom-0 inset-x-0 z-50 bg-bg border-t border-border-subtle md:hidden">
+      <nav className="fixed bottom-0 inset-x-0 z-50 bg-bg border-t border-border-subtle md:hidden">
         <div className="flex items-center justify-around h-14">
           {links.map((link) => {
             const Icon = link.icon;
@@ -91,7 +87,6 @@ export default function Navbar() {
           })}
         </div>
       </nav>
-      )}
     </>
   );
 }

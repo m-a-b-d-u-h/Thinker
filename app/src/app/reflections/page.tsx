@@ -85,7 +85,7 @@ export default function ReflectionListPage() {
                 className="group relative"
               >
                 <Link
-                  href={ref.module?.slug ? `/models/${ref.module.slug}/reflection` : '#'}
+                  href={ref.module?.slug ? `/models/${ref.module.slug}` : '#'}
                   className="block bg-bg-card border border-border-subtle rounded-2xl hover:border-border transition-all duration-200 p-6 no-underline"
                 >
                   <div className="flex items-center justify-between mb-3">

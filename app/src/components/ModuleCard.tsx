@@ -168,7 +168,7 @@ export function ModuleCard({ module }: { module: ModuleData }) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              router.push(`/models/${module.slug}/path`);
+              router.push(`/models/${module.slug}`);
             }}
             className="flex items-center gap-1.5 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-bg-elevated text-muted text-[0.625rem] md:text-[0.6875rem] font-semibold hover:bg-bg-card hover:text-fg transition-all"
           >

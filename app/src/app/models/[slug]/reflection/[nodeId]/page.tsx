@@ -82,7 +82,7 @@ export default function NodeReflectionPage({ params }: { params: Promise<{ slug:
       <div className="sticky top-0 z-10 bg-bg/80 backdrop-blur-md border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
           <button
-            onClick={() => router.push(`/models/${slug}/path`)}
+            onClick={() => router.push(`/models/${slug}`)}
             className="w-9 h-9 rounded-xl flex items-center justify-center text-muted hover:text-fg hover:bg-bg-elevated transition-all cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -147,7 +147,7 @@ export default function NodeReflectionPage({ params }: { params: Promise<{ slug:
               {saving ? "Saving..." : saved ? "Saved!" : "Save Reflection"}
             </button>
             <button
-              onClick={() => router.push(`/models/${slug}/path`)}
+              onClick={() => router.push(`/models/${slug}`)}
               className="px-4 py-2.5 text-sm font-medium rounded-lg bg-bg-elevated border border-border text-muted hover:text-fg hover:border-border-light transition-all cursor-pointer"
             >
               Done

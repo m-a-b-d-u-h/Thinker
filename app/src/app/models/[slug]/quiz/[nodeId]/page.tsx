@@ -116,7 +116,7 @@ export default function NodeQuizPage({ params }: { params: Promise<{ slug: strin
         <div className="text-center">
           <p className="text-sm text-muted">No quiz questions available.</p>
           <button
-            onClick={() => router.push(`/models/${slug}/path`)}
+            onClick={() => router.push(`/models/${slug}`)}
             className="mt-4 px-4 py-2 text-xs font-medium rounded-lg bg-bg-elevated border border-border text-muted hover:text-fg transition-all cursor-pointer"
           >
             Back to path
@@ -132,7 +132,7 @@ export default function NodeQuizPage({ params }: { params: Promise<{ slug: strin
       <div className="sticky top-0 z-10 bg-bg/80 backdrop-blur-md border-b border-border">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
           <button
-            onClick={() => router.push(`/models/${slug}/path`)}
+            onClick={() => router.push(`/models/${slug}`)}
             className="w-9 h-9 rounded-xl flex items-center justify-center text-muted hover:text-fg hover:bg-bg-elevated transition-all cursor-pointer"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -250,7 +250,7 @@ export default function NodeQuizPage({ params }: { params: Promise<{ slug: strin
                   Retry Quiz
                 </button>
                 <button
-                  onClick={() => router.push(`/models/${slug}/path`)}
+                  onClick={() => router.push(`/models/${slug}`)}
                   className="px-6 py-3 bg-bg-elevated border border-border text-muted rounded-xl font-semibold text-sm cursor-pointer hover:text-fg hover:border-border-light transition-all"
                 >
                   Back to Path

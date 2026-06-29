@@ -66,7 +66,7 @@ export default function AudioPage({ params }: { params: Promise<{ slug: string; 
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => router.push(`/models/${slug}/path`)}
+              onClick={() => router.push(`/models/${slug}`)}
               className="w-9 h-9 rounded-xl flex items-center justify-center text-muted hover:text-fg hover:bg-bg-elevated transition-all cursor-pointer"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -195,21 +195,21 @@ export default function AudioPage({ params }: { params: Promise<{ slug: string; 
           {/* Action buttons */}
           <div className="pt-4 pb-2 flex items-center justify-center gap-3">
             <button
-              onClick={() => router.push(`/models/${slug}/path/quiz/${nodeId}`)}
+              onClick={() => router.push(`/models/${slug}/quiz/${nodeId}`)}
               className="px-4 py-2 text-xs font-medium rounded-lg bg-bg-elevated border border-border text-muted hover:text-fg hover:border-border-light transition-all cursor-pointer flex items-center gap-1.5"
             >
               <HelpCircle className="w-3.5 h-3.5" />
               Quiz
             </button>
             <button
-              onClick={() => router.push(`/models/${slug}/path/reflection/${nodeId}`)}
+              onClick={() => router.push(`/models/${slug}/reflection/${nodeId}`)}
               className="px-4 py-2 text-xs font-medium rounded-lg bg-bg-elevated border border-border text-muted hover:text-fg hover:border-border-light transition-all cursor-pointer flex items-center gap-1.5"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               Reflect
             </button>
             <button
-              onClick={() => router.push(`/models/${slug}/path`)}
+              onClick={() => router.push(`/models/${slug}`)}
               className="px-5 py-2 text-xs font-medium rounded-lg bg-green-600 text-white hover:opacity-90 transition-all cursor-pointer"
             >
               Done

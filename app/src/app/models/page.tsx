@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import React, { useState, useEffect, useRef } from "react";
 import { Play, Clock, Search, Sparkles, Crown, Lock } from "lucide-react";
 import { motion } from "framer-motion";
@@ -12,87 +11,59 @@ import { useModules } from "@/lib/use-modules";
 import { useAuth } from "@/lib/auth-context";
 import { modulesApi } from "@/lib/api/modules";
 import Pagination from "@/components/Pagination";
-import type { Module as ModuleType } from "@/lib/types";
+import type { Module as ModuleType, ReactFlowNode, ReactFlowEdge } from "@/lib/types";
 
-const nodeSlugs: Record<string, string> = {
-  "First Principles": "first-principles",
-  "Systems Thinking": "systems-thinking",
-  "Inversion": "inversion-thinking",
-  "Second-Order": "second-order-thinking",
-  "Margin of Safety": "opportunity-cost",
-  "Opportunity Cost": "opportunity-cost",
-};
 
-const MarketingNode = ({ data }: { data: any }) => {
-  const router = useRouter();
-  const slug = nodeSlugs[data.label];
-  return (
-    <div
-      onClick={() => slug && router.push(`/models/${slug}`)}
-      className={`cursor-pointer transition-all hover:opacity-80 ${slug ? 'cursor-pointer' : 'cursor-default'}`}
-      title={slug ? `Open ${data.label}` : undefined}
-    >
-      <Handle type="target" position={Position.Top} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
-      {data.label}
-      <Handle type="source" position={Position.Bottom} className="!bg-[#333] !border-0 !w-1.5 !h-1.5" />
-    </div>
-  );
-};
+const DisplayNode = ({ data }: { data: any }) => (
+  <div className="rounded-lg px-3 py-2 text-[10px] font-bold text-center whitespace-nowrap bg-bg/90 text-fg border border-border backdrop-blur-[3px] cursor-default">
+    <Handle type="target" position={Position.Top} className="!bg-muted-dark !border-0 !w-1.5 !h-1.5" isConnectable={false} />
+    {data.label}
+    <Handle type="source" position={Position.Bottom} className="!bg-muted-dark !border-0 !w-1.5 !h-1.5" isConnectable={false} />
+  </div>
+);
 
-const marketingNodeTypes = { custom: MarketingNode };
+const displayNodeTypes = { custom: DisplayNode };
 
-const MarketingFlow = () => {
-  const nodes = React.useMemo(() => [
-    { id: '1', type: 'custom', position: { x: 20, y: 70 }, data: { label: 'First Principles' } },
-    { id: '2', type: 'custom', position: { x: 170, y: 25 }, data: { label: 'Systems Thinking' } },
-    { id: '3', type: 'custom', position: { x: 155, y: 120 }, data: { label: 'Inversion' } },
-    { id: '4', type: 'custom', position: { x: 320, y: 45 }, data: { label: 'Second-Order' } },
-    { id: '5', type: 'custom', position: { x: 305, y: 140 }, data: { label: 'Margin of Safety' } },
-    { id: '6', type: 'custom', position: { x: 470, y: 90 }, data: { label: 'Opportunity Cost' } },
-  ], []);
+const MarketingFlow = ({ nodes: rawNodes, edges: rawEdges }: { nodes: ReactFlowNode[]; edges: ReactFlowEdge[] }) => {
+  const styledNodes = React.useMemo(() => rawNodes.map((n) => ({
+    id: n.id,
+    type: 'custom',
+    position: n.position,
+    data: n.data,
+  })), [rawNodes]);
 
-  const edges = React.useMemo(() => [
-    { id: 'e1-2', source: '1', target: '2', animated: true, style: { stroke: 'rgba(251,191,36,0.35)', strokeWidth: 1.5 } },
-    { id: 'e1-3', source: '1', target: '3', animated: true, style: { stroke: 'rgba(251,191,36,0.25)', strokeWidth: 1 } },
-    { id: 'e2-4', source: '2', target: '4', animated: true, style: { stroke: 'rgba(251,191,36,0.4)', strokeWidth: 1.5 } },
-    { id: 'e3-5', source: '3', target: '5', animated: true, style: { stroke: 'rgba(251,191,36,0.25)', strokeWidth: 1 } },
-    { id: 'e4-5', source: '4', target: '5', animated: true, style: { stroke: 'rgba(251,191,36,0.35)', strokeWidth: 1.5 } },
-    { id: 'e4-6', source: '4', target: '6', animated: true, style: { stroke: 'rgba(251,191,36,0.4)', strokeWidth: 1.5 } },
-    { id: 'e5-6', source: '5', target: '6', animated: true, style: { stroke: 'rgba(251,191,36,0.3)', strokeWidth: 1 } },
-  ], []);
+  const styledEdges = React.useMemo(() => rawEdges.map((e) => ({
+    ...e,
+    animated: true,
+    style: { stroke: 'var(--color-border)', strokeWidth: 3, opacity: 1 },
+    labelStyle: { fill: 'var(--color-muted-dark)', fontSize: 9, fontWeight: 500 },
+    labelBgStyle: { fill: 'transparent' },
+    labelBgPadding: [0, 0] as [number, number],
+    labelBgBorderRadius: 0,
+  })), [rawEdges]);
 
-  const styledNodes = React.useMemo(() => nodes.map((n, i) => ({
-    ...n,
-    style: {
-      background: i === 0 ? 'linear-gradient(135deg, rgba(251,191,36,0.12), rgba(251,191,36,0.04))' : 'transparent',
-      color: i === 0 ? '#fbbf24' : 'rgba(255,255,255,0.7)',
-      border: i === 0 ? '1px solid rgba(251,191,36,0.4)' : '1px solid rgba(255,255,255,0.08)',
-      borderRadius: '8px',
-      padding: i === 0 ? '8px 12px' : '6px 10px',
-      fontSize: '11px',
-      fontWeight: 700,
-      boxShadow: i === 0 ? '0 0 24px rgba(251,191,36,0.08)' : 'none'
+  const rfRef = useRef<any>(null);
+  const [rfReady, setRfReady] = useState(false);
+
+  useEffect(() => {
+    if (rfReady) {
+      const timer = setTimeout(() => {
+        rfRef.current.fitView({ padding: 0.5, duration: 300 });
+      }, 100);
+      return () => clearTimeout(timer);
     }
-  })), [nodes]);
+  }, [rfReady]);
 
   return (
     <div className="h-full w-full">
       <ReactFlowProvider>
         <ReactFlow
           nodes={styledNodes}
-          edges={edges}
-          nodeTypes={marketingNodeTypes}
+          edges={styledEdges}
+          nodeTypes={displayNodeTypes}
           proOptions={{ hideAttribution: true }}
-          defaultViewport={{ x: 0, y: 0, zoom: 0.9 }}
-          minZoom={0.5}
-          maxZoom={1.5}
-          fitView
-          panOnDrag={false}
-          zoomOnScroll={false}
-          zoomOnPinch={false}
-        >
-          <Background color="#1a1a1a" gap={24} size={0.5} />
-        </ReactFlow>
+          onInit={(instance) => { rfRef.current = instance; setRfReady(true); }}
+        />
       </ReactFlowProvider>
     </div>
   );
@@ -143,71 +114,42 @@ export default function ProductsPage() {
       {/* Knowledge Graph Banner + Daily Material */}
       <div className="mb-8">
         {!isSubscribed && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <div className="h-[280px] bg-[#0a0a0c] rounded-3xl border border-white/10 overflow-hidden relative">
-              <div className="absolute inset-0">
-                <MarketingFlow />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] via-[#0a0a0c]/40 to-transparent z-10" />
-              <div className="relative z-20 h-full flex items-center">
-                <div className="p-8 max-w-[380px]">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] mb-3 w-fit">
-                    <Sparkles size={12} className="text-[#fbbf24]" />
-                    Premium Feature
-                  </div>
-                  <h2 className="text-xl font-black mb-2 text-white leading-tight">
-                    Your Second Brain Awaits
-                  </h2>
-                  <p className="text-[0.8125rem] text-[#666] mb-4 leading-relaxed max-w-[300px]">
-                    Visualize and grow your knowledge graph in real-time.
-                  </p>
-                  <Link href="/#pricing" className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black rounded-xl no-underline font-bold text-[0.8125rem] hover:bg-white/90 hover:scale-[1.02] transition-all duration-200 shadow-lg shadow-white/20">
-                    <Sparkles size={14} />
-                    See It In Action
-                  </Link>
-                </div>
-              </div>
+          <div className="h-[180px] sm:h-[220px] bg-[#0a0a0c] rounded-3xl border border-white/10 overflow-hidden relative">
+            <div className="absolute inset-y-0 right-0 w-1/2 z-0">
+              {dailyFree?.nodes && dailyFree.nodes.length > 0 ? (
+                <MarketingFlow nodes={dailyFree.nodes} edges={dailyFree.edges} />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-[0.75rem] text-white/20" />
+              )}
             </div>
-
-            <div className="h-[280px] bg-[#0a0a0c] rounded-3xl border border-white/10 overflow-hidden relative">
-              <div className="h-full flex items-center p-8">
-                <div className="w-full">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] mb-3 w-fit">
-                    <Sparkles size={12} className="text-[#fbbf24]" />
-                    Daily Free Material
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0c] from-30% via-[#0a0a0c]/50 via-55% to-transparent to-75% z-10" />
+            <div className="relative z-20 h-full flex items-center p-6 sm:p-8">
+              <div className="w-full max-w-[400px]">
+                <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-4">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 bg-white/10 rounded-full text-[0.5625rem] sm:text-[0.6875rem] font-bold text-white/90 uppercase tracking-[0.1em] w-fit">
+                    <Sparkles size={10} className="text-[#fbbf24]" />
+                    Daily Free
                   </div>
-                  <h3 className="text-xl font-bold text-white mb-2 leading-snug">
-                    {dailyFree?.title ?? 'Loading...'}
-                  </h3>
-                  <p className="text-[0.8125rem] text-[#666] mb-4 leading-relaxed line-clamp-2">
-                    {dailyFree?.description ?? ''}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="shrink-0 px-3 py-1 rounded-full text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10">
-                      {dailyFree?.category ? dailyFree.category.charAt(0).toUpperCase() + dailyFree.category.slice(1).replace(/-/g, ' ') : ''}
-                    </span>
-                    <Link href={`/models/${dailyFree?.slug ?? '#'}`} className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-black rounded-lg no-underline font-bold text-[0.75rem] hover:bg-white/90 transition-all">
-                      <Play size={12} fill="currentColor" />
-                      Start Free
-                    </Link>
-                  </div>
+                  <span className="inline-flex shrink-0 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[0.5rem] sm:text-[0.625rem] font-semibold bg-white/5 text-white/70 border border-white/10 w-fit">
+                    {dailyFree?.category ? dailyFree.category.charAt(0).toUpperCase() + dailyFree.category.slice(1).replace(/-/g, ' ') : ''}
+                  </span>
                 </div>
+                <h3 className="text-[0.9375rem] sm:text-xl font-bold text-white mb-1 sm:mb-2 leading-snug line-clamp-1 sm:line-clamp-none">
+                  {dailyFree?.title ?? 'Loading...'}
+                </h3>
+                <p className="text-[0.6875rem] sm:text-[0.8125rem] text-[#888] mb-3 sm:mb-5 leading-relaxed line-clamp-1 sm:line-clamp-2">
+                  {dailyFree?.description ?? ''}
+                </p>
+                <Link href={`/models/${dailyFree?.slug ?? '#'}`} className="inline-flex items-center gap-1 sm:gap-1.5 px-3 py-1.5 sm:px-5 sm:py-2.5 bg-white text-black rounded-lg sm:rounded-xl no-underline font-bold text-[0.625rem] sm:text-[0.75rem] hover:bg-white/90 hover:scale-[1.02] transition-all duration-200 shadow-lg shadow-white/20">
+                  <Play size={10} fill="currentColor" />
+                  <span className="hidden sm:inline">Start Free</span>
+                  <span className="sm:hidden">Free</span>
+                </Link>
               </div>
             </div>
           </div>
         )}
       </div>
-
-      {historyModules.length === 0 && (
-        <header className="mb-16 max-w-[800px]">
-          <h1 className="text-6xl font-black mb-4 tracking-[-0.04em] leading-none">
-            Master Your <span className="text-muted-light">Thinking Library</span>
-          </h1>
-          <p className="text-muted text-lg leading-relaxed">
-            Visual mental models and immersive audio narration for deep learning.
-          </p>
-        </header>
-      )}
 
       {historyModules.length > 0 && (
         <section className="mb-16">
