@@ -1,15 +1,16 @@
 "use client";
 
 import { useState, useMemo, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactFlow, Background, Handle, Position, useReactFlow, ReactFlowProvider } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import React from "react";
-import { CheckCircle2, Zap, Crown, ShieldCheck, Library, Play, ArrowRight, Sparkles, Network, Clock, BookOpen, Star, Quote } from "lucide-react";
+import { CheckCircle2, Zap, Crown, ShieldCheck, Library, Play, ArrowRight, Sparkles, Network, Clock, BookOpen, Star, Quote, Map, Waypoints, Brain, Headphones, Award, Lightbulb, Send } from "lucide-react";
 import Marquee from "react-fast-marquee";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { ModuleCard } from "@/components/ModuleCard";
 import { paymentsApi } from "@/lib/api/payments";
 import { authApi } from "@/lib/api/auth";
@@ -90,6 +91,59 @@ const MiniPreview = ({ nodes, edges }: { nodes: any[], edges: any[] }) => {
   );
 };
 
+function VantaBackground() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    let instance: any = null
+    const init = async () => {
+      const mod: any = await import("three")
+      const THREE = mod.default || mod
+      ;(window as any).THREE = THREE
+      const NET = (await import("vanta/dist/vanta.net.min")).default
+      if (ref.current && !instance) {
+        instance = NET({
+          el: ref.current,
+          mouseControls: true,
+          touchControls: false,
+          gyroControls: false,
+          minHeight: 200,
+          minWidth: 200,
+          scale: 1,
+          scaleMobile: 1,
+          color: 0x737373,
+          backgroundColor: 0x000000,
+          points: 5,
+          maxDistance: 40,
+          spacing: 35,
+          showDots: true,
+        })
+        try {
+          instance.points?.forEach((p: any) => { p.r = (Math.random() * 4 - 2) * 5 })
+        } catch {}
+        setTimeout(() => {
+          setReady(true)
+          try {
+            instance.points?.forEach((p: any) => p.scale.set(80, 80, 80))
+          } catch {}
+        }, 500)
+      }
+    }
+    init()
+    return () => {
+      instance?.destroy()
+    }
+  }, [])
+
+  return (
+    <>
+      <div ref={ref} className="absolute inset-0 transition-opacity duration-300" style={{ opacity: ready ? 0.4 : 0 }} />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_30%,_#000_75%)] pointer-events-none" />
+    </>
+  )
+}
+
 export default function Home() {
   const router = useRouter();
   const { user, setUser } = useAuth();
@@ -161,71 +215,187 @@ export default function Home() {
     }
   };
 
-  const [openFaq, setOpenFaq] = useState<string | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
 
   return (
     <>
       <Navbar />
-      <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6 pb-14 md:pb-0">
         {/* Hero Section */}
-        <section className="min-h-[calc(100vh-4rem)] flex items-center">
-          <div className="w-full grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left: Text */}
-            <div>
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 text-[#ffb800] bg-[#ffb8001a] px-5 py-2 rounded-full mb-8 font-bold uppercase tracking-wider text-[0.75rem] border border-[#ffb80033] w-fit">
-                <Library size={14} /> The Ultimate Cognitive Library
-              </motion.div>
+        <section className="relative min-h-screen overflow-hidden bg-black">
+          <VantaBackground />
 
-              <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-[clamp(2.5rem,5vw,4.5rem)] font-black tracking-[-0.04em] leading-[1.1] mb-6">
-                Master your <br /> <span className="bg-gradient-to-br from-white to-[#555] bg-clip-text text-transparent">thinking library.</span>
-              </motion.h1>
-
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-lg text-[#888] max-w-[500px] mb-8 leading-relaxed">
-                Explore an expansive library of mental models, cognitive tools, and frameworks. Internalize complex concepts through interactive mapping and committed action.
-              </motion.p>
-
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="flex gap-4 flex-wrap mb-10">
-                <Link href="/models" className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition-all">
-                  Continue Learning
-                </Link>
-                <Link href="/models" className="inline-flex items-center gap-2 bg-transparent border border-[#222] text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/5 transition-all">
-                  View Modules
-                </Link>
-              </motion.div>
-
-              {/* App Store Badges */}
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="flex items-center gap-4">
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-[#080808] border border-white/5 rounded-xl opacity-50 cursor-not-allowed">
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-                  <div className="text-left">
-                    <div className="text-[0.5rem] text-[#666] leading-tight">Download on the</div>
-                    <div className="text-[0.8125rem] font-bold text-white leading-tight">App Store</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 px-4 py-2.5 bg-[#080808] border border-white/5 rounded-xl opacity-50 cursor-not-allowed">
-                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 0 1 0 1.732l-2.807 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/></svg>
-                  <div className="text-left">
-                    <div className="text-[0.5rem] text-[#666] leading-tight">Get it on</div>
-                    <div className="text-[0.8125rem] font-bold text-white leading-tight">Google Play</div>
-                  </div>
-                </div>
-                <span className="text-[0.625rem] text-[#444] font-semibold">Mobile app in development</span>
-              </motion.div>
-            </div>
-
-            {/* Right: Hero Image */}
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} className="relative">
-              <img
-                src="/landing/hero.png"
-                alt="1section hero preview"
-                draggable={false}
-                onContextMenu={(e) => e.preventDefault()}
-                className="w-full h-auto rounded-2xl lg:scale-125 origin-center select-none pointer-events-none"
-              />
+          <div className="relative mx-auto flex min-h-screen max-w-[900px] flex-col items-center justify-center px-4 text-center sm:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-medium tracking-wider text-white"
+            >
+              <div className="h-1.5 w-1.5 rounded-full bg-[#f97316] animate-pulse" />
+              The Ultimate Cognitive Library
             </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+              className="text-5xl font-black leading-[1.05] tracking-[-0.04em] sm:text-6xl md:text-7xl lg:text-8xl max-w-4xl"
+            >
+              Master your{" "}
+              <span className="text-[#f97316]">thinking library</span>.
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-6 max-w-xl text-base leading-relaxed text-white/40 sm:text-lg"
+            >
+              Explore an expansive library of mental models, cognitive tools, and frameworks. Internalize complex concepts through interactive mapping and committed action.
+            </motion.p>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
+            >
+              <Link
+                href="/models"
+                className="group inline-flex items-center gap-3 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:bg-[#e5e5e5] hover:shadow-xl hover:shadow-white/20"
+              >
+                Continue Learning
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link
+                href="/models"
+                className="inline-flex items-center gap-3 rounded-xl border border-white/20 bg-transparent px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/5"
+              >
+                View Modules
+              </Link>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
+            >
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl opacity-50 cursor-not-allowed">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                <div className="text-left">
+                  <div className="text-[0.5rem] text-[#666] leading-tight">Download on the</div>
+                  <div className="text-[0.8125rem] font-bold text-white leading-tight">App Store</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl opacity-50 cursor-not-allowed">
+                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 0 1 0 1.732l-2.807 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/></svg>
+                <div className="text-left">
+                  <div className="text-[0.5rem] text-[#666] leading-tight">Get it on</div>
+                  <div className="text-[0.8125rem] font-bold text-white leading-tight">Google Play</div>
+                </div>
+              </div>
+              <span className="text-[0.625rem] text-[#444] font-semibold">Mobile app in development</span>
+            </motion.div>
+
+            <motion.a
+              href="#preview"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.1, duration: 0.4 }}
+              className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-xs text-white/25 transition-colors hover:text-white"
+            >
+              <span>Scroll to explore</span>
+              <motion.div
+                animate={{ y: [0, 6, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M4 6l4 4 4-4" />
+                </svg>
+              </motion.div>
+            </motion.a>
           </div>
         </section>
 
+        {/* Preview Section */}
+        <section id="preview" className="w-full py-32 sm:py-40">
+          <div className="mx-auto max-w-[1000px] px-4 sm:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mb-16 text-center"
+            >
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">
+                Preview
+              </p>
+              <h2 className="text-5xl font-black tracking-[-0.04em] sm:text-6xl text-white">
+                Take a look{" "}
+                <span className="text-[#f97316]">inside</span>
+              </h2>
+              <p className="mt-3 text-lg text-white/50">
+                A first look at your future dashboard — your command center with progress tracking, a library of mental models, daily bite-sized lessons, personal insights on your growth, and a community of fellow thinkers.
+              </p>
+            </motion.div>
+
+            <div className="space-y-20">
+              {[
+                {
+                  title: "Dashboard",
+                  badge: "Dashboard",
+                  desc: "Your command center. See your progress, recommended modules, recent activity, and learning streaks at a glance.",
+                  image: "/features/Screenshot_18-4-2026_12621_localhost.jpeg",
+                  color: "#3b82f6",
+                },
+                {
+                  title: "Explore Modules",
+                  badge: "Library",
+                  desc: "Browse the full collection of mental models. Filter by category, search by keyword, or discover your daily free theory.",
+                  image: "/features/screenshot-1779446043467.png",
+                  color: "#10b981",
+                },
+                {
+                  title: "Reading View",
+                  badge: "Learn",
+                  desc: "Dive deep into each mental model with rich reading content, text-to-speech narration, and word-level highlighting.",
+                  image: "/features/image%202.png",
+                  color: "#8b5cf6",
+                },
+              ].map((page, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: i * 0.1 }}
+                >
+                  <div className="overflow-hidden rounded-xl px-2.5 transition-transform duration-500 hover:scale-[1.02]" style={{ boxShadow: `-2px 0 0 0 ${page.color}40, 2px 0 0 0 ${page.color}40` }}>
+                    <img src={page.image} alt={page.title} className="w-full" />
+                  </div>
+                  <div className="mt-5 px-1">
+                    <div className="mb-4 flex items-center gap-3">
+                      <span className="h-px w-6" style={{ backgroundColor: page.color }} />
+                      <span className="text-[11px] font-bold uppercase tracking-[0.15em]" style={{ color: page.color }}>
+                        {page.badge}
+                      </span>
+                    </div>
+                    <div className="ml-9">
+                      <h3 className="text-xl font-black tracking-[-0.02em] text-white/90">
+                        {page.title}
+                      </h3>
+                      <p className="mt-2 text-sm leading-relaxed text-white/50">
+                        {page.desc}
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6">
         {/* Sample Products Section */}
         <section className="py-16">
           <header className="mb-16 text-center">
@@ -249,42 +419,170 @@ export default function Home() {
         </section>
 
         {/* How It Works Section */}
-        <section className="py-24">
-          <header className="mb-16 text-center">
-            <h2 className="text-5xl font-black mb-4 tracking-[-0.04em]">How It <span className="text-[#444]">Works</span></h2>
-            <p className="text-muted text-lg max-w-[600px] mx-auto">Transform your thinking in three simple steps.</p>
-          </header>
+        <section id="features" className="w-full py-32 sm:py-40">
+          <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mb-20 text-center"
+            >
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">
+                How It Works
+              </p>
+              <h2 className="font-heading text-5xl font-black tracking-[-0.04em] sm:text-6xl text-white">
+                Learn Through{" "}
+                <span className="text-[#f97316]">Interactive Maps</span>
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-lg text-white/40">
+                Each topic is a learning path. Each path is a map of connected nodes — with short lessons, audio, quizzes, and action steps.
+              </p>
+            </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-            <div className="hidden md:block absolute top-10 left-[16.67%] right-[16.67%] h-px bg-gradient-to-r from-transparent via-white/10 to-transparent z-0" />
+            <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+              {[
+                { icon: Map, title: "Pick a Path", desc: "Choose a topic and enter an interactive learning map. Each map is a curated path of connected nodes — designed to take you from zero to fluent.", features: ["Curated learning paths", "Visual node-based maps", "Connected topic networks", "Pick up where you left off"], color: "#3b82f6" },
+                { icon: Waypoints, title: "Walk the Nodes", desc: "Each node packs a short lesson, audio narration, quiz, reflection prompt, and action step — so every session is complete and hands-on.", features: ["Short & focused lessons", "Audio for on-the-go learning", "Quizzes to lock it in", "Reflections & action steps"], color: "#10b981" },
+                { icon: Brain, title: "Connect & Apply", desc: "See how mental models link together as you progress. Build a lattice of interconnected ideas — and start thinking like the best.", features: ["Visual node connections", "Cross-model linking", "Real-world application guides", "Track your thinking growth"], color: "#8b5cf6" },
+              ].map((step, i) => {
+                const Icon = step.icon
+                return (
+                  <motion.div
+                    key={step.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="rounded-2xl border border-white/10 bg-[#050505] p-6"
+                  >
+                    <div className="mb-2 text-xs font-bold uppercase tracking-[0.1em]" style={{ color: step.color }}>
+                      Step 0{i + 1}
+                    </div>
+                    <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]" style={{ color: step.color }}>
+                      <Icon className="h-7 w-7" />
+                    </div>
+                    <h3 className="font-heading mb-3 text-2xl font-black text-white/80">
+                      {step.title}
+                    </h3>
+                    <p className="mb-4 text-sm leading-relaxed text-white/40">
+                      {step.desc}
+                    </p>
+                    <ul className="space-y-2">
+                      {step.features.map((f) => (
+                        <li key={f} className="flex items-center gap-2.5 text-sm text-white/30">
+                          <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: step.color, opacity: 0.5 }} />
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
 
-            {[
-              { step: '01', title: 'Explore', desc: 'Browse an expansive library of mental models, filter by category, and discover your daily free theory.', icon: Network, color: '#a78bfa' },
-              { step: '02', title: 'Learn', desc: 'Read with immersive TTS narration, highlight key passages, and track your progress automatically.', icon: BookOpen, color: '#fb923c' },
-              { step: '03', title: 'Master', desc: 'Build action protocols, reflect with guided prompts, quiz yourself, and visualize connections in your knowledge graph.', icon: Zap, color: '#2dd4bf' },
-            ].map((item, idx) => (
-              <motion.div
-                key={item.step}
-                initial={{ opacity: 0, y: 5 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.15 }}
-                className="text-center relative z-10"
-              >
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6" style={{ background: `${item.color}15`, border: `1px solid ${item.color}30`, color: item.color }}>
-                  <item.icon size={32} />
+        {/* Features Section */}
+        <section id="analysis" className="w-full py-32 sm:py-40">
+          <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mb-16 text-center"
+            >
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">
+                Features
+              </p>
+              <h2 className="font-heading text-5xl font-black tracking-[-0.04em] sm:text-6xl text-white">
+                What&apos;s coming to{" "}
+                <span className="text-[#f97316]">1section</span>
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-lg text-white/40">
+                Every feature is designed to help you collect, connect, and apply
+                mental models effortlessly.
+              </p>
+            </motion.div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              {[
+                { icon: Network, title: "Knowledge Graphs", desc: "Visualize how mental models interconnect. Interactive nodes and edges reveal hidden relationships between every framework in the library.", stat: "Coming in v1.0", color: "#3b82f6" },
+                { icon: Headphones, title: "Text-to-Speech Narration", desc: "Listen to any theory with natural TTS narration. Word-level highlighting helps you follow along, perfect for learning on the go.", stat: "Audio for all 200+ models", color: "#10b981" },
+                { icon: Sparkles, title: "Daily Free Theory", desc: "A new professional framework unlocks every 24 hours. Build a daily learning habit without commitment, one mental model at a time.", stat: "Refreshes daily", color: "#8b5cf6" },
+                { icon: Award, title: "Quizzes & XP System", desc: "Test your understanding with interactive quizzes, earn XP for correct answers, track streaks, and unlock achievements as you progress.", stat: "Gamified learning", color: "#f97316" },
+              ].map((card, i) => {
+                const Icon = card.icon
+                return (
+                  <motion.div
+                    key={card.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.1 }}
+                    className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#050505] p-8 transition-all duration-300 hover:border-white/10"
+                  >
+                    <div
+                      className="pointer-events-none absolute -right-20 -top-20 h-40 w-40 rounded-full opacity-0 transition-all duration-500 group-hover:opacity-100"
+                      style={{
+                        background: `radial-gradient(circle, ${card.color}15, transparent 60%)`,
+                      }}
+                    />
+                    <div className="relative z-10">
+                      <div
+                        className="mb-5 inline-flex h-12 w-12 items-center justify-center rounded-xl shadow-lg shadow-black/20"
+                        style={{ background: `${card.color}15`, border: `1px solid ${card.color}30`, color: card.color }}
+                      >
+                        <Icon className="h-6 w-6" />
+                      </div>
+                      <h3 className="font-heading mb-2 text-xl font-bold text-white/80">{card.title}</h3>
+                      <p className="mb-4 text-sm leading-relaxed text-white/40">{card.desc}</p>
+                      <div className="flex items-center gap-2 text-xs font-semibold" style={{ color: card.color }}>
+                        <span>{card.stat}</span>
+                        <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Feedback Section */}
+        <section id="feedback" className="w-full py-32 sm:py-40">
+          <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mx-auto max-w-3xl"
+            >
+              <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#050505] p-10 sm:p-16">
+                <div className="pointer-events-none absolute inset-0 -z-10">
+                  <div className="absolute -right-20 -top-20 h-60 w-60 rounded-full bg-white/[0.03] blur-3xl" />
+                  <div className="absolute -bottom-20 -left-20 h-60 w-60 rounded-full bg-white/[0.03] blur-3xl" />
                 </div>
-                <div className="text-[0.625rem] font-bold tracking-[0.1em] mb-3" style={{ color: item.color }}>
-                  {item.step}
+
+                <div className="relative z-10 text-center">
+                  <div
+                    className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg shadow-black/20"
+                    style={{ background: "#ffffff10", border: "1px solid #ffffff20", color: "#f97316" }}
+                  >
+                    <Lightbulb className="h-7 w-7" />
+                  </div>
+                  <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">
+                    Feedback
+                  </p>
+                  <h2 className="font-heading text-5xl font-black tracking-[-0.04em] sm:text-6xl text-white">
+                    Have a Feature{" "}
+                    <span className="text-[#f97316]">Idea?</span>
+                  </h2>
+                  <p className="mx-auto mt-3 max-w-2xl text-lg text-white/40">
+                    Your feedback shapes 1section. Tell us what you&apos;d love to see.
+                  </p>
                 </div>
-                <h3 className="text-2xl font-black mb-3 text-white">
-                  {item.title}
-                </h3>
-                <p className="text-[0.9375rem] text-[#666] leading-relaxed max-w-[280px] mx-auto">
-                  {item.desc}
-                </p>
-              </motion.div>
-            ))}
+              </div>
+            </motion.div>
           </div>
         </section>
 
@@ -382,52 +680,87 @@ export default function Home() {
         )}
 
         {/* FAQ Section */}
-        <section className="py-16">
-          <header className="mb-16 text-center">
-            <h2 className="text-5xl font-black mb-4 tracking-[-0.04em]">Frequently Asked <span className="text-[#444]">Questions</span></h2>
-            <p className="text-muted text-lg max-w-[600px] mx-auto">Everything you need to know about 1section.</p>
-          </header>
+        <section id="faq" className="w-full py-32 sm:py-40">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="mb-16 text-center"
+            >
+              <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">
+                FAQ
+              </p>
+              <h2 className="font-heading text-5xl font-black tracking-[-0.04em] sm:text-6xl text-white">
+                Frequently Asked{" "}
+                <span className="text-[#f97316]">Questions</span>
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-lg text-white/40">
+                Everything you need to know about 1section.
+              </p>
+            </motion.div>
 
-          <div className="max-w-[800px] mx-auto flex flex-col gap-4">
-            {[
-              { id: "diff", q: "What makes 1section different from other learning platforms?", a: "1section focuses on mental models and cognitive frameworks rather than just information. Our interactive knowledge graph shows how concepts connect, and the implementation paths help you actually apply what you learn." },
-              { id: "free", q: "How does the daily free theory work?", a: "Every 24 hours, we unlock a new professional framework for free. This gives you a taste of our premium content and helps you build a learning habit without any commitment." },
-              { id: "offline", q: "Can I access content offline?", a: "Yes! With our 1 Year and Lifetime plans, you can download theories and listen to them offline. Perfect for commute learning or areas with limited connectivity." },
-              { id: "lifetime", q: "What's included in the lifetime access?", a: "Lifetime access includes all current and future theories, the complete knowledge graph, offline downloads, completion certificates, and free digital pocketbooks we release over time." },
-              { id: "graph", q: "How does the knowledge graph work?", a: "As you progress through theories, they appear in your personal knowledge graph showing how different mental models connect. This helps you see the bigger picture and understand relationships between concepts." },
-              { id: "refund", q: "Is there a refund policy?", a: "We offer a 30-day money-back guarantee on all paid plans. If you're not satisfied within the first 30 days, just reach out and we'll issue a full refund, no questions asked." },
-            ].map((faq, idx) => (
-              <motion.div
-                key={faq.id}
-                initial={{ opacity: 0, y: 2.5 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: idx * 0.05 }}
-              >
-                <button
-                  onClick={() => setOpenFaq(openFaq === faq.id ? null : faq.id)}
-                  className={`w-full p-6 bg-[#080808] border border-white/5 rounded-xl flex items-center justify-between cursor-pointer text-left transition-all duration-200 ${openFaq === faq.id ? 'bg-white/5' : ''}`}
-                >
-                  <span className="text-base font-bold text-white pr-4">{faq.q}</span>
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 flex-shrink-0 ${openFaq === faq.id ? 'bg-white/10' : 'bg-white/5'}`}>
-                    <div className={`w-2.5 h-2.5 border-r-2 border-b-2 border-[#888] ${openFaq === faq.id ? 'rotate-[-135deg] mt-[-4px]' : 'rotate-45'}`} />
-                  </div>
-                </button>
-                {openFaq === faq.id && (
+            <div className="flex flex-col gap-3">
+              {[
+                { q: "What makes 1section different from other learning platforms?", a: "1section focuses on mental models and cognitive frameworks rather than just information. Our interactive knowledge graph shows how concepts connect, and the implementation paths help you actually apply what you learn." },
+                { q: "How does the daily free theory work?", a: "Every 24 hours, we unlock a new professional framework for free. This gives you a taste of our premium content and helps you build a learning habit without any commitment." },
+                { q: "Can I access content offline?", a: "Yes! With our paid plans, you can download theories and listen to them offline. Perfect for commute learning or areas with limited connectivity." },
+                { q: "How does the knowledge graph work?", a: "As you progress through modules, they appear in your personal knowledge graph showing how different mental models connect. This helps you see the bigger picture and understand relationships between concepts." },
+                { q: "Is there a refund policy?", a: "We offer a 30-day money-back guarantee on all paid plans. If you're not satisfied within the first 30 days, just reach out and we'll issue a full refund." },
+              ].map((faq, i) => {
+                const isOpen = openFaq === i
+                return (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="p-5 bg-white/5 border border-white/5 border-t-0 rounded-b-xl -mt-px"
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.06 }}
+                    className="overflow-hidden rounded-2xl border border-white/10 bg-[#050505] transition-colors duration-200 hover:border-white/20"
                   >
-                    <p className="text-[0.9375rem] text-[#666] leading-relaxed">{faq.a}</p>
+                    <button
+                      onClick={() => setOpenFaq(isOpen ? null : i)}
+                      className="w-full p-6 text-left"
+                    >
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="font-heading text-base font-bold text-white/80">
+                          {faq.q}
+                        </span>
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.03] transition-colors duration-200">
+                          <motion.div
+                            animate={{ rotate: isOpen ? 45 : 0 }}
+                            transition={{ duration: 0.2, ease: "easeInOut" }}
+                            className="relative h-3 w-3"
+                          >
+                            <div className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-white/30" />
+                            <div className="absolute left-0 top-1/2 h-px w-full -translate-y-1/2 bg-white/30" />
+                          </motion.div>
+                        </div>
+                      </div>
+                    </button>
+                    <AnimatePresence>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                        >
+                          <div className="px-6 pb-6 pt-0">
+                            <div className="h-px w-full bg-white/5 mb-4" />
+                            <p className="text-sm leading-relaxed text-white/40">{faq.a}</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
-                )}
-              </motion.div>
-            ))}
+                )
+              })}
+            </div>
           </div>
         </section>
       </div>
+      <Footer />
     </>
   );
 }

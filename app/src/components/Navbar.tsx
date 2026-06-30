@@ -29,7 +29,7 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="w-full bg-bg border-b border-border-subtle sticky top-0 z-50 backdrop-blur">
+      <nav className="fixed top-0 z-50 w-full bg-bg/70 border-b border-border-subtle backdrop-blur-2xl">
         <div className="h-16 flex items-center justify-between px-4 md:px-8">
           <Link href="/" className="flex items-center gap-2 no-underline">
             <img src="/1section.svg" alt="1SECTION" className="h-8 w-auto" />
