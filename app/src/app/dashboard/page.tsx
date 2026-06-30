@@ -15,6 +15,7 @@ import {
   ArrowRight,
   Crown,
   HelpCircle,
+  RotateCcw,
 } from "lucide-react";
 import { authApi } from "@/lib/api/auth";
 import { paymentsApi } from "@/lib/api/payments";
@@ -144,6 +145,14 @@ export default function DashboardPage() {
           </div>
           <p className="text-2xl font-black text-fg">{quizStats?.totalQuizzesTaken || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">taken</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{quizStats?.quizXp || 0} XP</span></p>
           <p className="text-[0.6875rem] text-muted-dark mt-1">{quizStats?.totalQuizzesTaken ? `${quizStats.totalCorrect}/${quizStats.totalAnswered} correct (${Math.round(quizStats.averagePercentage)}%)` : 'No quizzes yet'}</p>
+        </div>
+        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-muted mb-3">
+            <RotateCcw size={14} />
+            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">In Progress</span>
+          </div>
+          <p className="text-2xl font-black text-fg">{stats?.inProgressCount || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">modules</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Currently being studied</p>
         </div>
       </div>
 
