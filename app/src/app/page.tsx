@@ -229,79 +229,85 @@ export default function Home() {
         <section className="relative min-h-screen overflow-hidden bg-black">
           <VantaBackground />
 
-          <div className="relative mx-auto flex min-h-screen max-w-[900px] flex-col items-center justify-center px-4 text-center sm:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-medium tracking-wider text-white"
-            >
-              <div className="h-1.5 w-1.5 rounded-full bg-[#f97316] animate-pulse" />
-              The Ultimate Cognitive Library
-            </motion.div>
-
-            <motion.h1
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-              className="text-5xl font-black leading-[1.05] tracking-[-0.04em] sm:text-6xl md:text-7xl lg:text-8xl max-w-4xl"
-            >
-              Master your{" "}
-              <span className="text-[#f97316]">thinking library</span>.
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-6 max-w-xl text-base leading-relaxed text-white/40 sm:text-lg"
-            >
-              Explore an expansive library of mental models, cognitive tools, and frameworks. Internalize complex concepts through interactive mapping and committed action.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
-            >
-              <Link
-                href="/models"
-                className="group inline-flex items-center gap-3 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:bg-[#e5e5e5] hover:shadow-xl hover:shadow-white/20"
+          <div className="relative mx-auto flex min-h-screen flex-col items-center justify-center px-4 sm:px-6 lg:grid lg:grid-cols-2 lg:gap-12 lg:max-w-[1200px]">
+            <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-4 py-1.5 text-xs font-medium tracking-wider text-white"
               >
-                Continue Learning
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-              </Link>
-              <Link
-                href="/models"
-                className="inline-flex items-center gap-3 rounded-xl border border-white/20 bg-transparent px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/5"
-              >
-                View Modules
-              </Link>
-            </motion.div>
+                <div className="h-1.5 w-1.5 rounded-full bg-[#f97316] animate-pulse" />
+                The Ultimate Cognitive Library
+              </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center"
-            >
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl opacity-50 cursor-not-allowed">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
-                <div className="text-left">
-                  <div className="text-[0.5rem] text-[#666] leading-tight">Download on the</div>
-                  <div className="text-[0.8125rem] font-bold text-white leading-tight">App Store</div>
+              <motion.h1
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                className="text-5xl font-black leading-[1.05] tracking-[-0.04em] sm:text-6xl md:text-7xl lg:text-7xl max-w-xl"
+              >
+                Master your{" "}
+                <span className="text-[#f97316]">thinking library</span>.
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-6 max-w-lg text-base leading-relaxed text-white/40 sm:text-lg"
+              >
+                Explore an expansive library of mental models, cognitive tools, and frameworks. Internalize complex concepts through interactive mapping and committed action.
+              </motion.p>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-10 flex flex-col items-center gap-3 sm:flex-row lg:justify-start"
+              >
+                <Link
+                  href="/models"
+                  className="group inline-flex items-center gap-3 rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:bg-[#e5e5e5] hover:shadow-xl hover:shadow-white/20"
+                >
+                  Continue Learning
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+                <Link
+                  href="/models"
+                  className="inline-flex items-center gap-3 rounded-xl border border-white/20 bg-transparent px-7 py-3.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-white/5"
+                >
+                  View Modules
+                </Link>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.8, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-10 flex flex-col items-center gap-3 sm:flex-row lg:justify-start"
+              >
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl opacity-50 cursor-not-allowed">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg>
+                  <div className="text-left">
+                    <div className="text-[0.5rem] text-[#666] leading-tight">Download on the</div>
+                    <div className="text-[0.8125rem] font-bold text-white leading-tight">App Store</div>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl opacity-50 cursor-not-allowed">
-                <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 0 1 0 1.732l-2.807 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/></svg>
-                <div className="text-left">
-                  <div className="text-[0.5rem] text-[#666] leading-tight">Get it on</div>
-                  <div className="text-[0.8125rem] font-bold text-white leading-tight">Google Play</div>
+                <div className="flex items-center gap-2 px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl opacity-50 cursor-not-allowed">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white" xmlns="http://www.w3.org/2000/svg"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 0 1-.61-.92V2.734a1 1 0 0 1 .609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-3.199l2.807 1.626a1 1 0 0 1 0 1.732l-2.807 1.626L15.206 12l2.492-2.492zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/></svg>
+                  <div className="text-left">
+                    <div className="text-[0.5rem] text-[#666] leading-tight">Get it on</div>
+                    <div className="text-[0.8125rem] font-bold text-white leading-tight">Google Play</div>
+                  </div>
                 </div>
-              </div>
-              <span className="text-[0.625rem] text-[#444] font-semibold">Mobile app in development</span>
-            </motion.div>
+                <span className="text-[0.625rem] text-[#444] font-semibold">Mobile app in development</span>
+              </motion.div>
+            </div>
+
+            <div className="hidden lg:flex items-center justify-center pointer-events-none select-none">
+              <img src="/landing/hero.png" alt="" className="w-full max-w-[550px] object-contain opacity-80" draggable={false} />
+            </div>
 
             <motion.a
               href="#preview"
