@@ -305,9 +305,14 @@ export default function Home() {
               </motion.div>
             </div>
 
-            <div className="flex items-center justify-center pointer-events-none select-none lg:max-w-none max-w-[280px] sm:max-w-[350px] lg:max-w-full">
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center justify-center pointer-events-none select-none lg:max-w-none max-w-[280px] sm:max-w-[350px] lg:max-w-full"
+            >
               <img src="/landing/hero.png" alt="" className="w-full object-contain opacity-80" draggable={false} />
-            </div>
+            </motion.div>
 
             <motion.a
               href="#preview"
