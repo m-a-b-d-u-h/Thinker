@@ -108,19 +108,11 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
           <div className="flex items-center gap-2 text-muted mb-3">
-            <Headphones size={14} />
-            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Listened</span>
+            <RotateCcw size={14} />
+            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">In Progress</span>
           </div>
-          <p className="text-2xl font-black text-fg">{stats?.listeningMinutes || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.listenXp || 0} XP</span></p>
-          <p className="text-[0.6875rem] text-muted-dark mt-1">Total audio time</p>
-        </div>
-        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-muted mb-3">
-            <BookOpen size={14} />
-            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Read</span>
-          </div>
-          <p className="text-2xl font-black text-fg">{stats?.readingMinutes || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.readXp || 0} XP</span></p>
-          <p className="text-[0.6875rem] text-muted-dark mt-1">Total reading time</p>
+          <p className="text-2xl font-black text-fg">{stats?.inProgressCount || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">modules</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Currently being studied</p>
         </div>
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
           <div className="flex items-center gap-2 text-muted mb-3">
@@ -132,11 +124,19 @@ export default function DashboardPage() {
         </div>
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
           <div className="flex items-center gap-2 text-muted mb-3">
-            <Sparkles size={14} />
-            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Reflections</span>
+            <BookOpen size={14} />
+            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Read</span>
           </div>
-          <p className="text-2xl font-black text-fg">{stats?.reflectionCount || 0}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.reflectionXp || 0} XP</span></p>
-          <p className="text-[0.6875rem] text-muted-dark mt-1">Total reflections</p>
+          <p className="text-2xl font-black text-fg">{stats?.readingMinutes || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.readXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Total reading time</p>
+        </div>
+        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-muted mb-3">
+            <Headphones size={14} />
+            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Listened</span>
+          </div>
+          <p className="text-2xl font-black text-fg">{stats?.listeningMinutes || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.listenXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Total audio time</p>
         </div>
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
           <div className="flex items-center gap-2 text-muted mb-3">
@@ -148,11 +148,11 @@ export default function DashboardPage() {
         </div>
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
           <div className="flex items-center gap-2 text-muted mb-3">
-            <RotateCcw size={14} />
-            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">In Progress</span>
+            <Sparkles size={14} />
+            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Reflections</span>
           </div>
-          <p className="text-2xl font-black text-fg">{stats?.inProgressCount || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">modules</span></p>
-          <p className="text-[0.6875rem] text-muted-dark mt-1">Currently being studied</p>
+          <p className="text-2xl font-black text-fg">{stats?.reflectionCount || 0}<span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.reflectionXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Total reflections</p>
         </div>
       </div>
 
