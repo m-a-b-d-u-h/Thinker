@@ -11,10 +11,12 @@ import { CheckCircle2, Zap, Crown, ShieldCheck, Library, Play, ArrowRight, Spark
 import Marquee from "react-fast-marquee";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import SectionHeader from "@/components/SectionHeader";
 import { ModuleCard } from "@/components/ModuleCard";
 import { paymentsApi } from "@/lib/api/payments";
 import { authApi } from "@/lib/api/auth";
 import { useAuth } from "@/lib/auth-context";
+import { reviewsApi } from "@/lib/api/reviews";
 import { paymentWs } from "@/lib/websocket";
 import { useModulesList } from "@/lib/query-hooks";
 import { openCheckout, initLemonSqueezy } from "@/lib/lemon-squeezy";
@@ -216,6 +218,9 @@ export default function Home() {
   };
 
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
 
   return (
     <>
@@ -321,23 +326,12 @@ export default function Home() {
         {/* Preview Section */}
         <section id="preview" className="w-full py-32 sm:py-40">
           <div className="mx-auto max-w-[1000px] px-4 sm:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mb-16 text-center"
-            >
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">
-                Preview
-              </p>
-              <h2 className="text-5xl font-black tracking-[-0.04em] sm:text-6xl text-white">
-                Take a look{" "}
-                <span className="text-[#f97316]">inside</span>
-              </h2>
-              <p className="mt-3 text-lg text-white/50">
-                A first look at your future dashboard — your command center with progress tracking, a library of mental models, daily bite-sized lessons, personal insights on your growth, and a community of fellow thinkers.
-              </p>
-            </motion.div>
+            <SectionHeader
+              badge="Preview"
+              title="Take a look inside"
+              accent="inside"
+              description="A first look at your future dashboard — your command center with progress tracking, a library of mental models, daily bite-sized lessons, personal insights on your growth, and a community of fellow thinkers."
+            />
 
             <div className="space-y-20">
               {[
@@ -397,11 +391,13 @@ export default function Home() {
 
         <div className="mx-auto w-full max-w-[1200px] px-4 md:px-6">
         {/* Sample Products Section */}
-        <section className="py-16">
-          <header className="mb-16 text-center">
-            <h2 className="text-5xl font-black mb-4 tracking-[-0.04em]">Explore the <span className="text-[#444]">Models</span></h2>
-            <p className="text-muted text-lg max-w-[600px] mx-auto">A sneak peek into the cognitive frameworks available.</p>
-          </header>
+        <section className="py-32 sm:py-40">
+          <SectionHeader
+            badge="Library"
+            title="Explore the Models"
+            accent="Models"
+            description="A sneak peek into the cognitive frameworks available."
+          />
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] md:grid-cols-[repeat(auto-fit,minmax(400px,1fr))] gap-4 md:gap-6">
             {sampleProducts.map((module, idx) => (
@@ -412,8 +408,8 @@ export default function Home() {
           </div>
 
           <div className="text-center mt-12">
-            <Link href="/models" className="inline-flex items-center gap-2 bg-transparent border border-[#222] text-white px-6 py-3 rounded-lg font-semibold hover:bg-white/5 transition-all">
-              View All Frameworks <ArrowRight size={16} />
+            <Link href="/models" className="group inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:opacity-90 hover:shadow-xl hover:shadow-white/10">
+              View All Frameworks <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
         </section>
@@ -421,23 +417,12 @@ export default function Home() {
         {/* How It Works Section */}
         <section id="features" className="w-full py-32 sm:py-40">
           <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mb-20 text-center"
-            >
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">
-                How It Works
-              </p>
-              <h2 className="font-heading text-5xl font-black tracking-[-0.04em] sm:text-6xl text-white">
-                Learn Through{" "}
-                <span className="text-[#f97316]">Interactive Maps</span>
-              </h2>
-              <p className="mx-auto mt-3 max-w-2xl text-lg text-white/40">
-                Each topic is a learning path. Each path is a map of connected nodes — with short lessons, audio, quizzes, and action steps.
-              </p>
-            </motion.div>
+            <SectionHeader
+              badge="How It Works"
+              title="Learn Through Interactive Maps"
+              accent="Interactive Maps"
+              description="Each topic is a learning path. Each path is a map of connected nodes — with short lessons, audio, quizzes, and action steps."
+            />
 
             <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
               {[
@@ -485,24 +470,12 @@ export default function Home() {
         {/* Features Section */}
         <section id="analysis" className="w-full py-32 sm:py-40">
           <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mb-16 text-center"
-            >
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">
-                Features
-              </p>
-              <h2 className="font-heading text-5xl font-black tracking-[-0.04em] sm:text-6xl text-white">
-                What&apos;s coming to{" "}
-                <span className="text-[#f97316]">1section</span>
-              </h2>
-              <p className="mx-auto mt-3 max-w-2xl text-lg text-white/40">
-                Every feature is designed to help you collect, connect, and apply
-                mental models effortlessly.
-              </p>
-            </motion.div>
+            <SectionHeader
+              badge="Features"
+              title="What's coming to 1section"
+              accent="1section"
+              description="Every feature is designed to help you collect, connect, and apply mental models effortlessly."
+            />
 
             <div className="grid gap-5 sm:grid-cols-2">
               {[
@@ -570,16 +543,93 @@ export default function Home() {
                   >
                     <Lightbulb className="h-7 w-7" />
                   </div>
-                  <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">
-                    Feedback
-                  </p>
-                  <h2 className="font-heading text-5xl font-black tracking-[-0.04em] sm:text-6xl text-white">
-                    Have a Feature{" "}
-                    <span className="text-[#f97316]">Idea?</span>
-                  </h2>
-                  <p className="mx-auto mt-3 max-w-2xl text-lg text-white/40">
-                    Your feedback shapes 1section. Tell us what you&apos;d love to see.
-                  </p>
+
+                  {!user ? (
+                    <>
+                      <SectionHeader
+                        badge="Feedback"
+                        title="Have a Feature Idea?"
+                        accent="Idea?"
+                        description="Your feedback shapes 1section. Tell us what you'd love to see."
+                        className="mb-0"
+                      />
+                      <div className="mt-10">
+                        <Link
+                          href="/login"
+                          className="inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:opacity-90 hover:shadow-xl hover:shadow-white/10"
+                        >
+                          Login to Submit Feedback
+                        </Link>
+                      </div>
+                    </>
+                  ) : feedbackSubmitted ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                    >
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/[0.05]">
+                        <Send className="h-6 w-6 text-white/25" />
+                      </div>
+                      <p className="font-heading text-lg font-bold">Thank you!</p>
+                      <p className="mt-1 text-sm text-white/40">
+                        Your feedback has been received. Our team will review it.
+                      </p>
+                      <button
+                        onClick={() => {
+                          setFeedbackSubmitted(false)
+                          setFeedbackText("")
+                        }}
+                        className="mt-6 text-sm text-white/30 underline-offset-4 hover:underline"
+                      >
+                        Submit another
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <>
+                      <SectionHeader
+                        badge="Feedback"
+                        title="Have a Feature Idea?"
+                        accent="Idea?"
+                        description="Your feedback shapes 1section. Tell us what you'd love to see."
+                        className="mb-0"
+                      />
+                      <form
+                        onSubmit={async (e) => {
+                          e.preventDefault()
+                          if (!feedbackText.trim()) return
+                          setFeedbackLoading(true)
+                          try {
+                            await reviewsApi.create({ rating: 5, comment: `FEEDBACK: ${feedbackText.trim()}` })
+                            setFeedbackSubmitted(true)
+                          } catch {
+                            console.error("Failed to submit feedback")
+                          } finally {
+                            setFeedbackLoading(false)
+                          }
+                        }}
+                        className="mx-auto mt-10 max-w-lg"
+                      >
+                        <textarea
+                          placeholder="Tell us your idea or suggestion..."
+                          value={feedbackText}
+                          onChange={(e) => setFeedbackText(e.target.value)}
+                          required
+                          rows={5}
+                          className="w-full resize-none rounded-xl border border-white/10 bg-[#030303] px-5 py-3.5 text-sm text-white/90 placeholder:text-white/20 outline-none transition-all duration-200 focus:border-white/20 focus:ring-1 focus:ring-white/10"
+                        />
+                        <div className="mt-4 flex justify-center">
+                          <button
+                            type="submit"
+                            disabled={feedbackLoading}
+                            className="group inline-flex items-center gap-2 rounded-full bg-white px-8 py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:opacity-90 hover:shadow-xl hover:shadow-white/10 disabled:opacity-50"
+                          >
+                            <Send className="h-4 w-4" />
+                            {feedbackLoading ? "Sending..." : "Send Feedback"}
+                          </button>
+                        </div>
+                      </form>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -587,11 +637,13 @@ export default function Home() {
         </section>
 
         {/* Testimonials Section */}
-        <section className="py-16 overflow-hidden">
-          <header className="mb-12 text-center">
-            <h2 className="text-5xl font-black mb-4 tracking-[-0.04em]">What Learners <span className="text-[#444]">Say</span></h2>
-            <p className="text-muted text-lg max-w-[600px] mx-auto">Join thousands who have transformed their thinking.</p>
-          </header>
+        <section className="w-full py-32 sm:py-40 overflow-hidden">
+          <SectionHeader
+            badge="Testimonials"
+            title="What Learners Say"
+            accent="Say"
+            description="Join thousands who have transformed their thinking."
+          />
 
           <div className="relative">
             <div className="absolute left-0 top-0 bottom-0 w-[100px] bg-gradient-to-r from-[#0a0a0a] to-transparent z-10 pointer-events-none" />
@@ -655,15 +707,18 @@ export default function Home() {
 
         {/* Upgrade CTA */}
         {(!user || user.subscriptionStatus === "FREE") && (
-        <section id="pricing" className="py-32 text-center">
-          <header className="mb-12">
-            <div className="inline-flex items-center gap-1.5 text-[#ffb800] bg-[#ffb8001a] px-4 py-2 rounded-full mb-6">
-              <Crown size={14} />
-              <span className="text-[0.75rem] font-bold uppercase tracking-wider">Unlock Full Access</span>
-            </div>
-            <h2 className="text-6xl font-black mb-4 tracking-[-0.04em]">Upgrade Your <span className="text-white">Mind</span></h2>
-            <p className="text-muted text-xl max-w-[600px] mx-auto">Get unlimited access to every mental model, tool, and feature.</p>
-          </header>
+        <section id="pricing" className="w-full py-32 sm:py-40 text-center">
+          <div className="mx-auto max-w-[1200px] px-4 sm:px-6">
+          <div className="inline-flex items-center gap-1.5 text-[#ffb800] bg-[#ffb8001a] px-4 py-2 rounded-full mb-6">
+            <Crown size={14} />
+            <span className="text-[0.75rem] font-bold uppercase tracking-wider">Unlock Full Access</span>
+          </div>
+          <SectionHeader
+            badge="Pricing"
+            title="Upgrade Your Mind"
+            accent="Mind"
+            description="Get unlimited access to every mental model, tool, and feature."
+          />
           <button
             onClick={handleSubscribe}
             disabled={subscribing !== null}
@@ -676,29 +731,19 @@ export default function Home() {
             )}
           </button>
           <p className="text-[0.75rem] text-[#555] mt-4">Choose Monthly, Yearly, or Lifetime — cancel anytime.</p>
+          </div>
         </section>
         )}
 
         {/* FAQ Section */}
         <section id="faq" className="w-full py-32 sm:py-40">
           <div className="mx-auto max-w-3xl px-4 sm:px-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="mb-16 text-center"
-            >
-              <p className="mb-4 text-xs font-bold uppercase tracking-[0.15em] text-[#f97316]">
-                FAQ
-              </p>
-              <h2 className="font-heading text-5xl font-black tracking-[-0.04em] sm:text-6xl text-white">
-                Frequently Asked{" "}
-                <span className="text-[#f97316]">Questions</span>
-              </h2>
-              <p className="mx-auto mt-3 max-w-2xl text-lg text-white/40">
-                Everything you need to know about 1section.
-              </p>
-            </motion.div>
+            <SectionHeader
+              badge="FAQ"
+              title="Frequently Asked Questions"
+              accent="Questions"
+              description="Everything you need to know about 1section."
+            />
 
             <div className="flex flex-col gap-3">
               {[
