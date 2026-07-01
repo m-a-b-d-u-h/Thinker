@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { FileText, PenLine, X, Loader2 } from "lucide-react";
 import { useUpsertNotebook, useDeleteNotebook } from "@/lib/query-hooks";
 import { useAuthStore } from "@/lib/store/auth";
@@ -77,9 +78,9 @@ export function NotebookSlide({
         {hasNote ? <FileText size={14} /> : <PenLine size={14} />}
       </button>
 
-      {open && (
+      {open && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         >
           <div
@@ -141,7 +142,8 @@ export function NotebookSlide({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
