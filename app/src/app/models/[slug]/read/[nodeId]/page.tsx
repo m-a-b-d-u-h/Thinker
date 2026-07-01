@@ -259,16 +259,14 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
                       </p>
                     </div>
 
-                    {/* Notebook - only on the visible slide */}
-                    {i === selectedIndex && (
-                      <NotebookSlide
-                        moduleSlug={slug}
-                        nodeId={nodeId}
-                        nodeLabel={slide.nodeLabel}
-                        slideIndex={slide.slideIndex}
-                        existingNote={currentNote?.content ?? null}
-                      />
-                    )}
+                    {/* Notebook button on every slide */}
+                    <NotebookSlide
+                      moduleSlug={slug}
+                      nodeId={nodeId}
+                      nodeLabel={slide.nodeLabel}
+                      slideIndex={slide.slideIndex}
+                      existingNote={i === selectedIndex ? (currentNote?.content ?? null) : null}
+                    />
 
                     {/* Footer */}
                     <div className="pt-4 mt-auto">
