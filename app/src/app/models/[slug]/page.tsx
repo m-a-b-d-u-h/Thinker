@@ -7,7 +7,11 @@ import React from "react";
 import { ReactFlow, Handle, Position } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useModule } from "@/lib/query-hooks";
-import { BookOpen, Headphones, HelpCircle, MessageSquare } from "lucide-react";
+import { favoritesApi } from "@/lib/api/favorites";
+import { reviewsApi } from "@/lib/api/reviews";
+import { BookOpen, Headphones, HelpCircle, MessageSquare, ArrowLeft, Heart, Star, X, Loader2, Share2, Info, Download } from "lucide-react";
+import { getSlides, type Slide } from "@/lib/course-content";
+import debounce from "lodash.debounce";
 
 const CustomNode = ({ data }: { data: any; id: string }) => {
   return (
@@ -46,6 +50,90 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
   const rf = useRef<any>(null);
   const selectedId = useRef<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<{id: string; data: any} | null>(null);
+  const [isFavorited, setIsFavorited] = useState(false);
+  const [showReview, setShowReview] = useState(false);
+  const [showOverview, setShowOverview] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+  useEffect(() => {
+    setIsFavorited(module?.isFavorited ?? false);
+  }, [module?.isFavorited]);
+
+  const debouncedFav = useMemo(() => debounce(async (favorite: boolean) => {
+    try {
+      if (favorite) await favoritesApi.add(slug);
+      else await favoritesApi.remove(slug);
+    } catch {
+      setIsFavorited(!favorite);
+    }
+  }, 500), [slug]);
+
+  const toggleFavorite = useCallback(() => {
+    const next = !isFavorited;
+    setIsFavorited(next);
+    debouncedFav(next);
+  }, [isFavorited, debouncedFav]);
+
+  useEffect(() => () => debouncedFav.cancel(), [debouncedFav]);
+
+  const shareModule = useCallback(() => {
+    const url = window.location.href;
+    if (navigator.share) {
+      navigator.share({ title: module?.title || "", url });
+    } else {
+      navigator.clipboard.writeText(url);
+    }
+  }, [module?.title]);
+
+  const downloadPdf = useCallback(() => {
+    if (!module) return;
+    const allSlides = getSlides(module.nodes);
+    const grouped: Record<string, Slide[]> = {};
+    for (const s of allSlides) {
+      if (!grouped[s.nodeLabel]) grouped[s.nodeLabel] = [];
+      grouped[s.nodeLabel].push(s);
+    }
+    const slidesHtml = Object.entries(grouped).map(([label, slides]) => `
+      <div style="margin-bottom:24px;page-break-inside:avoid">
+        <h2 style="font-size:16px;color:#333;margin:0 0 8px">${label}</h2>
+        ${slides.map(s => `<p style="font-size:14px;color:#555;line-height:1.6;margin:0 0 6px">${s.content}</p>`).join('')}
+      </div>
+    `).join('');
+    const win = window.open('', '_blank');
+    if (!win) return;
+    win.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>${module.title}</title>
+        <style>
+          body { font-family: Georgia,'Times New Roman',serif; max-width:700px; margin:40px auto; padding:0 20px; }
+          h1 { font-size:24px; color:#111; margin-bottom:4px; }
+          .desc { font-size:14px; color:#666; margin-bottom:32px; }
+          hr { border:none; border-top:1px solid #eee; margin:24px 0; }
+        </style>
+      </head>
+      <body>
+        <h1>${module.title}</h1>
+        <p class="desc">${module.description}</p>
+        <hr />
+        ${slidesHtml}
+      </body>
+      </html>
+    `);
+    win.document.close();
+    win.focus();
+    setTimeout(() => win.print(), 500);
+  }, [module]);
+
+  const totalSlides = useMemo(() => module ? getSlides(module.nodes).length : 0, [module]);
+  const totalWords = useMemo(() => module
+    ? getSlides(module.nodes).reduce((sum, s) => sum + s.content.split(/\s+/).length, 0)
+    : 0, [module]);
+
   const synthRef = useRef<SpeechSynthesis | null>(null);
   const voicesRef = useRef<SpeechSynthesisVoice[]>([]);
   const selectedVoiceRef = useRef<string>('');
@@ -225,6 +313,69 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
         <p className="text-base text-muted mt-2 pointer-events-auto">Click a node to explore connections</p>
       </div>
 
+      {/* Default button bar (when no node selected) */}
+      {!isLoading && !selectedNode && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.4, duration: 0.3 }}
+          className="fixed bottom-16 md:bottom-4 left-1/2 -translate-x-1/2 z-50"
+        >
+          <div className="flex items-center gap-1 bg-bg/70 backdrop-blur-md border border-border/50 rounded-xl px-2 py-1.5 shadow-lg">
+            <button
+              onClick={() => router.push("/models")}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-muted hover:text-fg hover:bg-white/[0.04] transition-all cursor-pointer"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              Back
+            </button>
+
+            <button
+              onClick={toggleFavorite}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all cursor-pointer hover:bg-white/[0.04]"
+              style={{ color: isFavorited ? '#f43f5e' : undefined }}
+            >
+              <Heart size={12} className={isFavorited ? "fill-red-500 text-red-500" : "text-muted"} />
+              <span style={{ color: isFavorited ? '#f43f5e' : undefined }} className={!isFavorited ? "text-muted" : ""}>
+                {isFavorited ? "Saved" : "Like"}
+              </span>
+            </button>
+
+            <button
+              onClick={shareModule}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-muted hover:text-fg hover:bg-white/[0.04] transition-all cursor-pointer"
+            >
+              <Share2 className="w-3 h-3" />
+              Share
+            </button>
+
+            <button
+              onClick={() => setShowReview(true)}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-muted hover:text-fg hover:bg-white/[0.04] transition-all cursor-pointer"
+            >
+              <Star className="w-3 h-3" />
+              Review
+            </button>
+
+            <button
+              onClick={() => setShowOverview(true)}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-muted hover:text-fg hover:bg-white/[0.04] transition-all cursor-pointer"
+            >
+              <Info className="w-3 h-3" />
+              About
+            </button>
+
+            <button
+              onClick={downloadPdf}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium text-muted hover:text-fg hover:bg-white/[0.04] transition-all cursor-pointer"
+            >
+              <Download className="w-3 h-3" />
+              PDF
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       <AnimatePresence>
         {selectedNode && (
           <motion.div
@@ -301,6 +452,127 @@ export default function PathPage({ params }: { params: Promise<{ slug: string }>
           </motion.div>
       )}
       </AnimatePresence>
+
+      {/* Overview popup */}
+      {showOverview && (
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowOverview(false)}
+        >
+          <div
+            className="bg-bg-card border border-border rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-sm font-bold text-fg">Module Overview</h3>
+              <button
+                onClick={() => setShowOverview(false)}
+                className="p-1 rounded-md text-muted-dark hover:text-fg hover:bg-bg-elevated transition-colors cursor-pointer bg-transparent border-none"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between py-2 border-b border-border/30">
+                <span className="text-[0.75rem] text-muted">Nodes</span>
+                <span className="text-[0.8125rem] font-semibold text-fg">{module?.nodes.length ?? 0}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-border/30">
+                <span className="text-[0.75rem] text-muted">Total Slides</span>
+                <span className="text-[0.8125rem] font-semibold text-fg">{totalSlides}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-border/30">
+                <span className="text-[0.75rem] text-muted">Total Words</span>
+                <span className="text-[0.8125rem] font-semibold text-fg">{totalWords.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between py-2 border-b border-border/30">
+                <span className="text-[0.75rem] text-muted">Est. Read Time</span>
+                <span className="text-[0.8125rem] font-semibold text-fg">{Math.max(1, Math.ceil(totalSlides * 0.5))} min</span>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <span className="text-[0.75rem] text-muted">Est. Listen Time</span>
+                <span className="text-[0.8125rem] font-semibold text-fg">{Math.max(1, Math.ceil(totalSlides * 0.75))} min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Review popup */}
+      {showReview && (
+        <div
+          className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setShowReview(false)}
+        >
+          <div
+            className="bg-bg-card border border-border rounded-2xl p-6 w-full max-w-sm mx-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-fg">Review Module</h3>
+              <button
+                onClick={() => setShowReview(false)}
+                className="p-1 rounded-md text-muted-dark hover:text-fg hover:bg-bg-elevated transition-colors cursor-pointer bg-transparent border-none"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <p className="text-[0.75rem] text-muted mb-4">Rate your experience with this module</p>
+
+            <div className="flex items-center gap-1 mb-5 justify-center">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  onClick={() => setReviewRating(star)}
+                  className="bg-transparent border-none cursor-pointer p-1 transition-all hover:scale-110"
+                >
+                  <Star
+                    size={24}
+                    className={star <= reviewRating ? "fill-[#fbbf24] text-[#fbbf24]" : "text-border/60"}
+                  />
+                </button>
+              ))}
+            </div>
+
+            <textarea
+              value={reviewComment}
+              onChange={(e) => setReviewComment(e.target.value)}
+              placeholder="Share your thoughts (optional)..."
+              rows={3}
+              className="w-full resize-none bg-bg border border-border-subtle rounded-xl p-3 text-[0.8125rem] text-fg outline-none focus:border-border transition-colors placeholder:text-muted-dark mb-4"
+            />
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowReview(false)}
+                className="flex-1 px-4 py-2 rounded-lg text-[0.75rem] font-semibold text-muted hover:text-fg transition-colors cursor-pointer bg-transparent border-none"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => {
+                  if (reviewRating === 0) return;
+                  setReviewSubmitting(true);
+                  try {
+                    await reviewsApi.create({ moduleSlug: slug, rating: reviewRating, comment: reviewComment.trim() || undefined });
+                    setShowReview(false);
+                    setReviewRating(0);
+                    setReviewComment("");
+                  } catch {}
+                  setReviewSubmitting(false);
+                }}
+                disabled={reviewRating === 0 || reviewSubmitting}
+                className="flex-1 px-4 py-2 rounded-lg text-[0.75rem] font-semibold bg-fg text-bg hover:opacity-90 transition-all cursor-pointer border-none disabled:opacity-30 flex items-center justify-center gap-1.5"
+              >
+                {reviewSubmitting ? <Loader2 size={14} className="animate-spin" /> : null}
+                Submit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

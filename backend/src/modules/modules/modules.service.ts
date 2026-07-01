@@ -262,9 +262,16 @@ export namespace ModulesService {
         : [];
       const completedNodeIds = new Set(nodeProgress.map((p) => p.nodeId));
 
+      const isFavorited = userId
+        ? !!(await prisma.favorite.findUnique({
+            where: { userId_moduleId: { userId, moduleId: module.id } },
+          }))
+        : false;
+
       return {
         ...fullModule,
         isPremium: module.isPremium,
+        isFavorited,
         nodes: fullModule.nodes.map((n) => {
           const transformed = transformNode(n);
           return {

@@ -44,6 +44,7 @@ export interface Module {
   description: string;
   category: string;
   isPremium: boolean;
+  isFavorited?: boolean;
   createdAt: string;
   updatedAt: string;
   nodes: ReactFlowNode[];

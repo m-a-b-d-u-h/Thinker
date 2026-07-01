@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import debounce from "lodash.debounce";
 import { Play, Clock, Search, Sparkles, Crown, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -102,10 +103,12 @@ export default function ProductsPage() {
     }
   }, [user, fetchHistory]);
 
+  const debouncedSetSearch = useMemo(() => debounce((value: string) => setDebouncedSearch(value), 400), []);
+
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 400);
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+    debouncedSetSearch(searchQuery);
+    return () => debouncedSetSearch.cancel();
+  }, [searchQuery, debouncedSetSearch]);
 
   const isSubscribed = user && user.subscriptionStatus && user.subscriptionStatus !== "FREE";
 
