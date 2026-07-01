@@ -244,6 +244,7 @@ export interface NotebookEntry {
   nodeId: string;
   nodeLabel: string;
   slideIndex: number;
+  slideContent: string;
   content: string;
   createdAt: string;
   updatedAt: string;

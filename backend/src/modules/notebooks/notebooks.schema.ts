@@ -5,6 +5,7 @@ export const upsertNotebookSchema = z.object({
   nodeId: z.string().min(1),
   nodeLabel: z.string().min(1),
   slideIndex: z.number().int().min(0),
+  slideContent: z.string().max(10000),
   content: z.string().max(5000),
 });
 

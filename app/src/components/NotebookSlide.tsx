@@ -11,6 +11,7 @@ interface NotebookSlideProps {
   nodeId: string;
   nodeLabel: string;
   slideIndex: number;
+  slideContent: string;
   existingNote?: string | null;
 }
 
@@ -19,6 +20,7 @@ export function NotebookSlide({
   nodeId,
   nodeLabel,
   slideIndex,
+  slideContent,
   existingNote,
 }: NotebookSlideProps) {
   const token = useAuthStore((s) => s.token);
@@ -49,6 +51,7 @@ export function NotebookSlide({
         nodeId,
         nodeLabel,
         slideIndex,
+        slideContent,
         content: content.trim(),
       });
     }
@@ -100,6 +103,12 @@ export function NotebookSlide({
                 <X size={16} />
               </button>
             </div>
+
+            {slideContent && (
+              <div className="mb-3 p-3 bg-bg-elevated border border-border-subtle rounded-xl max-h-24 overflow-y-auto text-[0.75rem] text-muted leading-relaxed">
+                {slideContent}
+              </div>
+            )}
 
             <textarea
               ref={textareaRef}

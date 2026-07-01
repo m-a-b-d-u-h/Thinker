@@ -2,7 +2,7 @@
 
 import { notFound, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useCallback, useState } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, MessageSquare, Type, CaseSensitive, ArrowUpDown, ArrowLeftRight, Maximize, Lock } from "lucide-react";
+import { ArrowLeft, HelpCircle, MessageSquare, Type, CaseSensitive, ArrowUpDown, ArrowLeftRight, Maximize, Lock } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
 import { useModule, useSaveProgress, useNotebookBySlide } from "@/lib/query-hooks";
@@ -90,7 +90,7 @@ function SettingIcon({
 
 function Popup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2">
+    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2">
       <div className="bg-bg-elevated border border-border/50 rounded-xl shadow-xl p-2">
         {children}
       </div>
@@ -213,132 +213,8 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
 
   return (
     <div className="h-full bg-bg flex flex-col">
-      {/* Embla Carousel */}
-      <div className="flex-1 flex items-center justify-center overflow-hidden">
-        <div className="relative w-full max-w-[280px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[480px]" style={{ aspectRatio: baseAspectRatio, containerType: 'inline-size' }}>
-          {selectedIndex > 0 && (
-            <button
-              onClick={scrollPrev}
-              className="absolute -left-4 sm:-left-5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-bg-elevated/80 border border-border/40 flex items-center justify-center text-muted hover:text-fg hover:bg-bg-elevated transition-all cursor-pointer shadow-sm"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          )}
-
-          <div className="overflow-hidden w-full h-full rounded-2xl" ref={emblaRef}>
-            <div className="flex h-full">
-              {nodeSlides.map((slide, i) => (
-                <div key={i} className="min-w-0 flex-[0_0_100%] h-full flex items-center justify-center">
-                  <div className="relative w-full h-full bg-bg-elevated border border-border/40 rounded-2xl shadow-lg flex flex-col p-5 sm:p-7" style={{ fontSize: baseFontSize, fontFamily: baseFontFamily, lineHeight: baseLineHeight, letterSpacing: baseLetterSpacing }}>
-                    {/* Slide progress dots */}
-                    <div className="flex items-center gap-1 mb-4">
-                      {nodeSlides.map((_, di) => (
-                        <span
-                          key={di}
-                          className={`block h-0.5 rounded-full transition-all duration-300 ${
-                            di === i ? 'w-6 bg-fg/70' : 'w-2 bg-border/50'
-                          }`}
-                        />
-                      ))}
-                    </div>
-
-                    {/* Module + Node title (first slide only) */}
-                    {slide.slideIndex === 0 && (
-                      <div className="mb-5">
-                        <p className="text-[0.65em] text-muted/70 font-semibold uppercase mb-1.5" style={{ letterSpacing: "0.15em" }}>{module.title}</p>
-                        <h1 className="text-[1.4em] font-bold text-fg leading-[1.15]">
-                          {slide.nodeLabel}
-                        </h1>
-                      </div>
-                    )}
-
-                    {/* Content */}
-                    <div className="flex-1 overflow-y-auto min-h-0">
-                      <p style={{ color: "rgba(255,255,255,0.85)" }}>
-                        {slide.content}
-                      </p>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="pt-4 mt-auto">
-                      <div className="flex items-center justify-between">
-                        <button
-                          onClick={() => router.push(`/models/${slug}`)}
-                          className="text-[10px] text-muted-dark/50 hover:text-muted transition-colors flex items-center gap-1 cursor-pointer"
-                        >
-                          <ArrowLeft className="w-2.5 h-2.5" />
-                          Back
-                        </button>
-                        <div className="flex gap-1.5 items-center">
-                          <NotebookSlide
-                            moduleSlug={slug}
-                            nodeId={nodeId}
-                            nodeLabel={slide.nodeLabel}
-                            slideIndex={slide.slideIndex}
-                            existingNote={i === selectedIndex ? (currentNote?.content ?? null) : null}
-                          />
-                          {i > 0 && (
-                            <button
-                              onClick={scrollPrev}
-                              className="px-2.5 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer"
-                            >
-                              Prev
-                            </button>
-                          )}
-                          {i < nodeSlides.length - 1 && (
-                            <button
-                              onClick={scrollNext}
-                              className="px-2.5 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer"
-                            >
-                              Next
-                            </button>
-                          )}
-                          {i === nodeSlides.length - 1 && (
-                            <div className="flex items-center gap-1.5">
-                              <button
-                                onClick={() => router.push(`/models/${slug}/quiz/${nodeId}`)}
-                                className="px-2 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer flex items-center gap-1"
-                              >
-                                <HelpCircle className="w-2.5 h-2.5" />
-                                Quiz
-                              </button>
-                              <button
-                                onClick={() => router.push(`/models/${slug}/reflection/${nodeId}`)}
-                                className="px-2 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer flex items-center gap-1"
-                              >
-                                <MessageSquare className="w-2.5 h-2.5" />
-                                Reflect
-                              </button>
-                              <button
-                                onClick={handleDone}
-                                className="px-3 py-1 text-[10px] font-medium rounded-lg bg-fg text-bg hover:opacity-90 transition-all cursor-pointer"
-                              >
-                                Done
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {selectedIndex < nodeSlides.length - 1 && (
-          <button
-            onClick={scrollNext}
-            className="absolute -right-4 sm:-right-5 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-bg-elevated/80 border border-border/40 flex items-center justify-center text-muted hover:text-fg hover:bg-bg-elevated transition-all cursor-pointer shadow-sm"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-      </div>
-
-      {/* Fixed bottom settings bar */}
-      <div className="fixed bottom-16 sm:bottom-4 left-1/2 -translate-x-1/2 z-40">
+      {/* Top fixed settings bar */}
+      <div className="fixed top-16 left-1/2 -translate-x-1/2 z-40 pt-2">
         <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md border border-border/60 rounded-xl px-3 py-1.5 shadow-lg">
           <SettingIcon
             icon={Type}
@@ -403,6 +279,113 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
               </Popup>
             )}
           </SettingIcon>
+        </div>
+      </div>
+
+      {/* Clean carousel - no buttons inside */}
+      <div className="flex-1 flex items-center justify-center px-4">
+        <div className="w-full max-w-[280px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[480px]" style={{ aspectRatio: baseAspectRatio, containerType: 'inline-size' }}>
+          <div className="overflow-hidden w-full h-full rounded-2xl" ref={emblaRef}>
+            <div className="flex h-full">
+              {nodeSlides.map((slide, i) => (
+                <div key={i} className="min-w-0 flex-[0_0_100%] h-full flex items-center justify-center">
+                  <div className="w-full h-full bg-bg-elevated border border-border/40 rounded-2xl shadow-lg flex flex-col p-5 sm:p-7" style={{ fontSize: baseFontSize, fontFamily: baseFontFamily, lineHeight: baseLineHeight, letterSpacing: baseLetterSpacing }}>
+                    {/* Slide progress dots */}
+                    <div className="flex items-center gap-1 mb-4">
+                      {nodeSlides.map((_, di) => (
+                        <span
+                          key={di}
+                          className={`block h-0.5 rounded-full transition-all duration-300 ${
+                            di === i ? 'w-6 bg-fg/70' : 'w-2 bg-border/50'
+                          }`}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Module + Node title (first slide only) */}
+                    {slide.slideIndex === 0 && (
+                      <div className="mb-5">
+                        <p className="text-[0.65em] text-muted/70 font-semibold uppercase mb-1.5" style={{ letterSpacing: "0.15em" }}>{module.title}</p>
+                        <h1 className="text-[1.4em] font-bold text-fg leading-[1.15]">
+                          {slide.nodeLabel}
+                        </h1>
+                      </div>
+                    )}
+
+                    {/* Content only - no buttons */}
+                    <div className="flex-1 overflow-y-auto min-h-0">
+                      <p style={{ color: "rgba(255,255,255,0.85)" }}>
+                        {slide.content}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom fixed nav/action bar */}
+      <div className="fixed bottom-16 sm:bottom-4 left-1/2 -translate-x-1/2 z-40 pb-2">
+        <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md border border-border/60 rounded-xl px-3 py-2 shadow-lg">
+          <button
+            onClick={() => router.push(`/models/${slug}`)}
+            className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer"
+          >
+            <ArrowLeft className="w-2.5 h-2.5" />
+            Back
+          </button>
+
+          <NotebookSlide
+            moduleSlug={slug}
+            nodeId={nodeId}
+            nodeLabel={currentSlide?.nodeLabel ?? ""}
+            slideIndex={currentSlide?.slideIndex ?? 0}
+            slideContent={currentSlide?.content ?? ""}
+            existingNote={currentNote?.content ?? null}
+          />
+
+          {selectedIndex > 0 && (
+            <button
+              onClick={scrollPrev}
+              className="px-2.5 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer"
+            >
+              Prev
+            </button>
+          )}
+
+          {selectedIndex < nodeSlides.length - 1 ? (
+            <button
+              onClick={scrollNext}
+              className="px-2.5 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer"
+            >
+              Next
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => router.push(`/models/${slug}/quiz/${nodeId}`)}
+                className="px-2 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer flex items-center gap-1"
+              >
+                <HelpCircle className="w-2.5 h-2.5" />
+                Quiz
+              </button>
+              <button
+                onClick={() => router.push(`/models/${slug}/reflection/${nodeId}`)}
+                className="px-2 py-1 text-[10px] font-medium rounded-lg bg-bg-elevated border border-border/40 text-muted hover:text-fg hover:border-border/70 transition-all cursor-pointer flex items-center gap-1"
+              >
+                <MessageSquare className="w-2.5 h-2.5" />
+                Reflect
+              </button>
+              <button
+                onClick={handleDone}
+                className="px-3 py-1 text-[10px] font-medium rounded-lg bg-fg text-bg hover:opacity-90 transition-all cursor-pointer"
+              >
+                Done
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>

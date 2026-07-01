@@ -54,6 +54,7 @@ export namespace NotebooksService {
       },
       update: {
         content: input.content,
+        slideContent: input.slideContent,
         nodeLabel: input.nodeLabel,
       },
       create: {
@@ -62,6 +63,7 @@ export namespace NotebooksService {
         nodeId: input.nodeId,
         nodeLabel: input.nodeLabel,
         slideIndex: input.slideIndex,
+        slideContent: input.slideContent,
         content: input.content,
       },
       include: {
@@ -79,14 +81,12 @@ export namespace NotebooksService {
     const module = await prisma.module.findUnique({ where: { slug: moduleSlug } });
     if (!module) throw new NotFoundError("Module");
 
-    await prisma.notebookEntry.delete({
+    await prisma.notebookEntry.deleteMany({
       where: {
-        userId_moduleId_nodeId_slideIndex: {
-          userId,
-          moduleId: module.id,
-          nodeId,
-          slideIndex,
-        },
+        userId,
+        moduleId: module.id,
+        nodeId,
+        slideIndex,
       },
     });
 

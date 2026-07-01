@@ -223,6 +223,7 @@ export default function AudioPage({ params }: { params: Promise<{ slug: string; 
                         nodeId={nodeId}
                         nodeLabel={slide.nodeLabel}
                         slideIndex={slide.slideIndex}
+                        slideContent={slide.content}
                         existingNote={activeNote?.content ?? null}
                       />
                     )}

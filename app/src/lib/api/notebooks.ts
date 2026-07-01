@@ -15,6 +15,7 @@ export const notebooksApi = {
     nodeId: string;
     nodeLabel: string;
     slideIndex: number;
+    slideContent: string;
     content: string;
   }) => api.post<NotebookEntry>("/notebooks", body).then((r) => r.data),
 

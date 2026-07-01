@@ -23,6 +23,7 @@ export default function NotebookPage() {
     (e) =>
       !search ||
       e.content.toLowerCase().includes(search.toLowerCase()) ||
+      e.slideContent?.toLowerCase().includes(search.toLowerCase()) ||
       e.nodeLabel.toLowerCase().includes(search.toLowerCase()) ||
       e.module?.title?.toLowerCase().includes(search.toLowerCase()),
   );
@@ -119,7 +120,13 @@ export default function NotebookPage() {
                       {entry.nodeLabel} &middot; Slide {entry.slideIndex + 1}
                     </h3>
 
-                    <p className="text-[0.8125rem] text-muted leading-relaxed whitespace-pre-wrap line-clamp-4">
+                    {entry.slideContent && (
+                      <div className="mb-2.5 p-2.5 bg-bg-elevated border border-border-subtle rounded-lg max-h-20 overflow-y-auto text-[0.6875rem] text-muted-dark leading-relaxed line-clamp-3">
+                        {entry.slideContent}
+                      </div>
+                    )}
+
+                    <p className="text-[0.8125rem] text-fg leading-relaxed whitespace-pre-wrap line-clamp-4">
                       {entry.content}
                     </p>
                   </Link>
