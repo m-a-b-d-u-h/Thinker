@@ -84,17 +84,17 @@ export default function NotebookPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          <div className="columns-1 sm:columns-2 xl:columns-3 gap-5">
             {filtered
               .slice((page - 1) * PER_PAGE, page * PER_PAGE)
               .map((entry, idx) => (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.04 }}
-                    className="group relative"
-                  >
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.04 }}
+                  className="group relative break-inside-avoid mb-5"
+                >
                     <Link
                       href={`/models/${entry.module.slug}/read/${entry.nodeId}?slide=${entry.slideIndex}`}
                       className="block bg-bg-card border border-white/10 rounded-2xl hover:border-white/20 hover:shadow-sm transition-all duration-200 no-underline overflow-hidden"

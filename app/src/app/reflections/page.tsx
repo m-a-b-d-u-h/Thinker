@@ -75,14 +75,14 @@ export default function ReflectionListPage() {
         <div className="text-center py-20 text-muted-dark text-[0.875rem]">No reflections match your search.</div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          <div className="columns-1 sm:columns-2 xl:columns-3 gap-5">
             {filteredReflections.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((ref, idx) => (
                 <motion.div
                   key={ref.id}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.04 }}
-                  className="group relative"
+                  className="group relative break-inside-avoid mb-5"
                 >
                   <Link
                     href={ref.module?.slug ? `/models/${ref.module.slug}` : '#'}
