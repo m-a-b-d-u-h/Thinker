@@ -15,7 +15,7 @@ import {
   ArrowRight,
   Crown,
   HelpCircle,
-  RotateCcw,
+  FileText,
 } from "lucide-react";
 import { authApi } from "@/lib/api/auth";
 import { paymentsApi } from "@/lib/api/payments";
@@ -108,14 +108,6 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
           <div className="flex items-center gap-2 text-muted mb-3">
-            <RotateCcw size={14} />
-            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">In Progress</span>
-          </div>
-          <p className="text-2xl font-black text-fg">{stats?.inProgressCount || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">modules</span></p>
-          <p className="text-[0.6875rem] text-muted-dark mt-1">Currently being studied</p>
-        </div>
-        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
-          <div className="flex items-center gap-2 text-muted mb-3">
             <CheckCircle2 size={14} />
             <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Completed</span>
           </div>
@@ -137,6 +129,14 @@ export default function DashboardPage() {
           </div>
           <p className="text-2xl font-black text-fg">{stats?.listeningMinutes || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">min</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.listenXp || 0} XP</span></p>
           <p className="text-[0.6875rem] text-muted-dark mt-1">Total audio time</p>
+        </div>
+        <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
+          <div className="flex items-center gap-2 text-muted mb-3">
+            <FileText size={14} />
+            <span className="text-[0.625rem] font-bold uppercase tracking-[0.08em]">Notebook</span>
+          </div>
+          <p className="text-2xl font-black text-fg">{stats?.notebookCount || 0}<span className="text-[0.875rem] font-normal text-muted-dark ml-1">notes</span><span className="text-[0.875rem] text-[#a78bfa] ml-2">+{stats?.notebookXp || 0} XP</span></p>
+          <p className="text-[0.6875rem] text-muted-dark mt-1">Slide notes saved</p>
         </div>
         <div className="bg-bg-card rounded-2xl p-5 border border-border-subtle flex-1 min-w-0">
           <div className="flex items-center gap-2 text-muted mb-3">

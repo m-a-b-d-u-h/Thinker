@@ -163,7 +163,7 @@ export namespace ProgressService {
   }
 
   export async function getStats(userId: string) {
-    const [allProgress, totalModules, reflections, user] = await Promise.all([
+    const [allProgress, totalModules, reflections, user, notebookCount] = await Promise.all([
       prisma.userProgress.findMany({
         where: { userId },
         include: {
@@ -184,6 +184,9 @@ export namespace ProgressService {
       prisma.user.findUnique({
         where: { id: userId },
         select: { streakCount: true, preferredCategories: true },
+      }),
+      prisma.notebookEntry.count({
+        where: { userId },
       }),
     ]);
 
@@ -287,8 +290,9 @@ export namespace ProgressService {
     const readXp = readingMinutes * 10;
     const completedXp = completedCount * 50;
     const reflectionXp = reflectionCount * 150;
+    const notebookXp = notebookCount * 100;
     const streakXp = streak * 5;
-    const totalXp = listenXp + readXp + completedXp + reflectionXp + streakXp;
+    const totalXp = listenXp + readXp + completedXp + reflectionXp + notebookXp + streakXp;
 
     const ranks = [
       { level: 1, name: "Beginner", xp: 0 },
@@ -324,10 +328,12 @@ export namespace ProgressService {
       recentActivity,
       recommendedModules,
       reflectionCount,
+      notebookCount,
       listenXp,
       readXp,
       completedXp,
       reflectionXp,
+      notebookXp,
       streakXp,
       totalXp,
       rank: currentRank.name,

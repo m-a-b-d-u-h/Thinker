@@ -211,6 +211,7 @@ export interface ProgressStats {
   readingMinutes: number;
   inProgressCount: number;
   reflectionCount: number;
+  notebookCount: number;
   historyCount: number;
   categoryBreakdown: Record<string, number>;
   completedCategoryBreakdown: CategoryEntry[];
@@ -220,6 +221,7 @@ export interface ProgressStats {
   readXp: number;
   completedXp: number;
   reflectionXp: number;
+  notebookXp: number;
   streakXp: number;
   totalXp: number;
   rank: string;
