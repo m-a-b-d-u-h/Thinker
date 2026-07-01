@@ -64,17 +64,19 @@ const aspectRatioOptions: { key: AspectRatio; label: string }[] = [
 
 function SettingIcon({
   icon: Icon,
+  label,
   active,
   onClick,
   children,
 }: {
   icon: React.ComponentType<{ className?: string }>;
+  label: string;
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative">
+    <div className="relative flex flex-col items-center gap-0.5">
       <button
         onClick={onClick}
         className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all cursor-pointer ${
@@ -83,15 +85,23 @@ function SettingIcon({
       >
         <Icon className="w-3.5 h-3.5" />
       </button>
+      {active && (
+        <span className="text-[7px] font-semibold text-fg/60 uppercase tracking-wider leading-none">
+          {label}
+        </span>
+      )}
       {children}
     </div>
   );
 }
 
-function Popup({ children }: { children: React.ReactNode }) {
+function Popup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2">
-      <div className="bg-bg-elevated border border-border/50 rounded-xl shadow-xl p-2">
+      <div className="bg-bg-elevated border border-border/50 rounded-xl shadow-xl p-2 min-w-[140px]">
+        <p className="text-[9px] font-semibold text-muted-dark uppercase tracking-wider mb-1.5 px-1">
+          {title}
+        </p>
         {children}
       </div>
     </div>
@@ -218,11 +228,12 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
         <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md border border-border/60 rounded-xl px-3 py-1.5 shadow-lg">
           <SettingIcon
             icon={Type}
+            label={fontSizeOptions.find(o => o.key === fontSize)?.label ?? ""}
             active={activeSetting === "fontSize"}
             onClick={() => setActiveSetting(activeSetting === "fontSize" ? null : "fontSize")}
           >
             {activeSetting === "fontSize" && (
-              <Popup>
+              <Popup title="Font Size">
                 <RadioGroup options={fontSizeOptions} value={fontSize} onChange={setFontSize} />
               </Popup>
             )}
@@ -230,11 +241,12 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
 
           <SettingIcon
             icon={CaseSensitive}
+            label={fontFamilyOptions.find(o => o.key === fontFamily)?.label ?? ""}
             active={activeSetting === "fontFamily"}
             onClick={() => setActiveSetting(activeSetting === "fontFamily" ? null : "fontFamily")}
           >
             {activeSetting === "fontFamily" && (
-              <Popup>
+              <Popup title="Font">
                 <RadioGroup options={fontFamilyOptions} value={fontFamily} onChange={setFontFamily} />
               </Popup>
             )}
@@ -244,11 +256,12 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
 
           <SettingIcon
             icon={ArrowUpDown}
+            label={lineHeightOptions.find(o => o.key === lineHeight)?.label ?? ""}
             active={activeSetting === "lineHeight"}
             onClick={() => setActiveSetting(activeSetting === "lineHeight" ? null : "lineHeight")}
           >
             {activeSetting === "lineHeight" && (
-              <Popup>
+              <Popup title="Line Height">
                 <RadioGroup options={lineHeightOptions} value={lineHeight} onChange={setLineHeight} />
               </Popup>
             )}
@@ -256,11 +269,12 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
 
           <SettingIcon
             icon={ArrowLeftRight}
+            label={letterSpacingOptions.find(o => o.key === letterSpacing)?.label ?? ""}
             active={activeSetting === "letterSpacing"}
             onClick={() => setActiveSetting(activeSetting === "letterSpacing" ? null : "letterSpacing")}
           >
             {activeSetting === "letterSpacing" && (
-              <Popup>
+              <Popup title="Letter Spacing">
                 <RadioGroup options={letterSpacingOptions} value={letterSpacing} onChange={setLetterSpacing} />
               </Popup>
             )}
@@ -270,11 +284,12 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
 
           <SettingIcon
             icon={Maximize}
+            label={aspectRatioOptions.find(o => o.key === aspectRatio)?.label ?? ""}
             active={activeSetting === "aspectRatio"}
             onClick={() => setActiveSetting(activeSetting === "aspectRatio" ? null : "aspectRatio")}
           >
             {activeSetting === "aspectRatio" && (
-              <Popup>
+              <Popup title="Aspect Ratio">
                 <RadioGroup options={aspectRatioOptions} value={aspectRatio} onChange={setAspectRatio} />
               </Popup>
             )}
@@ -289,34 +304,30 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
             <div className="flex h-full">
               {nodeSlides.map((slide, i) => (
                 <div key={i} className="min-w-0 flex-[0_0_100%] h-full flex items-center justify-center">
-                  <div className="w-full h-full bg-bg-elevated border border-border/40 rounded-2xl shadow-lg flex flex-col p-5 sm:p-7" style={{ fontSize: baseFontSize, fontFamily: baseFontFamily, lineHeight: baseLineHeight, letterSpacing: baseLetterSpacing }}>
-                    {/* Slide progress dots */}
-                    <div className="flex items-center gap-1 mb-4">
-                      {nodeSlides.map((_, di) => (
-                        <span
-                          key={di}
-                          className={`block h-0.5 rounded-full transition-all duration-300 ${
-                            di === i ? 'w-6 bg-fg/70' : 'w-2 bg-border/50'
-                          }`}
-                        />
-                      ))}
+                  <div className="w-full h-full bg-bg-elevated border border-border/40 rounded-2xl shadow-lg flex flex-col p-5 sm:p-7 relative" style={{ fontSize: baseFontSize, fontFamily: baseFontFamily, lineHeight: baseLineHeight, letterSpacing: baseLetterSpacing }}>
+                    <div className="flex-1 flex flex-col items-center justify-center min-h-0" style={{ fontFamily: baseFontFamily, letterSpacing: baseLetterSpacing }}>
+                      {/* Module + Node title (first slide only) */}
+                      {slide.slideIndex === 0 && (
+                        <div className="mb-5 w-full" style={{ fontFamily: baseFontFamily, letterSpacing: baseLetterSpacing }}>
+                          <p className="text-[0.65em] text-muted/70 font-semibold uppercase mb-1.5" style={{ letterSpacing: "0.15em" }}>{module.title}</p>
+                          <h1 className="text-[1.4em] font-bold text-fg leading-[1.15]">
+                            {slide.nodeLabel}
+                          </h1>
+                        </div>
+                      )}
+
+                      {/* Content only - no buttons */}
+                      <div className="overflow-y-auto min-h-0 w-full">
+                        <p style={{ color: "rgba(255,255,255,0.85)" }}>
+                          {slide.content}
+                        </p>
+                      </div>
                     </div>
 
-                    {/* Module + Node title (first slide only) */}
-                    {slide.slideIndex === 0 && (
-                      <div className="mb-5">
-                        <p className="text-[0.65em] text-muted/70 font-semibold uppercase mb-1.5" style={{ letterSpacing: "0.15em" }}>{module.title}</p>
-                        <h1 className="text-[1.4em] font-bold text-fg leading-[1.15]">
-                          {slide.nodeLabel}
-                        </h1>
-                      </div>
-                    )}
-
-                    {/* Content only - no buttons */}
-                    <div className="flex-1 overflow-y-auto min-h-0">
-                      <p style={{ color: "rgba(255,255,255,0.85)" }}>
-                        {slide.content}
-                      </p>
+                    <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
+                      <span className="text-[10px] font-medium text-muted-dark">
+                        {i + 1}/{nodeSlides.length}
+                      </span>
                     </div>
                   </div>
                 </div>
