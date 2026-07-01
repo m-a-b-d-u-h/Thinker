@@ -12,7 +12,6 @@ interface NotebookSlideProps {
   nodeLabel: string;
   slideIndex: number;
   slideContent: string;
-  existingNote?: string | null;
 }
 
 export function NotebookSlide({
@@ -21,18 +20,13 @@ export function NotebookSlide({
   nodeLabel,
   slideIndex,
   slideContent,
-  existingNote,
 }: NotebookSlideProps) {
   const token = useAuthStore((s) => s.token);
   const [open, setOpen] = useState(false);
-  const [content, setContent] = useState(existingNote || "");
+  const [content, setContent] = useState("");
   const upsertMutation = useUpsertNotebook();
   const deleteMutation = useDeleteNotebook();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    setContent(existingNote || "");
-  }, [existingNote]);
 
   useEffect(() => {
     if (open && textareaRef.current) {
@@ -56,6 +50,7 @@ export function NotebookSlide({
       });
     }
     setOpen(false);
+    setContent("");
   };
 
   const handleDelete = async () => {
@@ -64,22 +59,16 @@ export function NotebookSlide({
     setOpen(false);
   };
 
-  const hasNote = !!existingNote;
-
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
-        className={`px-2 py-1 text-[10px] font-medium rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
-          hasNote
-            ? "bg-[#a78bfa]/10 border-[#a78bfa]/30 text-[#a78bfa] hover:bg-[#a78bfa]/20"
-            : "bg-bg-elevated border-border/40 text-muted hover:text-fg hover:border-border/70"
-        }`}
-        title={hasNote ? "Edit note" : "Add note"}
+        onClick={() => { setOpen(true); setContent(""); }}
+        className="px-2 py-1 text-[10px] font-medium rounded-lg border transition-all cursor-pointer flex items-center gap-1 bg-bg-elevated border-border/40 text-muted hover:text-fg hover:border-border/70"
+        title="Add note"
       >
         <PenLine size={10} />
-        {hasNote ? "Note" : "Note"}
+        Note
       </button>
 
       {open && createPortal(
@@ -119,16 +108,14 @@ export function NotebookSlide({
             />
 
             <div className="flex items-center justify-between mt-3">
-              {hasNote && (
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={deleteMutation.isPending}
-                  className="text-[0.75rem] text-red-400 hover:text-red-300 transition-colors cursor-pointer bg-transparent border-none disabled:opacity-30"
-                >
-                  Delete note
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={deleteMutation.isPending}
+                className="text-[0.75rem] text-red-400 hover:text-red-300 transition-colors cursor-pointer bg-transparent border-none disabled:opacity-30"
+              >
+                Delete note
+              </button>
               <div className="flex items-center gap-2 ml-auto">
                 <button
                   type="button"

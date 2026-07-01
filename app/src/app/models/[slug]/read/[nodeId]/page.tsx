@@ -5,7 +5,7 @@ import React, { useEffect, useMemo, useCallback, useState } from "react";
 import { ArrowLeft, HelpCircle, MessageSquare, Type, CaseSensitive, ArrowUpDown, ArrowLeftRight, Maximize, Lock } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
-import { useModule, useSaveProgress, useNotebookBySlide } from "@/lib/query-hooks";
+import { useModule, useSaveProgress } from "@/lib/query-hooks";
 import { getSlides } from "@/lib/course-content";
 import { NotebookSlide } from "@/components/NotebookSlide";
 
@@ -182,11 +182,6 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
   }, [slug, nodeId, saveProgress, router]);
 
   const currentSlide = nodeSlides[selectedIndex];
-  const { data: currentNote } = useNotebookBySlide(
-    slug,
-    nodeId,
-    currentSlide?.slideIndex ?? 0,
-  );
 
   if (isLoading) {
     return (
@@ -298,13 +293,13 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
       </div>
 
       {/* Clean carousel - no buttons inside */}
-      <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-[280px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[480px]" style={{ aspectRatio: baseAspectRatio, containerType: 'inline-size' }}>
+      <div className="flex-1 flex items-center justify-center px-2 sm:px-4">
+        <div className="w-full max-w-[340px] sm:max-w-[360px] md:max-w-[420px] lg:max-w-[480px]" style={{ aspectRatio: baseAspectRatio, containerType: 'inline-size' }}>
           <div className="overflow-hidden w-full h-full rounded-2xl" ref={emblaRef}>
             <div className="flex h-full">
               {nodeSlides.map((slide, i) => (
                 <div key={i} className="min-w-0 flex-[0_0_100%] h-full flex items-center justify-center">
-                  <div className="w-full h-full bg-bg-elevated border border-border/40 rounded-2xl shadow-lg flex flex-col p-5 sm:p-7 relative" style={{ fontSize: baseFontSize, fontFamily: baseFontFamily, lineHeight: baseLineHeight, letterSpacing: baseLetterSpacing }}>
+                  <div className="w-full h-full bg-bg-elevated border border-border/40 rounded-2xl shadow-lg flex flex-col p-4 sm:p-7 relative" style={{ fontSize: baseFontSize, fontFamily: baseFontFamily, lineHeight: baseLineHeight, letterSpacing: baseLetterSpacing }}>
                     <div className="flex-1 flex flex-col items-center justify-center min-h-0" style={{ fontFamily: baseFontFamily, letterSpacing: baseLetterSpacing }}>
                       {/* Module + Node title (first slide only) */}
                       {slide.slideIndex === 0 && (
@@ -354,7 +349,6 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
             nodeLabel={currentSlide?.nodeLabel ?? ""}
             slideIndex={currentSlide?.slideIndex ?? 0}
             slideContent={currentSlide?.content ?? ""}
-            existingNote={currentNote?.content ?? null}
           />
 
           {selectedIndex > 0 && (

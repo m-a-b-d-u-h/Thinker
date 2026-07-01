@@ -4,7 +4,7 @@ import { notFound, useRouter } from "next/navigation";
 import React, { useMemo, useRef, useEffect, useCallback } from "react";
 import { ArrowLeft, Headphones, Play, Pause, SkipBack, SkipForward, HelpCircle, MessageSquare, Lock } from "lucide-react";
 
-import { useModule, useSaveProgress, useNotebookBySlide } from "@/lib/query-hooks";
+import { useModule, useSaveProgress } from "@/lib/query-hooks";
 import { useTTS } from "@/hooks/useTTS";
 import { getSlides, Slide } from "@/lib/course-content";
 import { NotebookSlide } from "@/components/NotebookSlide";
@@ -51,11 +51,6 @@ export default function AudioPage({ params }: { params: Promise<{ slug: string; 
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
   const activeSlide = slides[currentSection];
-  const { data: activeNote } = useNotebookBySlide(
-    slug,
-    nodeId,
-    activeSlide?.slideIndex ?? 0,
-  );
 
   const saveProgress = useSaveProgress();
   const handleDone = useCallback(async () => {
@@ -224,7 +219,6 @@ export default function AudioPage({ params }: { params: Promise<{ slug: string; 
                         nodeLabel={slide.nodeLabel}
                         slideIndex={slide.slideIndex}
                         slideContent={slide.content}
-                        existingNote={activeNote?.content ?? null}
                       />
                     )}
                   </div>
