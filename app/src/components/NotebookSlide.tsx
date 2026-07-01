@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { FileText, PenLine, X, Loader2 } from "lucide-react";
+import { PenLine, X, Loader2 } from "lucide-react";
 import { useUpsertNotebook, useDeleteNotebook } from "@/lib/query-hooks";
 import { useAuthStore } from "@/lib/store/auth";
 
@@ -75,7 +75,7 @@ export function NotebookSlide({
         }`}
         title={hasNote ? "Edit note" : "Add note"}
       >
-        {hasNote ? <FileText size={14} /> : <PenLine size={14} />}
+        <PenLine size={14} />
       </button>
 
       {open && createPortal(
