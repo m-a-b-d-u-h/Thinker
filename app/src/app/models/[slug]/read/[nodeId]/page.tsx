@@ -259,15 +259,6 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
                       </p>
                     </div>
 
-                    {/* Notebook button on every slide */}
-                    <NotebookSlide
-                      moduleSlug={slug}
-                      nodeId={nodeId}
-                      nodeLabel={slide.nodeLabel}
-                      slideIndex={slide.slideIndex}
-                      existingNote={i === selectedIndex ? (currentNote?.content ?? null) : null}
-                    />
-
                     {/* Footer */}
                     <div className="pt-4 mt-auto">
                       <div className="flex items-center justify-between">
@@ -279,6 +270,13 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
                           Back
                         </button>
                         <div className="flex gap-1.5 items-center">
+                          <NotebookSlide
+                            moduleSlug={slug}
+                            nodeId={nodeId}
+                            nodeLabel={slide.nodeLabel}
+                            slideIndex={slide.slideIndex}
+                            existingNote={i === selectedIndex ? (currentNote?.content ?? null) : null}
+                          />
                           {i > 0 && (
                             <button
                               onClick={scrollPrev}

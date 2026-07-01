@@ -68,14 +68,15 @@ export function NotebookSlide({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`absolute bottom-3 right-3 z-20 p-2 rounded-lg border transition-all cursor-pointer ${
+        className={`px-2 py-1 text-[10px] font-medium rounded-lg border transition-all cursor-pointer flex items-center gap-1 ${
           hasNote
             ? "bg-[#a78bfa]/10 border-[#a78bfa]/30 text-[#a78bfa] hover:bg-[#a78bfa]/20"
-            : "bg-bg/50 border-border/30 text-muted-dark hover:text-muted hover:border-border/60"
+            : "bg-bg-elevated border-border/40 text-muted hover:text-fg hover:border-border/70"
         }`}
         title={hasNote ? "Edit note" : "Add note"}
       >
-        <PenLine size={14} />
+        <PenLine size={10} />
+        {hasNote ? "Note" : "Note"}
       </button>
 
       {open && createPortal(
