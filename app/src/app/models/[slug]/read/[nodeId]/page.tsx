@@ -1,6 +1,6 @@
 "use client";
 
-import { notFound, useRouter } from "next/navigation";
+import { notFound, useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect, useMemo, useCallback, useState } from "react";
 import { ArrowLeft, HelpCircle, MessageSquare, Type, CaseSensitive, ArrowUpDown, ArrowLeftRight, Maximize, Lock } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -150,8 +150,11 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
     [allSlides, nodeId],
   );
 
-  const [emblaRef, emblaApi] = useEmblaCarousel({ startIndex: 0 });
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const searchParams = useSearchParams();
+  const startSlide = parseInt(searchParams.get('slide') || '0', 10);
+
+  const [emblaRef, emblaApi] = useEmblaCarousel({ startIndex: startSlide });
+  const [selectedIndex, setSelectedIndex] = useState(startSlide);
   const [activeSetting, setActiveSetting] = useState<"fontSize" | "fontFamily" | "lineHeight" | "letterSpacing" | "aspectRatio" | null>(null);
 
   const [fontSize, setFontSize] = useState<FontSize>("md");

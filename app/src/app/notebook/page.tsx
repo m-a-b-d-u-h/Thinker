@@ -88,61 +88,70 @@ export default function NotebookPage() {
             {filtered
               .slice((page - 1) * PER_PAGE, page * PER_PAGE)
               .map((entry, idx) => (
-                <motion.div
-                  key={entry.id}
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: idx * 0.04 }}
-                  className="group relative"
-                >
-                  <Link
-                    href={`/models/${entry.module.slug}`}
-                    className="block bg-bg-card border border-border-subtle rounded-2xl hover:border-border transition-all duration-200 p-6 no-underline"
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.04 }}
+                    className="group relative"
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      {entry.module?.category && (
-                        <span className="text-[0.625rem] font-semibold uppercase tracking-[0.08em] text-muted-dark">
-                          {entry.module.category.replace(/-/g, " ")}
-                        </span>
-                      )}
-                      <span className="text-[0.6875rem] text-muted-dark">
-                        {formatDate(new Date(entry.updatedAt).getTime())}
-                      </span>
-                    </div>
+                    <Link
+                      href={`/models/${entry.module.slug}/read/${entry.nodeId}?slide=${entry.slideIndex}`}
+                      className="block bg-bg-card border border-white/10 rounded-2xl hover:border-white/20 hover:shadow-sm transition-all duration-200 no-underline overflow-hidden"
+                    >
+                      <div className="p-5">
+                        <div className="flex items-center gap-2 mb-3">
+                          {entry.module?.category && (
+                            <span className="inline-block px-2 py-0.5 rounded-md bg-bg-elevated border border-white/10 text-[0.6875rem] font-semibold text-muted">
+                              {entry.module.category.replace(/-/g, " ")}
+                            </span>
+                          )}
+                          <span className="text-[0.8125rem] text-muted">
+                            {entry.module.title}
+                          </span>
+                          <span className="ml-auto text-[0.6875rem] text-muted">
+                            {formatDate(new Date(entry.updatedAt).getTime())}
+                          </span>
+                        </div>
 
-                    <div className="h-px bg-border-subtle mb-4" />
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-fg/15 border border-white/10 text-[0.6875rem] font-semibold text-fg">
+                            <FileText size={11} />
+                            {entry.nodeLabel}
+                          </span>
+                          <span className="text-[0.6875rem] text-muted">
+                            Slide {entry.slideIndex + 1}
+                          </span>
+                        </div>
 
-                    <span className="text-[0.6875rem] text-muted block">
-                      {entry.module.title}
-                    </span>
+                        {entry.slideContent && (
+                          <div className="mb-3 pl-3 border-l-2 border-white/10">
+                            <p className="text-[0.8125rem] text-muted leading-relaxed italic">
+                              &ldquo;{entry.slideContent}&rdquo;
+                            </p>
+                          </div>
+                        )}
 
-                    <h3 className="text-[1.0625rem] font-bold text-fg mb-2.5 leading-snug tracking-[-0.01em]">
-                      {entry.nodeLabel} &middot; Slide {entry.slideIndex + 1}
-                    </h3>
-
-                    {entry.slideContent && (
-                      <div className="mb-2.5 p-2.5 bg-bg-elevated border border-border-subtle rounded-lg max-h-20 overflow-y-auto text-[0.6875rem] text-muted-dark leading-relaxed line-clamp-3">
-                        {entry.slideContent}
+                        <div className="bg-bg-elevated/60 rounded-xl px-4 py-3 border border-white/10">
+                          <p className="text-[0.9375rem] text-fg leading-relaxed whitespace-pre-wrap">
+                            {entry.content}
+                          </p>
+                        </div>
                       </div>
-                    )}
+                    </Link>
 
-                    <p className="text-[0.8125rem] text-fg leading-relaxed whitespace-pre-wrap line-clamp-4">
-                      {entry.content}
-                    </p>
-                  </Link>
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(entry.module.slug, entry.nodeId, entry.slideIndex);
-                    }}
-                    disabled={deleteMutation.isPending}
-                    className="absolute top-5 right-5 p-1.5 rounded-lg text-muted-dark opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-bg-elevated transition-all cursor-pointer bg-transparent border-none disabled:opacity-30"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </motion.div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(entry.module.slug, entry.nodeId, entry.slideIndex);
+                      }}
+                      disabled={deleteMutation.isPending}
+                      className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-lg text-muted-dark/60 opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer bg-transparent border-none disabled:opacity-30"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  </motion.div>
               ))}
           </div>
           <Pagination
