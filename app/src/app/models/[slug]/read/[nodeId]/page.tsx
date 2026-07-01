@@ -5,8 +5,9 @@ import React, { useEffect, useMemo, useCallback, useState } from "react";
 import { ArrowLeft, ChevronLeft, ChevronRight, HelpCircle, MessageSquare, Type, CaseSensitive, ArrowUpDown, ArrowLeftRight, Maximize, Lock } from "lucide-react";
 import useEmblaCarousel from "embla-carousel-react";
 
-import { useModule, useSaveProgress } from "@/lib/query-hooks";
+import { useModule, useSaveProgress, useNotebookBySlide } from "@/lib/query-hooks";
 import { getSlides } from "@/lib/course-content";
+import { NotebookSlide } from "@/components/NotebookSlide";
 
 type FontSize = "sm" | "md" | "lg" | "xl";
 type FontFamily = "inter" | "serif" | "mono" | "outfit";
@@ -170,6 +171,13 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
     router.push(`/models/${slug}`);
   }, [slug, nodeId, saveProgress, router]);
 
+  const currentSlide = nodeSlides[selectedIndex];
+  const { data: currentNote } = useNotebookBySlide(
+    slug,
+    nodeId,
+    currentSlide?.slideIndex ?? 0,
+  );
+
   if (isLoading) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-bg">
@@ -250,6 +258,17 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
                         {slide.content}
                       </p>
                     </div>
+
+                    {/* Notebook - only on the visible slide */}
+                    {i === selectedIndex && (
+                      <NotebookSlide
+                        moduleSlug={slug}
+                        nodeId={nodeId}
+                        nodeLabel={slide.nodeLabel}
+                        slideIndex={slide.slideIndex}
+                        existingNote={currentNote?.content ?? null}
+                      />
+                    )}
 
                     {/* Footer */}
                     <div className="pt-4 mt-auto">

@@ -4,9 +4,10 @@ import { notFound, useRouter } from "next/navigation";
 import React, { useMemo, useRef, useEffect, useCallback } from "react";
 import { ArrowLeft, Headphones, Play, Pause, SkipBack, SkipForward, HelpCircle, MessageSquare, Lock } from "lucide-react";
 
-import { useModule, useSaveProgress } from "@/lib/query-hooks";
+import { useModule, useSaveProgress, useNotebookBySlide } from "@/lib/query-hooks";
 import { useTTS } from "@/hooks/useTTS";
 import { getSlides, Slide } from "@/lib/course-content";
+import { NotebookSlide } from "@/components/NotebookSlide";
 
 export default function AudioPage({ params }: { params: Promise<{ slug: string; nodeId: string }> }) {
   const { slug, nodeId } = React.use(params);
@@ -48,6 +49,13 @@ export default function AudioPage({ params }: { params: Promise<{ slug: string; 
   }, [currentSection]);
 
   const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
+
+  const activeSlide = slides[currentSection];
+  const { data: activeNote } = useNotebookBySlide(
+    slug,
+    nodeId,
+    activeSlide?.slideIndex ?? 0,
+  );
 
   const saveProgress = useSaveProgress();
   const handleDone = useCallback(async () => {
@@ -175,7 +183,7 @@ export default function AudioPage({ params }: { params: Promise<{ slug: string; 
             return (
               <div
                 key={i}
-                className={`rounded-xl border p-4 sm:p-5 transition-all duration-500 ${
+                className={`relative rounded-xl border p-4 sm:p-5 transition-all duration-500 ${
                   isActive
                     ? 'border-fg/40 bg-fg/[0.03] shadow-[0_0_20px_rgba(255,255,255,0.04)]'
                     : isPast
@@ -209,6 +217,15 @@ export default function AudioPage({ params }: { params: Promise<{ slug: string; 
                     }`}>
                       {slide.content}
                     </p>
+                    {isActive && (
+                      <NotebookSlide
+                        moduleSlug={slug}
+                        nodeId={nodeId}
+                        nodeLabel={slide.nodeLabel}
+                        slideIndex={slide.slideIndex}
+                        existingNote={activeNote?.content ?? null}
+                      />
+                    )}
                   </div>
                 </div>
               </div>

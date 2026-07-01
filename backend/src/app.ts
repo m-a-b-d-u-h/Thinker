@@ -18,6 +18,7 @@ import quizRoutes from "./modules/quiz/quiz.routes";
 import actionsRoutes from "./modules/actions/actions.routes";
 import paymentsRoutes from "./modules/payments/payments.routes";
 import reviewsRoutes from "./modules/reviews/reviews.routes";
+import notebooksRoutes from "./modules/notebooks/notebooks.routes";
 import aiRoutes from "./modules/ai/ai.routes";
 import adminRoutes from "./modules/admin/admin.routes";
 
@@ -102,7 +103,8 @@ app.use("/api/quiz", quizRoutes);
 app.use("/api/actions", actionsRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/reviews", reviewsRoutes);
-app.use("/api/ai", aiRoutes);
+  app.use("/api/notebooks", notebooksRoutes);
+  app.use("/api/ai", aiRoutes);
 app.use("/api/admin", adminRoutes);
 
 // 404 handler

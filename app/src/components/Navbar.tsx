@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   Library,
   BookOpen,
+  FileText,
   User,
   X,
 } from "lucide-react";
@@ -34,6 +35,7 @@ export default function Navbar() {
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     { name: "Favorites", href: "/favorites", icon: Library },
     { name: "Reflections", href: "/reflections", icon: BookOpen },
+    { name: "Notebook", href: "/notebook", icon: FileText },
   ];
 
   if (isLanding) {

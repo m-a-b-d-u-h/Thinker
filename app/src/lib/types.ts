@@ -237,6 +237,19 @@ export interface PaginationInfo {
   totalPages: number;
 }
 
+export interface NotebookEntry {
+  id: string;
+  userId: string;
+  moduleId: string;
+  nodeId: string;
+  nodeLabel: string;
+  slideIndex: number;
+  content: string;
+  createdAt: string;
+  updatedAt: string;
+  module: { slug: string; title: string; category: string };
+}
+
 export interface CategoryWithCount {
   name: string;
   count: number;

@@ -55,6 +55,7 @@ model User {
   actionPlans       ActionPlan[]
   payments          Payment[]
   reviews           Review[]
+  notebookEntries   NotebookEntry[]
 }
 
 model Module {
@@ -77,6 +78,7 @@ model Module {
   quizAttempts    QuizAttempt[]
   actionPlans     ActionPlan[]
   reviews         Review[]
+  notebookEntries NotebookEntry[]
 }
 
 model ModuleNode {
@@ -188,6 +190,23 @@ model ActionPlan {
   module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   @@unique([userId, moduleId])
+}
+
+model NotebookEntry {
+  id         String   @id @default(cuid())
+  userId     String
+  moduleId   String
+  nodeId     String
+  nodeLabel  String
+  slideIndex Int
+  content    String   @default("")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  module Module @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleId, nodeId, slideIndex])
 }
 
 model Review {

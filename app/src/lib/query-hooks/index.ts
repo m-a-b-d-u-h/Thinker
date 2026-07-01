@@ -7,6 +7,7 @@ import { reflectionsApi } from "@/lib/api/reflections";
 import { actionsApi } from "@/lib/api/actions";
 import { progressApi } from "@/lib/api/progress";
 import { quizApi } from "@/lib/api/quiz";
+import { notebooksApi } from "@/lib/api/notebooks";
 import { paymentsApi } from "@/lib/api/payments";
 import { useAuthStore } from "@/lib/store/auth";
 import type { CategoryWithCount, ModuleListItem } from "@/lib/types";
@@ -310,6 +311,54 @@ export function usePaymentHistory() {
     queryFn: () => paymentsApi.getHistory(),
     enabled: !!token,
     staleTime: 60 * 1000,
+  });
+}
+
+// ─── Notebook ───
+
+export function useNotebook() {
+  const token = useAuthStore((s) => s.token);
+  return useQuery({
+    queryKey: ["notebook"],
+    queryFn: () => notebooksApi.list(),
+    enabled: !!token,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useNotebookBySlide(
+  moduleSlug: string,
+  nodeId: string,
+  slideIndex: number,
+) {
+  const token = useAuthStore((s) => s.token);
+  return useQuery({
+    queryKey: ["notebook", moduleSlug, nodeId, slideIndex],
+    queryFn: () => notebooksApi.getBySlide(moduleSlug, nodeId, slideIndex),
+    enabled: !!token && !!moduleSlug && !!nodeId,
+    staleTime: 0,
+  });
+}
+
+export function useUpsertNotebook() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: notebooksApi.upsert,
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["notebook"] });
+      qc.invalidateQueries({
+        queryKey: ["notebook", variables.moduleSlug, variables.nodeId, variables.slideIndex],
+      });
+    },
+  });
+}
+
+export function useDeleteNotebook() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ moduleSlug, nodeId, slideIndex }: { moduleSlug: string; nodeId: string; slideIndex: number }) =>
+      notebooksApi.remove(moduleSlug, nodeId, slideIndex),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["notebook"] }),
   });
 }
 
