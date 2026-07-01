@@ -229,7 +229,7 @@ export default function ReadPage({ params }: { params: Promise<{ slug: string; n
             <div className="flex h-full">
               {nodeSlides.map((slide, i) => (
                 <div key={i} className="min-w-0 flex-[0_0_100%] h-full flex items-center justify-center">
-                  <div className="w-full h-full bg-bg-elevated border border-border/40 rounded-2xl shadow-lg flex flex-col p-5 sm:p-7" style={{ fontSize: baseFontSize, fontFamily: baseFontFamily, lineHeight: baseLineHeight, letterSpacing: baseLetterSpacing }}>
+                  <div className="relative w-full h-full bg-bg-elevated border border-border/40 rounded-2xl shadow-lg flex flex-col p-5 sm:p-7" style={{ fontSize: baseFontSize, fontFamily: baseFontFamily, lineHeight: baseLineHeight, letterSpacing: baseLetterSpacing }}>
                     {/* Slide progress dots */}
                     <div className="flex items-center gap-1 mb-4">
                       {nodeSlides.map((_, di) => (
