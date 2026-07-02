@@ -109,7 +109,7 @@ export default function ReflectionListPage() {
                         {ref.title}
                       </h3>
 
-                      <p className="text-[0.875rem] text-muted leading-relaxed whitespace-pre-wrap line-clamp-6">
+                      <p className="text-[0.875rem] text-muted leading-relaxed whitespace-pre-wrap">
                         {ref.content}
                       </p>
                     </div>
